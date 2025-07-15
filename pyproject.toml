@@ -1,0 +1,15 @@
+[project]
+name = "behavioralsignals"
+version = "0.1.0"
+description = "SDK for the REST and Streaming APIs of Behavioral Signals"
+readme = "README.md"
+authors = [
+    { name = "Nikos Antoniou", email = "nikos.antoniou@behavioralsignals.com" }
+]
+requires-python = ">=3.10"
+dependencies = []
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
