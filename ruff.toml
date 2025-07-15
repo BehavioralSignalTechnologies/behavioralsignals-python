@@ -1,0 +1,22 @@
+line-length = 120
+indent-width = 4
+include = ["src/behavioralsignals/*", "examples/*"]
+exclude = ["src/behavioralsignals/generated/*"]
+extend-exclude = ["*.md", "*.json"]
+
+[lint]
+extend-select = ["I"]
+preview = true
+
+[lint.isort]
+lines-after-imports = 2
+known-first-party = ["behavioralsignals"]
+length-sort = true
+
+[format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = false
+docstring-code-line-length = 100

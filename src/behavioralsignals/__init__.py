@@ -1,2 +1,4 @@
-def main() -> None:
-    print("Hello from behavioralsignals!")
+from .client import Client
+
+
+__all__ = ["Client"]

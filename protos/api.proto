@@ -1,0 +1,89 @@
+syntax = "proto3";
+package behavioral_api.grpc.v1;
+
+option java_multiple_files = true;
+option java_package = "com.behavioralsignals.oliver_api.api.proto";
+option java_outer_classname = "StreamingApiProto";
+
+service BehavioralStreamingApi {
+  rpc StreamAudio(stream AudioStream) returns (stream StreamResult) {}
+}
+
+// Provides information to the recognizer that specifies how to process the
+// request
+message AudioConfig {
+    // Sample rate in Hertz of the audio data sent
+    int32 sample_rate_hertz = 1;
+
+    // If specified, filter the level of the results to return:
+    // * segment: Return only results at segment level
+    // * utterance: Return only results per utterance
+    // By default the endpoint returns both segment/utterance level results.
+    optional Level level = 2;
+
+    // Whether to return also logits in addition to posteriors
+    optional bool logits = 3;
+
+    // Whether to return feature embeddings
+    optional bool feature_embedding = 4;
+}
+
+/*
+ * AUDIO STREAM MESSAGE DEFINITION
+ */
+
+// The streaming request, which is either a streaming config or audio content.
+message AudioStream {
+  int64 cid = 1;
+  string x_auth_token = 2;
+
+  // Provides information to the recognizer that specifies how to process the
+  // request. The first `AudioStream` message must contain a `streaming_config`  message.
+  AudioConfig config = 3;
+  // The audio data to be recognized. Sequential chunks of audio data are sent in sequential
+  // `AudioStream` messages. The first `AudioStream` message must not contain `audio` data
+  // and all subsequent `AudioStream` messages must contain `audio` data. The audio bytes must
+  // be encoded as specified in `StreamConfig`.
+  bytes audio_content = 4;
+}
+
+message Prediction {
+  // label predicted by the model
+  string label = 1;
+  // confidence of the prediction
+  optional string posterior = 2;
+  // logit
+  optional string logit = 3;
+}
+
+message InferenceResult {
+  //message identifier
+  string id = 1;
+  string start_time = 2;
+  string end_time = 3;
+  //task name
+  string task = 4;
+  // pair of label and posteriors
+  repeated Prediction prediction = 5;
+  // label after thresholding
+  string final_label = 6;
+  // embedding of the segment
+  optional string embedding = 7;
+  // Level of result
+  optional Level level = 8;
+}
+
+// The response message of the server that contains the inference results.
+message StreamResult {
+  int64 cid = 1;
+  int64 pid = 2;
+  int32 message_id = 3;
+
+  repeated InferenceResult result = 4;
+}
+
+// Used to indicate the level (utterance/segment) of the prediction
+enum Level {
+  segment = 0;
+  utterance = 1;
+}
