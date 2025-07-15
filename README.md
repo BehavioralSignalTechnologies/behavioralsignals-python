@@ -32,13 +32,12 @@ Below, we provide examples for both batch and streaming modes. You can also find
 In batch mode, you can send audio files to the Behavioral Signals API for analysis. The API will return a unique process ID (PID) that you can use to retrieve the results later.
 
 ```python
->> from behavioralsignals import Client
+from behavioralsignals import Client
 
->> client = Client(YOUR_USER_ID, YOUR_API_KEY)
-Authentication successful
+client = Client(YOUR_USER_ID, YOUR_API_KEY)
 
->> response = client.send_audio(file="audio.wav")
->> output = client.get_result(pid=response["pid"])
+response = client.send_audio(file="audio.wav")
+output = client.get_result(pid=response["pid"])
 ```
 
 See more examples [here](examples/batch/README.md).
@@ -49,15 +48,15 @@ See more examples [here](examples/batch/README.md).
 In streaming mode, you can send audio data in real-time to the Behavioral Signals API. The API will return results as they are processed.
 
 ```python
->> from behavioralsignals import Client
->> from behavioralsignals.utils import create_audio_stream
+from behavioralsignals import Client
+from behavioralsignals.utils import create_audio_stream
 
->> client = Client(YOUR_USER_ID, YOUR_API_KEY)
->> audio_stream = create_audio_stream("audio.wav", sample_rate=16000, chunk_size=250)
->> streaming_options = {"sample_rate": 16000}
+client = Client(YOUR_USER_ID, YOUR_API_KEY)
+audio_stream = create_audio_stream("audio.wav", sample_rate=16000, chunk_size=250)
+streaming_options = {"sample_rate": 16000}
 
->> for result in client.send_audio_stream(audio_stream=audio_stream, streaming_options=streaming_options):
->>     print(result)
+for result in client.send_audio_stream(audio_stream=audio_stream, streaming_options=streaming_options):
+     print(result)
 ```
 
 See more examples [here](examples/streaming/README.md).
