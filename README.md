@@ -12,8 +12,8 @@
 
 </div>
 
-Python SDK for the Behavioral Signals REST and Streaming APIs. Behavioral Signals builds AI solutions that understand human behavior through voice and detect deepfake content in audio.
-Our API enables developers to integrate behavioral analysis into their applications, both in real-time and offline modes.
+Python SDK for the Behavioral Signals API. Behavioral Signals builds AI solutions that understand human behavior through voice and detect deepfake content in audio.
+Our API enables developers to integrate behavioral analysis into their applications, both in batching and streaming modes.
 
 ## Install
 
@@ -52,10 +52,10 @@ from behavioralsignals import Client
 from behavioralsignals.utils import create_audio_stream
 
 client = Client(YOUR_USER_ID, YOUR_API_KEY)
-audio_stream = create_audio_stream("audio.wav", sample_rate=16000, chunk_size=250)
-streaming_options = {"sample_rate": 16000}
+audio_stream, sample_rate = create_audio_stream("audio.wav", chunk_size=250)
+streaming_options = {"sample_rate": sample_rate}
 
-for result in client.send_audio_stream(audio_stream=audio_stream, streaming_options=streaming_options):
+for result in client.stream_audio(audio_stream=audio_stream, streaming_options=streaming_options):
      print(result)
 ```
 

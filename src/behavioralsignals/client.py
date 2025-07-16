@@ -76,6 +76,8 @@ class Client:
                 level = levels_dict[level]
 
             def _request_generator() -> Iterator[pb.AudioStream]:
+                # Streaming API always requires the first message to contain the audio configuration
+                # and authentication details
                 audio_config = pb.AudioConfig(sample_rate_hertz=sample_rate)
                 req = pb.AudioStream(
                     cid=int(self.user_id),
@@ -83,6 +85,7 @@ class Client:
                     config=audio_config,
                 )
                 yield req
+
                 for chunk in audio_stream:
                     yield pb.AudioStream(
                         cid=int(self.user_id),

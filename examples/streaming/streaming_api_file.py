@@ -1,17 +1,10 @@
 import os
 import argparse
 
-from pydub import AudioSegment
 from dotenv import load_dotenv
-from pydub.utils import make_chunks
 
 from behavioralsignals import Client
-
-
-load_dotenv()
-
-CHUNK_SIZE = 0.25  # chunk size in milliseconds
-SAMPLE_RATE = 16000
+from behavioralsignals.utils import make_audio_stream
 
 
 def parse_args():
@@ -21,20 +14,16 @@ def parse_args():
     return parser.parse_args()
 
 
-args = parse_args()
-file_path, output = args.file_path, args.output
+if __name__ == "__main__":
+    args = parse_args()
+    file_path, output = args.file_path, args.output
 
-# Step 1. Initialize the client with your user ID and API key
-client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY"))
+    # Step 1. Initialize the client with your user ID and API key
+    load_dotenv()
+    client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY"))
 
-# Step 2. Read the audio file, and wrap it inside an iterator of chunks
-snd = AudioSegment.from_file(file_path, format="wav")
-snd = snd.set_frame_rate(SAMPLE_RATE)  # Ensure the audio is at 16kHz
-snd = snd.set_channels(1)  # Ensure the audio is mono
-snd = snd.set_sample_width(2)  # Ensure the audio is in 16-bit
-
-chunks_list = make_chunks(snd, CHUNK_SIZE * 1000)
-audio_stream = iter([chunk.raw_data for chunk in chunks_list])
-options_dict = {"sample_rate": SAMPLE_RATE}
-for resp in client.stream_audio(audio_stream, streaming_options=options_dict):
-    print(type(resp))
+    # Step 2. Read the audio file, and wrap it inside an iterator of chunks
+    audio_stream, sample_rate = make_audio_stream(file_path, chunk_size=0.25)
+    options_dict = {"sample_rate": sample_rate}
+    for resp in client.stream_audio(audio_stream, streaming_options=options_dict):
+        print(resp)
