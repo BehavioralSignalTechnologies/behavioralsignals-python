@@ -25,6 +25,7 @@ The results will be printed to the console as they are processed.
 You can use the streaming_api_microphone.py script to capture audio directly from your microphone and stream it to the Behavioral Signals API in real time.
 This is a common use case when integrating with audio streaming APIs for live analysis or feedback.
 
+First, make sure you install some additional dependencies required for audio capture and live display:
 ```bash
 uv pip install sounddevice numpy rich
 ```

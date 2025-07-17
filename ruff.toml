@@ -1,4 +1,4 @@
-line-length = 120
+line-length = 100
 indent-width = 4
 include = ["src/behavioralsignals/*", "examples/*"]
 exclude = ["src/behavioralsignals/generated/*"]

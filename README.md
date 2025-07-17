@@ -48,14 +48,14 @@ See more examples [here](examples/batch/README.md).
 In streaming mode, you can send audio data in real-time to the Behavioral Signals API. The API will return results as they are processed.
 
 ```python
-from behavioralsignals import Client
+from behavioralsignals import Client, StreamingOptions
 from behavioralsignals.utils import create_audio_stream
 
 client = Client(YOUR_USER_ID, YOUR_API_KEY)
 audio_stream, sample_rate = create_audio_stream("audio.wav", chunk_size=250)
-streaming_options = {"sample_rate": sample_rate}
+options = StreamingOptions(sample_rate=sample_rate)
 
-for result in client.stream_audio(audio_stream=audio_stream, streaming_options=streaming_options):
+for result in client.stream_audio(audio_stream=audio_stream, options=options):
      print(result)
 ```
 

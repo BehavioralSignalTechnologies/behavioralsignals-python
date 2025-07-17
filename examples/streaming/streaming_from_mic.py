@@ -9,7 +9,7 @@ from rich.live import Live
 from rich.table import Table
 from rich.console import Console
 
-from behavioralsignals import Client
+from behavioralsignals import Client, StreamingOptions
 
 
 SAMPLE_RATE = 16000  # Sample rate in Hz
@@ -64,7 +64,11 @@ def audio_capture(q: Queue):
         q.put(indata.copy())
 
     with sd.InputStream(
-        samplerate=SAMPLE_RATE, channels=CHANNELS, dtype="int16", blocksize=CHUNK_SIZE, callback=callback
+        samplerate=SAMPLE_RATE,
+        channels=CHANNELS,
+        dtype="int16",
+        blocksize=CHUNK_SIZE,
+        callback=callback,
     ):
         print(f"🎤 Recording @ {SAMPLE_RATE}Hz, chunk={CHUNK_DURATION_SEC}s. Ctrl+C to stop.")
         try:
@@ -94,8 +98,8 @@ if __name__ == "__main__":
 
     # Step 3. Send the audio stream for processing
     audio_stream = audio_stream_from_queue(chunks_queue)
-    options_dict = {"sample_rate": SAMPLE_RATE}
-    responses = client.stream_audio(audio_stream=audio_stream, streaming_options=options_dict)
+    options = StreamingOptions(sample_rate=SAMPLE_RATE)
+    responses = client.stream_audio(audio_stream=audio_stream, options=options)
 
     # Step 4. Display the results in a live table
     console = Console()
