@@ -11,7 +11,7 @@ from behavioralsignals import Client
 
 
 def upload_dataset(ds: Dataset, client: Client) -> list[int]:
-    """ Uploads audio files from the dataset to the Behavioral Signals API (batch mode).
+    """Uploads audio files from the dataset to the Behavioral Signals API (batch mode).
 
     Args:
         ds (Dataset): The dataset containing audio files and labels.
@@ -28,7 +28,7 @@ def upload_dataset(ds: Dataset, client: Client) -> list[int]:
 
 
 def get_all_results(ds: Dataset, client: Client) -> list[str]:
-    """ Retrieves results for all processes in the dataset. It returns the final labels
+    """Retrieves results for all processes in the dataset. It returns the final labels
     for each audio file.
 
     Args:
@@ -69,7 +69,9 @@ def get_all_results(ds: Dataset, client: Client) -> list[str]:
             # may have multiple results - maybe because diarization has segmented it
             # into multiple parts. We only keep the first result for the sake of simplicity
             if len(results) > 1:
-                print(f"Process {pid} has multiple results: {len(results)} ... Keeping the first one.")
+                print(
+                    f"Process {pid} has multiple results: {len(results)} ... Keeping the first one."
+                )
 
             if len(results) == 0:
                 print(f"Process {pid} has no results.")

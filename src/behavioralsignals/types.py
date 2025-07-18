@@ -1,8 +1,10 @@
+import json
 from enum import IntEnum
 from typing import Any, List, Literal, Optional
-from datetime import datetime
+from pathlib import Path
+from datetime import date, datetime
 
-from pydantic import Field, BaseModel, computed_field
+from pydantic import Field, BaseModel, ConfigDict, computed_field, field_validator
 
 from .generated import api_pb2 as pb
 
@@ -46,6 +48,35 @@ class APIError(BaseModel):
     details: Optional[dict] = None
 
 
+class AudioUploadParams(BaseModel):
+    file_path: str = Field(..., description="Path to the audio file to upload")
+    name: Optional[str] = Field(None, description="Optional name for the job request")
+    embeddings: bool = Field(
+        False, description="Whether to include speaker and behavioral embeddings in the result"
+    )
+    meta: Optional[str] = Field(
+        None, description="Metadata json containing any extra user-defined metadata"
+    )
+
+    # Optional: Add validation for file path
+    @field_validator("file_path")
+    @classmethod
+    def validate_file_exists(cls, v):
+        if not Path(v).exists():
+            raise ValueError(f"File does not exist: {v}")
+        return v
+
+    @field_validator("meta")
+    @classmethod
+    def validate_meta_json(cls, v):
+        if v is not None:
+            try:
+                json.loads(v)
+            except json.JSONDecodeError:
+                raise ValueError("meta must be valid JSON string")
+        return v
+
+
 class ProcessItem(BaseModel):
     """Individual process in the list"""
 
@@ -56,7 +87,9 @@ class ProcessItem(BaseModel):
     statusmsg: str
     duration: float
     datetime: datetime
-    meta: Optional[dict] = None
+    meta: Optional[str] = Field(
+        None, description="Metadata json containing any extra user-defined metadata"
+    )
 
     @property
     def is_completed(self) -> bool:
@@ -73,6 +106,26 @@ class ProcessItem(BaseModel):
     @property
     def is_pending(self) -> bool:
         return self.status == ProcessStatus.PENDING
+
+
+class ProcessListParams(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    page: int = Field(0, ge=0, description="Page number for pagination.")
+    page_size: int = Field(
+        1000, ge=1, le=1000, description="Number of processes per page.", alias="pageSize"
+    )
+    sort: Literal["asc", "desc"] = "asc"
+    start_date: Optional[date] = Field(
+        None,
+        alias="startDate",
+        description="Filter processes created on or after this date (YYYY-MM-DD)",
+    )
+    end_date: Optional[date] = Field(
+        None,
+        alias="endDate",
+        description="Filter processes created on or before this date (YYYY-MM-DD)",
+    )
 
 
 class ProcessListResponse(BaseModel):
