@@ -1,35 +1,13 @@
 import json
 from enum import IntEnum
-from typing import Any, List, Literal, Optional
+from typing import List, Literal, Optional
 from pathlib import Path
-from datetime import date, datetime
+from datetime import date
+from datetime import datetime as datetime_aliased
 
 from pydantic import Field, BaseModel, ConfigDict, computed_field, field_validator
 
 from .generated import api_pb2 as pb
-
-
-class StreamingOptions(BaseModel):
-    sample_rate: int = Field(16000, gt=0, description="PCM sample rate (Hz).")
-    level: Literal["segment", "utterance", "all"] = Field(
-        "segment",
-        description="Level of granularity for the streaming results. "
-        "Use 'segment' for segment-level results, 'utterance' for utterance-level results."
-        " Use 'all' for both segment and utterance results.",
-    )
-
-    def to_pb_config(self) -> pb.AudioConfig:
-        """Convert the level to a protobuf Level enum."""
-        level = {
-            "segment": pb.Level.segment,
-            "utterance": pb.Level.utterance,
-            "all": None,
-        }[self.level]
-
-        config = pb.AudioConfig(sample_rate_hertz=self.sample_rate)
-        if level is not None:
-            config.level = level
-        return config
 
 
 class ProcessStatus(IntEnum):
@@ -48,15 +26,34 @@ class APIError(BaseModel):
     details: Optional[dict] = None
 
 
+class StreamingOptions(BaseModel):
+    sample_rate: int = Field(16000, gt=0, description="PCM sample rate (Hz).")
+    level: Literal["segment", "utterance", "all"] = Field(
+        "segment",
+        description="Level of granularity for the streaming results. "
+        "Use 'segment' for segment-level results, 'utterance' for utterance-level results. "
+        "Use 'all' for both segment and utterance results.",
+    )
+
+    def to_pb_config(self) -> pb.AudioConfig:
+        """Convert the level to a protobuf Level enum."""
+        level = {
+            "segment": pb.Level.segment,
+            "utterance": pb.Level.utterance,
+            "all": None,
+        }[self.level]
+
+        config = pb.AudioConfig(sample_rate_hertz=self.sample_rate)
+        if level is not None:
+            config.level = level
+        return config
+
+
 class AudioUploadParams(BaseModel):
     file_path: str = Field(..., description="Path to the audio file to upload")
     name: Optional[str] = Field(None, description="Optional name for the job request")
-    embeddings: bool = Field(
-        False, description="Whether to include speaker and behavioral embeddings in the result"
-    )
-    meta: Optional[str] = Field(
-        None, description="Metadata json containing any extra user-defined metadata"
-    )
+    embeddings: bool = Field(False, description="Whether to include speaker and behavioral embeddings in the result")
+    meta: Optional[str] = Field(None, description="Metadata json containing any extra user-defined metadata")
 
     # Optional: Add validation for file path
     @field_validator("file_path")
@@ -80,16 +77,20 @@ class AudioUploadParams(BaseModel):
 class ProcessItem(BaseModel):
     """Individual process in the list"""
 
-    pid: int
-    cid: int
-    name: str
-    status: int
-    statusmsg: str
-    duration: float
-    datetime: datetime
-    meta: Optional[str] = Field(
-        None, description="Metadata json containing any extra user-defined metadata"
+    pid: int = Field(..., description="Unique ID for the processing job")
+    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
+    name: Optional[str] = Field(None, description="Label of the processing job (Client defined)")
+    status: Optional[int] = Field(
+        None,
+        description="Shows the processing state of the job. Status is 0: pending, 1: processing, 2: completed, -1:failed, -2 aborted",
     )
+    statusmsg: Optional[str] = Field(None, description="Reason for success or failure")
+    duration: Optional[float] = Field(None, description="duration of the audio signal (in sec)")
+    datetime: Optional[datetime_aliased] = Field(
+        None,
+        description="date and time the request for processing was inserted into the system",
+    )
+    meta: Optional[str] = Field(None, description="A JSON string containing additional metadata")
 
     @property
     def is_completed(self) -> bool:
@@ -112,9 +113,7 @@ class ProcessListParams(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     page: int = Field(0, ge=0, description="Page number for pagination.")
-    page_size: int = Field(
-        1000, ge=1, le=1000, description="Number of processes per page.", alias="pageSize"
-    )
+    page_size: int = Field(1000, ge=1, le=1000, description="Number of processes per page.", alias="pageSize")
     sort: Literal["asc", "desc"] = "asc"
     start_date: Optional[date] = Field(
         None,
@@ -148,21 +147,39 @@ class ProcessListResponse(BaseModel):
         return [p for p in self.processes if p.is_failed]
 
 
-class Prediction(BaseModel):
-    label: Optional[str] = None
-    posterior: Optional[str] = None
-    dominantInSegments: List[Any] = Field(default_factory=list, deprecated=True)
+class ModelPredictions(BaseModel):
+    label: Optional[str] = Field(None, description="The name of the class", example="happy")
+    posterior: Optional[str] = Field(None, description="The probability of this class being present", example="0.754")
+    dominantInSegments: Optional[List[int]] = Field(None, description="The segments in which this class is dominant")
 
 
 class ResultItem(BaseModel):
-    id: str
-    startTime: str
-    endTime: str
-    task: str
-    prediction: List[Prediction]
-    finalLabel: Optional[str] = None
-    level: str
-    embedding: Optional[str] = None
+    id: Optional[str] = Field(None, description="The id of the segment/utterance", example="1")
+    startTime: Optional[str] = Field(
+        None, description="The start time of the segment/utterance in seconds", example="0.209"
+    )
+    endTime: Optional[str] = Field(
+        None, description="The end time of the segment/utterance in seconds", example="7.681"
+    )
+    task: Optional[str] = Field(
+        None,
+        description="The behavioral attribute. Can be one of diarization, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. Consider visiting the guides in oliver.readme.io for the latest examples.",
+        example="emotion",
+    )
+    prediction: Optional[List[ModelPredictions]] = None
+    finalLabel: Optional[str] = Field(
+        None, description="The dominant value of the behavioral attribute", example="happy"
+    )
+    level: Optional[str] = Field(
+        None,
+        description="Whether this result corresponds to a segment/utterance",
+        example="utterance",
+    )
+    embedding: Optional[str] = Field(
+        None,
+        description="The corresponding embedding (present in diarization or features). It's a stringified array of length 728.",
+        example="[11.614513397216797, -15.228992462158203, -4.92175817489624, ...]",
+    )
 
     @computed_field
     @property
@@ -174,15 +191,10 @@ class ResultItem(BaseModel):
     def et(self) -> float:
         return float(self.endTime)
 
-    @computed_field
-    @property
-    def duration(self) -> float:
-        return self.et - self.st
-
 
 class ResultResponse(BaseModel):
-    pid: int
-    cid: int
-    code: int
-    message: str
-    results: List[ResultItem]
+    pid: Optional[int] = Field(None, description="Unique ID for the processing job")
+    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
+    code: Optional[int] = Field(None, description="Code indicating status")
+    message: Optional[str] = Field(None, description="Description of status")
+    results: Optional[List[ResultItem]] = None

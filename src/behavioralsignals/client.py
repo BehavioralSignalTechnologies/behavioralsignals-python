@@ -7,7 +7,6 @@ import requests
 from .types import (
     APIError,
     ProcessItem,
-    ProcessStatus,
     ResultResponse,
     StreamingOptions,
     AudioUploadParams,
@@ -66,7 +65,6 @@ class Client:
             name (str, optional): Optional name for the job request. Defaults to filename.
             embeddings (bool): Whether to include speaker and behavioral embeddings. Defaults to False.
             meta (str, optional): Metadata json containing any extra user-defined metadata.
-
         Returns:
             ProcessItem: The process item containing details about the submitted process.
         """
@@ -106,7 +104,6 @@ class Client:
             sort (str): Sort order for the processes, should be "asc" or "desc". Defaults to "asc".
             start_date (str, optional: Filter processes created on or after this date (YYYY-MM-DD).
             end_date (str, optional): Filter processes created on or before this date (YYYY-MM-DD).
-
         Returns:
             ProcessListResponse: A list of processes associated with the user.
         """
@@ -127,7 +124,6 @@ class Client:
 
         Args:
             pid (int): The process ID to retrieve.
-
         Returns:
             ProcessItem: The process item containing details about the specified process.
         """
@@ -146,13 +142,6 @@ class Client:
         Returns:
             ResultResponse: The result response containing the results of the specified process.
         """
-
-        process = self.get_process(pid)
-        if not process.is_completed:
-            raise Exception(
-                f"Process {pid} is not completed. Current status: {ProcessStatus(process.status).name}"
-            )
-
         results_url = f"{API_URL}/clients/{self.user_id}/processes/{pid}/results"
         headers = self._headers()
         response = requests.get(results_url, headers=headers)
