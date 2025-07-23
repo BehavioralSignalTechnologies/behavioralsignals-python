@@ -28,6 +28,7 @@ class APIError(BaseModel):
 
 class StreamingOptions(BaseModel):
     sample_rate: int = Field(16000, gt=0, description="PCM sample rate (Hz).")
+    encoding: Literal["LINEAR_PCM"] = Field(..., description="Audio encoding format.")
     level: Literal["segment", "utterance", "all"] = Field(
         "segment",
         description="Level of granularity for the streaming results. "
@@ -43,7 +44,10 @@ class StreamingOptions(BaseModel):
             "all": None,
         }[self.level]
 
-        config = pb.AudioConfig(sample_rate_hertz=self.sample_rate)
+        encoding = {
+            "LINEAR_PCM": pb.AudioEncoding.LINEAR_PCM
+        }[self.encoding]
+        config = pb.AudioConfig(encoding=encoding, sample_rate_hertz=self.sample_rate)
         if level is not None:
             config.level = level
         return config
@@ -163,7 +167,8 @@ class ResultItem(BaseModel):
     )
     task: Optional[str] = Field(
         None,
-        description="The behavioral attribute. Can be one of diarization, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. Consider visiting the guides in oliver.readme.io for the latest examples.",
+        description="The behavioral attribute. Can be one of diarization, deepfake, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. "
+        "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         example="emotion",
     )
     prediction: Optional[List[ModelPredictions]] = None

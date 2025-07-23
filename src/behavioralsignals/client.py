@@ -18,7 +18,7 @@ from .generated import api_pb2_grpc as pb_grpc
 
 
 API_URL = "https://api.behavioralsignals.com/v5"
-STREAMING_API_URL = "https://streaming.behavioralsignals.com/v5"
+STREAMING_API_URL = "streaming.behavioralsignals.com:443"
 
 
 class Client:

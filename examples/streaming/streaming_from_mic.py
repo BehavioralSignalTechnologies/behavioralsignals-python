@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     # Step 3. Send the audio stream for processing
     audio_stream = audio_stream_from_queue(chunks_queue)
-    options = StreamingOptions(sample_rate=SAMPLE_RATE)
+    options = StreamingOptions(sample_rate=SAMPLE_RATE, encoding="LINEAR_PCM")
     responses = client.stream_audio(audio_stream=audio_stream, options=options)
 
     # Step 4. Display the results in a live table

@@ -1,31 +1,35 @@
 syntax = "proto3";
 package behavioral_api.grpc.v1;
 
-option java_multiple_files = true;
-option java_package = "com.behavioralsignals.oliver_api.api.proto";
-option java_outer_classname = "StreamingApiProto";
-
 service BehavioralStreamingApi {
   rpc StreamAudio(stream AudioStream) returns (stream StreamResult) {}
+}
+
+enum AudioEncoding {
+  // Uncompressed 16-bit signed little-endian samples (Linear PCM - pcm_s16le).
+  LINEAR_PCM = 0;
 }
 
 // Provides information to the recognizer that specifies how to process the
 // request
 message AudioConfig {
+    // The encoding of the audio data sent in the request
+    AudioEncoding encoding = 1;
+
     // Sample rate in Hertz of the audio data sent
-    int32 sample_rate_hertz = 1;
+    int32 sample_rate_hertz = 2;
 
     // If specified, filter the level of the results to return:
     // * segment: Return only results at segment level
     // * utterance: Return only results per utterance
     // By default the endpoint returns both segment/utterance level results.
-    optional Level level = 2;
+    optional Level level = 3;
 
     // Whether to return also logits in addition to posteriors
-    optional bool logits = 3;
+    optional bool logits = 4;
 
     // Whether to return feature embeddings
-    optional bool feature_embedding = 4;
+    optional bool feature_embedding = 5;
 }
 
 /*

@@ -8,7 +8,7 @@
 
 
 
-[![Discord](https://badgen.net/discord/members/sSJ88FZG/?color=8978cc&icon=discord)](https://discord.gg/sSJ88FZG)
+[![Discord](https://badgen.net/discord/members/fxjRrbMH3Q/?color=8978cc&icon=discord)](https://discord.com/invite/fxjRrbMH3Q)
 [![Twitter](https://badgen.net/badge/b/behavioralsignals/icon?icon=twitter&label&color=8978cc)](https://x.com/behaviorsignals)
 [![readme.io](https://badgen.net/badge/readme.io/Documentation/?color=8978cc)](https://behavioralsignals.readme.io/)
 
@@ -55,7 +55,7 @@ from behavioralsignals.utils import create_audio_stream
 
 client = Client(YOUR_USER_ID, YOUR_API_KEY)
 audio_stream, sample_rate = create_audio_stream("audio.wav", chunk_size=250)
-options = StreamingOptions(sample_rate=sample_rate)
+options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 
 for result in client.stream_audio(audio_stream=audio_stream, options=options):
      print(result)
