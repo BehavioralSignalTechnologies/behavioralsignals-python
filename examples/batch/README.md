@@ -25,7 +25,7 @@ The results are saved to `audio_results.json` file once they are ready.
 
 We also provide `batch_upload_dataset.py`, which demonstrates how to upload a dataset from HuggingFace 🤗 and evaluate it using the Behavioral Signals API.
 
-For the purposes of this example, we have uploaded a sample dataset of 22 audio files to our [HuggingFace repository](https://huggingface.co/datasets/behavioralsignals/audio-deepfakes-demo).
+For the purposes of this example, we have uploaded a sample dataset of 22 audio files to our [HuggingFace repository](https://huggingface.co/datasets/behavioralsignals/deepfake-detection-demo).
 The dataset contains 1 spoofed ("deepfake") and 1 genuine ("bonafide") audio file for 11 different languages.
 
 First, make sure you install some additional dependencies required for dataset handling:
