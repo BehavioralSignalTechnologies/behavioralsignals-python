@@ -30,7 +30,7 @@ The dataset contains 1 spoofed ("deepfake") and 1 genuine ("bonafide") audio fil
 
 First, make sure you install some additional dependencies required for dataset handling:
 ```bash
-uv pip install "datasets<4.0.0" soundfile librosa
+uv pip install "datasets<4.0.0" soundfile librosa tqdm
 ```
 
 Then, run the script aset and evaluate it:

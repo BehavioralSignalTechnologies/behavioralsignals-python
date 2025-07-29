@@ -85,7 +85,7 @@ def get_all_results(ds: Dataset, client: Client) -> list[str]:
 
 def main():
     load_dotenv()
-    client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY"))
+    client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY")).deepfakes
 
     ds = load_dataset("behavioralsignals/audio-deepfakes-demo", split="test")
     pids = upload_dataset(ds, client)

@@ -10,6 +10,7 @@ from .configuration import Configuration
 class BaseClient:
     def __init__(self, user_id: str, api_key: str):
         self.config = Configuration(user_id=user_id, api_key=api_key)
+        self.session = requests.Session()
         self._authenticate()
 
     def _get_default_headers(self):
@@ -47,13 +48,23 @@ class BaseClient:
             headers = self._get_default_headers()
 
         if method == "GET":
-            response = requests.get(url, headers=headers, params=data, timeout=self.config.timeout)
+            response = self.session.get(url, headers=headers, params=data, timeout=self.config.timeout)
         elif method == "POST":
-            response = requests.post(url, headers=headers, data=data, files=files, timeout=self.config.timeout)
+            response = self.session.post(url, headers=headers, data=data, files=files, timeout=self.config.timeout)
         else:
             raise ValueError(f"Unsupported method: {method}")
 
         return self._handle_response(response)
+
+    def close(self):
+        """Close the session."""
+        self.session.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
     def _get_channel_context(self):
         """Returns the channel context for gRPC connections."""
