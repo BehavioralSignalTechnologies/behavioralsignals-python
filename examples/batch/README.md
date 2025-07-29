@@ -8,7 +8,7 @@ Before running the scripts, ensure you have set up your environment correctly (n
 uv venv -p python3.10 venv
 source venv/bin/activate
 
-uv pip install behavioralsignals
+uv pip install behavioralsignals python-dotenv
 ```
 
 ## Submit file

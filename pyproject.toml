@@ -7,15 +7,36 @@ authors = [
     { name = "Nikos Antoniou", email = "nikos.antoniou@behavioralsignals.com" }
 ]
 requires-python = ">=3.10"
+license = { file = "LICENSE" }
+keywords = []
+classifiers = [
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: Apache Software License"
+]
+
 dependencies = [
-    "dotenv>=0.9.9",
     "grpcio>=1.64.0",
-    "grpcio-tools>=1.64.0",
+    "protobuf>=6.31.1",
     "pydantic>=2.11.7",
     "pydub>=0.25.1",
     "requests>=2.32.4",
+    "audioop-lts; python_version >= '3.13'"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "grpcio-tools>=1.64.0",
+    "ruff",
+]
+
+[project.urls]
+Repository = "https://github.com/BehavioralSignals/behavioralsignals-python"
 
 [build-system]
 requires = ["setuptools", "wheel"]
