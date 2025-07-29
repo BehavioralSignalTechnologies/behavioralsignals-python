@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 import threading
 from queue import Queue
 
@@ -25,11 +26,11 @@ def make_table(resp):
     table.add_column("Score", justify="right")
 
     # Add timestamps row if available
-    if resp.result:
-        st, et = resp.result[0].start_time, resp.result[0].end_time
+    if resp.results:
+        st, et = resp.results[0].st, resp.results[0].et
         table.add_row("Timestamps", f"{st} → {et} (s)", "")
 
-    for res in resp.result:
+    for res in resp.results:
         scores = []
         for p in res.prediction:
             try:
@@ -87,7 +88,24 @@ def audio_stream_from_queue(q: Queue):
         yield chunk.tobytes()
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Behavioral Signals Streaming Example")
+    parser.add_argument(
+        "--api", type=str, default="behavioral", choices=["behavioral", "streaming"], help="API to use for streaming"
+    )
+    parser.add_argument(
+        "--response_level",
+        type=str,
+        default="segments",
+        choices=["segments", "utterances", "all"],
+        help="Level of response granularity",
+    )
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
+    args = parse_args()
+
     # Step 1. Initialize the client with your user ID and API key
     load_dotenv()
     client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY"))
@@ -98,8 +116,12 @@ if __name__ == "__main__":
 
     # Step 3. Send the audio stream for processing
     audio_stream = audio_stream_from_queue(chunks_queue)
-    options = StreamingOptions(sample_rate=SAMPLE_RATE, encoding="LINEAR_PCM")
-    responses = client.stream_audio(audio_stream=audio_stream, options=options)
+    options = StreamingOptions(sample_rate=SAMPLE_RATE, encoding="LINEAR_PCM", level=args.response_level)
+
+    if args.api == "behavioral":
+        responses = client.behavioral.stream_audio(audio_stream=audio_stream, options=options)
+    else:
+        responses = client.deepfakes.stream_audio(audio_stream=audio_stream, options=options)
 
     # Step 4. Display the results in a live table
     console = Console()

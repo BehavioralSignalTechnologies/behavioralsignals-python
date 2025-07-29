@@ -25,6 +25,9 @@ def parse_args():
     parser.add_argument(
         "--output", type=str, default="output.json", help="Path to save the output JSON file"
     )
+    parser.add_argument(
+        "--api", type=str, default="behavioral", choices=["behavioral", "deepfakes"], help="API to use for streaming"
+    )
     return parser.parse_args()
 
 
@@ -34,9 +37,13 @@ if __name__ == "__main__":
 
     # Step 1. Initialize the client with your user ID and API key
     load_dotenv()
-    client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY"))
+    base_client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY"))
 
     # Step 2. Send the audio file for processing
+    if args.api == "behavioral":
+        client = base_client.behavioral
+    elif args.api == "deepfakes":
+        client = base_client.deepfakes
     upload_response = client.upload_audio(file_path=file_path)
     pid = upload_response.pid
     print(f"Sent audio for processing! Process ID (pid): {pid}")

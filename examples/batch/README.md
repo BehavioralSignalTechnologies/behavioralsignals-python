@@ -15,8 +15,9 @@ uv pip install behavioralsignals
 
 The `batch_api_polling.py` is a simple script that submits and audio file to the Behavioral Signals API and then polls for the results until they are ready.
 ```bash
-python batch_api_polling.py --file_path audio.wav --output audio_results.json
+python batch_api_polling.py --file_path audio.wav --output audio_results.json --api behavioral
 ```
+With the `--api` argument you can specify which API to use (either `behavioral` or `deepfakes`).
 
 The results are saved to `audio_results.json` file once they are ready.
 

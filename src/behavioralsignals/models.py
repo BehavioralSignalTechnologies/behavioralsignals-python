@@ -47,7 +47,7 @@ class StreamingOptions(BaseModel):
         encoding = {
             "LINEAR_PCM": pb.AudioEncoding.LINEAR_PCM
         }[self.encoding]
-        config = pb.AudioConfig(encoding=encoding, sample_rate_hertz=self.sample_rate)
+        config = pb.AudioConfig(sample_rate_hertz=self.sample_rate, encoding=encoding)
         if level is not None:
             config.level = level
         return config
@@ -203,3 +203,10 @@ class ResultResponse(BaseModel):
     code: Optional[int] = Field(None, description="Code indicating status")
     message: Optional[str] = Field(None, description="Description of status")
     results: Optional[List[ResultItem]] = None
+
+
+class StreamingResultResponse(BaseModel):
+    pid: Optional[int] = Field(None, description="Unique ID for the processing job")
+    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
+    message_id: Optional[int] = Field(None, alias="messageId", description="Incremental message ID for the stream")
+    results: Optional[List[ResultItem]] = Field(None, alias="result", description="List of result items")

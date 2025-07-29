@@ -39,13 +39,30 @@ class BehavioralStreamingApiStub(object):
                 request_serializer=api__pb2.AudioStream.SerializeToString,
                 response_deserializer=api__pb2.StreamResult.FromString,
                 _registered_method=True)
+        self.DeepfakeDetection = channel.stream_stream(
+                '/behavioral_api.grpc.v1.BehavioralStreamingApi/DeepfakeDetection',
+                request_serializer=api__pb2.AudioStream.SerializeToString,
+                response_deserializer=api__pb2.StreamResult.FromString,
+                _registered_method=True)
 
 
 class BehavioralStreamingApiServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def StreamAudio(self, request_iterator, context):
-        """Missing associated documentation comment in .proto file."""
+        """
+        Bi-directional streaming method for sending chunks of audio and retrieving real-time
+        behavioral and emotion results.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DeepfakeDetection(self, request_iterator, context):
+        """
+        Bi-directional streaming method for sending chunks of audio and retrieving real-time
+        deepfake detection results.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -55,6 +72,11 @@ def add_BehavioralStreamingApiServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'StreamAudio': grpc.stream_stream_rpc_method_handler(
                     servicer.StreamAudio,
+                    request_deserializer=api__pb2.AudioStream.FromString,
+                    response_serializer=api__pb2.StreamResult.SerializeToString,
+            ),
+            'DeepfakeDetection': grpc.stream_stream_rpc_method_handler(
+                    servicer.DeepfakeDetection,
                     request_deserializer=api__pb2.AudioStream.FromString,
                     response_serializer=api__pb2.StreamResult.SerializeToString,
             ),
@@ -84,6 +106,33 @@ class BehavioralStreamingApi(object):
             request_iterator,
             target,
             '/behavioral_api.grpc.v1.BehavioralStreamingApi/StreamAudio',
+            api__pb2.AudioStream.SerializeToString,
+            api__pb2.StreamResult.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def DeepfakeDetection(request_iterator,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.stream_stream(
+            request_iterator,
+            target,
+            '/behavioral_api.grpc.v1.BehavioralStreamingApi/DeepfakeDetection',
             api__pb2.AudioStream.SerializeToString,
             api__pb2.StreamResult.FromString,
             options,

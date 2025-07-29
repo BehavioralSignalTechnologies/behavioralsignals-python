@@ -2,7 +2,17 @@ syntax = "proto3";
 package behavioral_api.grpc.v1;
 
 service BehavioralStreamingApi {
+  /*
+  Bi-directional streaming method for sending chunks of audio and retrieving real-time
+  behavioral and emotion results.
+   */
   rpc StreamAudio(stream AudioStream) returns (stream StreamResult) {}
+
+  /*
+  Bi-directional streaming method for sending chunks of audio and retrieving real-time
+  deepfake detection results.
+   */
+  rpc DeepfakeDetection(stream AudioStream) returns (stream StreamResult) {}
 }
 
 enum AudioEncoding {
