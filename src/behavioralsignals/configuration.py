@@ -11,4 +11,4 @@ class Configuration:
     api_url: str = "https://api.behavioralsignals.com/v5"
     streaming_api_url: str = "streaming.behavioralsignals.com:443"
     timeout: Optional[TimeoutType] = None
-    use_ssl: bool = False
+    use_ssl: bool = True
