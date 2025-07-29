@@ -87,7 +87,7 @@ def main():
     load_dotenv()
     client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY")).deepfakes
 
-    ds = load_dataset("behavioralsignals/audio-deepfakes-demo", split="test")
+    ds = load_dataset("behavioralsignals/deepfake-detection-demo", split="test")
     pids = upload_dataset(ds, client)
 
     ds = ds.add_column("pid", pids)
