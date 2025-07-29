@@ -17,13 +17,13 @@ def parse_args():
         "--output", type=str, default="output.json", help="Path to save the output JSON file"
     )
     parser.add_argument(
-        "--api", type=str, default="behavioral", choices=["behavioral", "streaming"], help="API to use for streaming"
+        "--api", type=str, default="behavioral", choices=["behavioral", "deepfakes"], help="API to use for streaming"
     )
     parser.add_argument(
         "--response_level",
         type=str,
-        default="segments",
-        choices=["segments", "utterances", "all"],
+        default="segment",
+        choices=["segment", "utterance", "all"],
         help="Level of response granularity",
     )
 
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # Step 2. Read the audio file, and wrap it inside an iterator of chunks
     audio_stream, sample_rate = make_audio_stream(file_path, chunk_size=0.25)
-    options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
+    options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM", level=args.response_level)
 
     if args.api == "behavioral":
         responses = client.behavioral.stream_audio(audio_stream=audio_stream, options=options)

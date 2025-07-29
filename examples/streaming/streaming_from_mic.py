@@ -91,13 +91,13 @@ def audio_stream_from_queue(q: Queue):
 def parse_args():
     parser = argparse.ArgumentParser(description="Behavioral Signals Streaming Example")
     parser.add_argument(
-        "--api", type=str, default="behavioral", choices=["behavioral", "streaming"], help="API to use for streaming"
+        "--api", type=str, default="behavioral", choices=["behavioral", "deepfakes"], help="API to use for streaming"
     )
     parser.add_argument(
         "--response_level",
         type=str,
-        default="segments",
-        choices=["segments", "utterances", "all"],
+        default="segment",
+        choices=["segment", "utterance", "all"],
         help="Level of response granularity",
     )
     return parser.parse_args()
