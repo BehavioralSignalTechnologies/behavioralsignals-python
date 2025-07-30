@@ -9,8 +9,9 @@
 
 
 [![Discord](https://badgen.net/discord/members/fxjRrbMH3Q/?color=8978cc&icon=discord)](https://discord.com/invite/fxjRrbMH3Q)
-[![Twitter](https://badgen.net/badge/b/behavioralsignals/icon?icon=twitter&label&color=8978cc)](https://x.com/behaviorsignals)
-[![readme.io](https://badgen.net/badge/readme.io/Documentation/?color=8978cc)](https://behavioralsignals.readme.io/)
+[![Twitter](https://badgen.net/badge/b/behavioralsignals/icon?icon=twitter&label&color=black)](https://x.com/behaviorsignals)
+[![readme.io](https://badgen.net/badge/readme.io/Documentation/?color=black)](https://behavioralsignals.readme.io/)
+[![PyPI](https://badgen.net/badge/PyPI/behavioralsignals/?color=blue)](https://pypi.org/project/behavioralsignals/)
 
 </div>
 
