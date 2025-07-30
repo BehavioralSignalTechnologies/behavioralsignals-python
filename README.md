@@ -21,6 +21,8 @@ Our API enables developers to integrate behavioral analysis into their applicati
 
 ## Table of Contents
 * [Behavioral Signals Python SDK](#behavioral-signals-python-sdk)
+  * [Features](#features)
+  * [Requirements](#requirements)
   * [API Key Setup](#api-key-setup)
   * [SDK Installation](#sdk-installation)
   * [SDK Example Usage](#sdk-example-usage)
@@ -28,6 +30,26 @@ Our API enables developers to integrate behavioral analysis into their applicati
     * [Behavioral API Streaming Mode](#behavioral-api-streaming-mode)
     * [Deepfakes API Batch Mode](#deepfakes-api-batch-mode)
     * [Deepfakes API Streaming Mode](#deepfakes-api-streaming-mode)
+
+## Features
+
+- **Behavioral Analysis API** : Analyze human behavior in both batch (offline) and streaming (online) modes.
+
+- **Deepfake Detection API**: Detect synthetic or manipulated speech using advanced deepfake detection models.  
+  - Supports batch (offline) and streaming (online) modes  
+  - Compatible with a wide range of spoken languages
+
+- **Core Speech Attributes (Batch Only)**: Extract foundational conversational metadata from both APIs:  
+  - Automatic Speech Recognition (ASR)  
+  - Speaker Diarization  
+  - Language Identification
+
+## Requirements
+
+* `Python3.10+`,
+* `ffmpeg`,
+* Python dependencies as specified in `pyproject.toml`
+
 
 ## API Key Setup
 
@@ -47,7 +69,7 @@ We currently provide two main APIs:
 * the **Behavioral API** for analyzing human behavior through voice, and
 * the **Deepfakes API** for detecting deepfake audio content in human speech.
 
-Both APIs support batch and streaming modes, allowing you to send audio files or streams for analysis and receive results in real-time or after processing.
+Both APIs support batch and streaming modes, allowing you to send audio files or streams for analysis and receive results after processing and in real-time, respectively.
 You can also find more detailed examples for both [batch](examples/batch/README.md) and [streaming](examples/streaming/README.md) in the `examples/` directory.
 
 ### Behavioral API Batch Mode
@@ -59,8 +81,8 @@ from behavioralsignals import Client
 
 client = Client(YOUR_CID, YOUR_API_KEY)
 
-response = client.behavioral.upload_audio(file="audio.wav")
-output = client.behavioral.get_result(pid=response["pid"])
+response = client.behavioral.upload_audio(file_path="audio.wav")
+output = client.behavioral.get_result(pid=response.pid)
 ```
 
 ### Behavioral API Streaming Mode
@@ -76,7 +98,7 @@ audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=250)
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 
 for result in client.behavioral.stream_audio(audio_stream=audio_stream, options=options):
-     print(result)
+    print(result)
 ```
 
 ### Deepfakes API Batch Mode
@@ -88,8 +110,8 @@ from behavioralsignals import Client
 
 client = Client(YOUR_CID, YOUR_API_KEY)
 
-response = client.deepfakes.upload_audio(file="audio.wav")
-output = client.deepfakes.get_result(pid=response["pid"])
+response = client.deepfakes.upload_audio(file_path="audio.wav")
+output = client.deepfakes.get_result(pid=response.pid)
 ```
 
 ### Deepfakes API Streaming Mode
@@ -103,6 +125,7 @@ from behavioralsignals.utils import make_audio_stream
 client = Client(YOUR_CID, YOUR_API_KEY)
 audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=250)
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
+
 for result in client.deepfakes.stream_audio(audio_stream=audio_stream, options=options):
-     print(result)
+    print(result)
 ```

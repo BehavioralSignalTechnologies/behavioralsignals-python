@@ -1,6 +1,6 @@
 [project]
 name = "behavioralsignals"
-version = "0.1.0"
+version = "0.1.1"
 description = "Python SDK for Behavioral Signals API"
 readme = "README.md"
 authors = []
@@ -34,7 +34,7 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/BehavioralSignals/behavioralsignals-python"
+Repository = "https://github.com/BehavioralSignalTechnologies/behavioralsignals-python"
 
 [build-system]
 requires = ["setuptools>=64", "wheel"]
