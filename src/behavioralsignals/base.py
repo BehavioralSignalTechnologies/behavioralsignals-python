@@ -48,9 +48,13 @@ class BaseClient:
             headers = self._get_default_headers()
 
         if method == "GET":
-            response = self.session.get(url, headers=headers, params=data, timeout=self.config.timeout)
+            response = self.session.get(
+                url, headers=headers, params=data, timeout=self.config.timeout
+            )
         elif method == "POST":
-            response = self.session.post(url, headers=headers, data=data, files=files, timeout=self.config.timeout)
+            response = self.session.post(
+                url, headers=headers, data=data, files=files, timeout=self.config.timeout
+            )
         else:
             raise ValueError(f"Unsupported method: {method}")
 

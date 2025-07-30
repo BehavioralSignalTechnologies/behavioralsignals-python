@@ -44,9 +44,7 @@ class StreamingOptions(BaseModel):
             "all": None,
         }[self.level]
 
-        encoding = {
-            "LINEAR_PCM": pb.AudioEncoding.LINEAR_PCM
-        }[self.encoding]
+        encoding = {"LINEAR_PCM": pb.AudioEncoding.LINEAR_PCM}[self.encoding]
         config = pb.AudioConfig(sample_rate_hertz=self.sample_rate, encoding=encoding)
         if level is not None:
             config.level = level
@@ -56,8 +54,12 @@ class StreamingOptions(BaseModel):
 class AudioUploadParams(BaseModel):
     file_path: str = Field(..., description="Path to the audio file to upload")
     name: Optional[str] = Field(None, description="Optional name for the job request")
-    embeddings: bool = Field(False, description="Whether to include speaker and behavioral embeddings in the result")
-    meta: Optional[str] = Field(None, description="Metadata json containing any extra user-defined metadata")
+    embeddings: bool = Field(
+        False, description="Whether to include speaker and behavioral embeddings in the result"
+    )
+    meta: Optional[str] = Field(
+        None, description="Metadata json containing any extra user-defined metadata"
+    )
 
     # Optional: Add validation for file path
     @field_validator("file_path")
@@ -117,7 +119,9 @@ class ProcessListParams(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     page: int = Field(0, ge=0, description="Page number for pagination.")
-    page_size: int = Field(1000, ge=1, le=1000, description="Number of processes per page.", alias="pageSize")
+    page_size: int = Field(
+        1000, ge=1, le=1000, description="Number of processes per page.", alias="pageSize"
+    )
     sort: Literal["asc", "desc"] = "asc"
     start_date: Optional[date] = Field(
         None,
@@ -153,8 +157,12 @@ class ProcessListResponse(BaseModel):
 
 class ModelPredictions(BaseModel):
     label: Optional[str] = Field(None, description="The name of the class", example="happy")
-    posterior: Optional[str] = Field(None, description="The probability of this class being present", example="0.754")
-    dominantInSegments: Optional[List[int]] = Field(None, description="The segments in which this class is dominant")
+    posterior: Optional[str] = Field(
+        None, description="The probability of this class being present", example="0.754"
+    )
+    dominantInSegments: Optional[List[int]] = Field(
+        None, description="The segments in which this class is dominant"
+    )
 
 
 class ResultItem(BaseModel):
@@ -208,5 +216,9 @@ class ResultResponse(BaseModel):
 class StreamingResultResponse(BaseModel):
     pid: Optional[int] = Field(None, description="Unique ID for the processing job")
     cid: Optional[int] = Field(None, description="Client ID that requested the processing")
-    message_id: Optional[int] = Field(None, alias="messageId", description="Incremental message ID for the stream")
-    results: Optional[List[ResultItem]] = Field(None, alias="result", description="List of result items")
+    message_id: Optional[int] = Field(
+        None, alias="messageId", description="Incremental message ID for the stream"
+    )
+    results: Optional[List[ResultItem]] = Field(
+        None, alias="result", description="List of result items"
+    )

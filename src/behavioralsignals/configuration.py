@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 TimeoutType = Union[float, tuple[float, float]]
 
+
 @dataclass
 class Configuration:
     user_id: str

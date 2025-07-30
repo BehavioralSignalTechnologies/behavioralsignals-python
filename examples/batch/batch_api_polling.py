@@ -26,7 +26,11 @@ def parse_args():
         "--output", type=str, default="output.json", help="Path to save the output JSON file"
     )
     parser.add_argument(
-        "--api", type=str, default="behavioral", choices=["behavioral", "deepfakes"], help="API to use for streaming"
+        "--api",
+        type=str,
+        default="behavioral",
+        choices=["behavioral", "deepfakes"],
+        help="API to use for streaming",
     )
     return parser.parse_args()
 
