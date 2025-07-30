@@ -8,8 +8,8 @@ from .configuration import Configuration
 
 
 class BaseClient:
-    def __init__(self, user_id: str, api_key: str):
-        self.config = Configuration(user_id=user_id, api_key=api_key)
+    def __init__(self, cid: str, api_key: str):
+        self.config = Configuration(cid=cid, api_key=api_key)
         self.session = requests.Session()
         self._authenticate()
 
@@ -31,7 +31,7 @@ class BaseClient:
 
     def _authenticate(self):
         headers = self._get_default_headers()
-        headers["X-Auth-Client"] = self.config.user_id
+        headers["X-Auth-Client"] = self.config.cid
         response = self._send_request(path="auth", method="GET", headers=headers)
         return response
 

@@ -49,7 +49,7 @@ class Behavioral(BaseClient):
                 data["meta"] = params.meta
 
             data = self._send_request(
-                path=f"clients/{self.config.user_id}/processes/audio",
+                path=f"clients/{self.config.cid}/processes/audio",
                 method="POST",
                 files=files,
                 data=data,
@@ -83,7 +83,7 @@ class Behavioral(BaseClient):
         query_params = query_params.model_dump(by_alias=True, exclude_none=True)
 
         data = self._send_request(
-            path=f"clients/{self.config.user_id}/processes",
+            path=f"clients/{self.config.cid}/processes",
             method="GET",
             data=query_params,
         )
@@ -100,7 +100,7 @@ class Behavioral(BaseClient):
         """
 
         data = self._send_request(
-            path=f"clients/{self.config.user_id}/processes/{pid}",
+            path=f"clients/{self.config.cid}/processes/{pid}",
             method="GET",
         )
 
@@ -115,7 +115,7 @@ class Behavioral(BaseClient):
             ResultResponse: The result response containing the results of the specified process.
         """
         data = self._send_request(
-            path=f"clients/{self.config.user_id}/processes/{pid}/results",
+            path=f"clients/{self.config.cid}/processes/{pid}/results",
             method="GET",
         )
         return ResultResponse(**data)
@@ -131,7 +131,7 @@ class Behavioral(BaseClient):
                 # the audio configurationand authentication details
                 audio_config = options.to_pb_config()
                 req = pb.AudioStream(
-                    cid=int(self.config.user_id),
+                    cid=int(self.config.cid),
                     x_auth_token=self.config.api_key,
                     config=audio_config,
                 )
@@ -139,7 +139,7 @@ class Behavioral(BaseClient):
 
                 for chunk in audio_stream:
                     yield pb.AudioStream(
-                        cid=int(self.config.user_id),
+                        cid=int(self.config.cid),
                         x_auth_token=self.config.api_key,
                         audio_content=chunk,
                     )

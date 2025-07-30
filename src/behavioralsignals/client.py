@@ -15,7 +15,7 @@ class Client(BaseClient):
             module_path, class_name = client_map[name]
             module = importlib.import_module(module_path)
             client_class = getattr(module, class_name)
-            instance = client_class(user_id=self.config.user_id, api_key=self.config.api_key)
+            instance = client_class(cid=self.config.cid, api_key=self.config.api_key)
             setattr(self, name, instance)
             return instance
 

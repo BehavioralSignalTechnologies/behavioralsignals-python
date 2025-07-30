@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     # Step 1. Initialize the client with your user ID and API key
     load_dotenv()
-    client = Client(user_id=os.getenv("USER_ID"), api_key=os.getenv("API_KEY"))
+    client = Client(cid=os.getenv("CID"), api_key=os.getenv("API_KEY"))
 
     # Step 2. Start audio capture in a separate thread, and push audio chunks to a queue
     chunks_queue = Queue()

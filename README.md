@@ -56,9 +56,9 @@ In batch mode, you can send audio files to the Behavioral Signals API for analys
 ```python
 from behavioralsignals import Client
 
-client = Client(YOUR_USER_ID, YOUR_API_KEY)
+client = Client(YOUR_CID, YOUR_API_KEY)
 
-response = client.behavioral.send_audio(file="audio.wav")
+response = client.behavioral.upload_audio(file="audio.wav")
 output = client.behavioral.get_result(pid=response["pid"])
 ```
 
@@ -68,10 +68,10 @@ In streaming mode, you can send audio data in real-time to the Behavioral Signal
 
 ```python
 from behavioralsignals import Client, StreamingOptions
-from behavioralsignals.utils import create_audio_stream
+from behavioralsignals.utils import make_audio_stream
 
-client = Client(YOUR_USER_ID, YOUR_API_KEY)
-audio_stream, sample_rate = create_audio_stream("audio.wav", chunk_size=250)
+client = Client(YOUR_CID, YOUR_API_KEY)
+audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=250)
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 
 for result in client.behavioral.stream_audio(audio_stream=audio_stream, options=options):
@@ -85,9 +85,9 @@ A similar example for the Deepfakes API in batch mode allows you to send audio f
 ```python
 from behavioralsignals import Client
 
-client = Client(YOUR_USER_ID, YOUR_API_KEY)
+client = Client(YOUR_CID, YOUR_API_KEY)
 
-response = client.deepfakes.send_audio(file="audio.wav")
+response = client.deepfakes.upload_audio(file="audio.wav")
 output = client.deepfakes.get_result(pid=response["pid"])
 ```
 
@@ -97,10 +97,10 @@ A similar streaming example for the Deepfakes API allows you to send audio data 
 
 ```python
 from behavioralsignals import Client, StreamingOptions
-from behavioralsignals.utils import create_audio_stream
+from behavioralsignals.utils import make_audio_stream
 
-client = Client(YOUR_USER_ID, YOUR_API_KEY)
-audio_stream, sample_rate = create_audio_stream("audio.wav", chunk_size=250)
+client = Client(YOUR_CID, YOUR_API_KEY)
+audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=250)
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 for result in client.deepfakes.stream_audio(audio_stream=audio_stream, options=options):
      print(result)

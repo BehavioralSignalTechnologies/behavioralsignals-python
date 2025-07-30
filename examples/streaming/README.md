@@ -11,6 +11,18 @@ source venv/bin/activate
 uv pip install behavioralsignals python-dotenv
 ```
 
+For convenience, all of our examples read your API credentials from the environment variables `CID` and `API_KEY`.
+You can either set them in your shell:
+```bash
+export CID=your_cid
+export API_KEY=your_api_key
+```
+
+or create a `.env` file in the same directory as the scripts with the following content, which will be automatically loaded by the examples:
+```bash
+CID=your_cid
+API_KEY=your_api_key
+```
 
 ## 🎤 Record from microphone
 
@@ -25,7 +37,7 @@ uv pip install sounddevice numpy rich
 Then, run the script and start speaking into your microphone. The results will be displayed in a live table format, showing the analysis of your speech in real-time.
 
 ```bash
-python streaming_api_microphone.py --api behavioral --response_level all
+python streaming_from_mic.py --api behavioral --response_level all
 ```
 
 * The `--api` argument specifies which API to use (either `behavioral` or `deepfakes`).
