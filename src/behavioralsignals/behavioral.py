@@ -81,24 +81,25 @@ class Behavioral(BaseClient):
         # Use provided name or default to filename
         job_name = params.name
 
-        data = {
+        payload = {
             "url": params.url,
             "name": job_name,
             "embeddings": params.embeddings
         }
-        headers = {"content-type": "application/x-www-form-urlencoded"}
 
         if params.meta:
-            data["meta"] = params.meta
+            payload["meta"] = params.meta
 
-        data = self._send_request(
+        headers = {"content-type": "application/json"}
+
+        response = self._send_request(
             path=f"clients/{self.config.cid}/processes/s3-presigned-url",
             method="POST",
-            data=data,
+            json=payload,
             headers=headers
         )
 
-        return ProcessItem(**data)
+        return ProcessItem(**response)
 
     def list_processes(
         self,

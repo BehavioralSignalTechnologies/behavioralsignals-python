@@ -40,6 +40,7 @@ class BaseClient:
         path: str,
         method: str = "GET",
         data: Optional[dict] = None,
+        json: Optional[dict] = None,
         headers: Optional[dict] = None,
         files: Optional[dict] = None,
     ):
@@ -55,7 +56,7 @@ class BaseClient:
             )
         elif method == "POST":
             response = self.session.post(
-                url, headers=headers, data=data, files=files, timeout=self.config.timeout
+                url, headers=headers, data=data, files=files, json=json, timeout=self.config.timeout
             )
         else:
             raise ValueError(f"Unsupported method: {method}")
