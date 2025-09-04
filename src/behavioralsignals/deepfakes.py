@@ -9,6 +9,7 @@ from .models import (
     ResultResponse,
     StreamingOptions,
     AudioUploadParams,
+    S3UrlUploadParams,
     ProcessListParams,
     ProcessListResponse,
     StreamingResultResponse,
@@ -54,6 +55,48 @@ class Deepfakes(BaseClient):
                 files=files,
                 data=data,
             )
+
+        return ProcessItem(**data)
+
+    def upload_s3_presigned_url(
+        self,
+        url: str,
+        name: Optional[str] = None,
+        embeddings: bool = False,
+        meta: Optional[str] = None,
+    ) -> ProcessItem:
+        """Uploads an S3 presigned url pointing to an audio file and returns the process item.
+
+        Args:
+            url (str): The S3 presigned url.
+            name (str, optional): Optional name for the job request. Defaults to filename.
+            embeddings (bool): Whether to include speaker and behavioral embeddings. Defaults to False.
+            meta (str, optional): Metadata json containing any extra user-defined metadata.
+        Returns:
+            ProcessItem: The process item containing details about the submitted process.
+        """
+        # Create and validate parameters
+        params = S3UrlUploadParams(url=url, name=name, embeddings=embeddings, meta=meta)
+
+        # Use provided name or default to filename
+        job_name = params.name
+
+        data = {
+            "url": params.url,
+            "name": job_name,
+            "embeddings": params.embeddings
+        }
+        headers = {"content-type": "application/x-www-form-urlencoded"}
+
+        if params.meta:
+            data["meta"] = params.meta
+
+        data = self._send_request(
+            path=f"detection/clients/{self.config.cid}/processes/s3-presigned-url",
+            method="POST",
+            data=data,
+            headers=headers
+        )
 
         return ProcessItem(**data)
 

@@ -46,6 +46,8 @@ class BaseClient:
         url = self.config.api_url + "/" + path
         if headers is None:
             headers = self._get_default_headers()
+        else:
+            headers = {**self._get_default_headers(), **headers}
 
         if method == "GET":
             response = self.session.get(
