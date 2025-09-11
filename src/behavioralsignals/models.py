@@ -80,6 +80,27 @@ class AudioUploadParams(BaseModel):
         return v
 
 
+class S3UrlUploadParams(BaseModel):
+    url: str = Field(..., description="The S3 presigned url containing the audio")
+    name: Optional[str] = Field(None, description="Optional name for the job request")
+    embeddings: bool = Field(
+        False, description="Whether to include speaker and behavioral embeddings in the result"
+    )
+    meta: Optional[str] = Field(
+        None, description="Metadata json containing any extra user-defined metadata"
+    )
+
+    @field_validator("meta")
+    @classmethod
+    def validate_meta_json(cls, v):
+        if v is not None:
+            try:
+                json.loads(v)
+            except json.JSONDecodeError:
+                raise ValueError("meta must be valid JSON string")
+        return v
+
+
 class ProcessItem(BaseModel):
     """Individual process in the list"""
 
