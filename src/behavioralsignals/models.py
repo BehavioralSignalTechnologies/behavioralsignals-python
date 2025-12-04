@@ -100,6 +100,18 @@ class S3UrlUploadParams(BaseModel):
                 raise ValueError("meta must be valid JSON string")
         return v
 
+class DeepfakeAudioUploadParams(AudioUploadParams):
+    enable_generator_detection: bool = Field(
+        False, description="Whether to include prediction for the source of the deepfake (generator model)"
+    )
+
+
+class DeepfakeS3UrlUploadParams(S3UrlUploadParams):
+    enable_generator_detection: bool = Field(
+        False, description="Whether to include prediction for the source of the deepfake (generator model)"
+    )
+
+
 
 class ProcessItem(BaseModel):
     """Individual process in the list"""
