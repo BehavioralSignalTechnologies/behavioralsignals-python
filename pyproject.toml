@@ -1,6 +1,6 @@
 [project]
 name = "behavioralsignals"
-version = "0.2.0"
+version = "0.3.0"
 description = "Python SDK for Behavioral Signals API"
 readme = "README.md"
 authors = []
