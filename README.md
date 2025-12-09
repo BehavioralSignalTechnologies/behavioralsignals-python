@@ -85,6 +85,13 @@ response = client.behavioral.upload_audio(file_path="audio.wav")
 output = client.behavioral.get_result(pid=response.pid)
 ```
 
+Setting `embeddings=True` during audio upload will include speaker and behavioral embeddings in the output (see [documentation](https://behavioralsignals.readme.io/v5.4.0/docs/embeddings#/)):
+
+```python
+response = client.behavioral.upload_audio(file_path="audio.wav", embeddings=True)
+output = client.behavioral.get_result(pid=response.pid)
+```
+
 ### Behavioral API Streaming Mode
 
 In streaming mode, you can send audio data in real-time to the Behavioral Signals API. The API will return results as they are processed.
@@ -113,6 +120,32 @@ client = Client(YOUR_CID, YOUR_API_KEY)
 response = client.deepfakes.upload_audio(file_path="audio.wav")
 output = client.deepfakes.get_result(pid=response.pid)
 ```
+
+Setting `embeddings=True` during audio upload will include speaker and deepfake embeddings in the output (see [documentation](https://behavioralsignals.readme.io/v5.4.0/docs/embeddings-1#/)):
+
+```python
+response = client.deepfakes.upload_audio(file_path="audio.wav", embeddings=True)
+output = client.deepfakes.get_result(pid=response.pid)
+```
+
+
+#### 🔬 Experimental: Deepfake Generator Prediction (Batch Only)
+
+An experimental option is now available that attempts to predict the generator model used to produce a deepfake.
+When enabled, the returned results will contain an additional field - only for audios with detected deepfake content - indicating the predicted generator model along with a confidence score.
+
+You can activate this feature by passing `enable_generator_detection=True` during audio upload:
+
+```python
+from behavioralsignals import Client
+
+client = Client(YOUR_CID, YOUR_API_KEY)
+
+response = client.deepfakes.upload_audio(file_path="audio.wav", enable_generator_detection=True)
+output = client.deepfakes.get_result(pid=response.pid)
+```
+
+See more in our [API documentation](https://behavioralsignals.readme.io/v5.4.0/docs/generator-detection#/).
 
 ### Deepfakes API Streaming Mode
 

@@ -30,7 +30,7 @@ The `batch_api_polling.py` is a simple script that submits and audio file to the
 ```bash
 python batch_api_polling.py --file_path audio.wav --output audio_results.json --api behavioral
 ```
-With the `--api` argument you can specify which API to use (either `behavioral` or `deepfakes`).
+With the `--api` argument you can specify which API to use (either `behavioral` or `deepfakes`). You can also set the `--embeddings` flag to include speaker and behavioral/deepfake embeddings in the output.
 
 The results are saved to `audio_results.json` file once they are ready.
 
