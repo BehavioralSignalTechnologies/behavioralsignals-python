@@ -8,11 +8,11 @@ from .models import (
     ProcessItem,
     ResultResponse,
     StreamingOptions,
-    AudioUploadParams,
-    S3UrlUploadParams,
     ProcessListParams,
     ProcessListResponse,
     StreamingResultResponse,
+    DeepfakeAudioUploadParams,
+    DeepfakeS3UrlUploadParams,
 )
 from .generated import api_pb2 as pb
 from .generated import api_pb2_grpc as pb_grpc
@@ -24,6 +24,7 @@ class Deepfakes(BaseClient):
         file_path: str,
         name: Optional[str] = None,
         embeddings: bool = False,
+        enable_generator_detection: bool = False,
         meta: Optional[str] = None,
     ) -> ProcessItem:
         """Uploads an audio file for processing and returns the process item.
@@ -31,20 +32,31 @@ class Deepfakes(BaseClient):
         Args:
             file_path (str): Path to the audio file to upload.
             name (str, optional): Optional name for the job request. Defaults to filename.
-            embeddings (bool): Whether to include speaker and behavioral embeddings. Defaults to False.
+            embeddings (bool): Whether to include speaker embeddings. Defaults to False.
+            enable_generator_detection (bool): Whether to include prediction for the source of the deepfake (generator model). Defaults to False.
             meta (str, optional): Metadata json containing any extra user-defined metadata.
         Returns:
             ProcessItem: The process item containing details about the submitted process.
         """
         # Create and validate parameters
-        params = AudioUploadParams(file_path=file_path, name=name, embeddings=embeddings, meta=meta)
+        params = DeepfakeAudioUploadParams(
+            file_path=file_path,
+            name=name,
+            embeddings=embeddings,
+            meta=meta,
+            enable_generator_detection=enable_generator_detection,
+        )
 
         # Use provided name or default to filename
         job_name = params.name or Path(params.file_path).name
 
         with open(params.file_path, "rb") as audio_file:
             files = {"file": audio_file}
-            data = {"name": job_name, "embeddings": params.embeddings}
+            data = {
+                "name": job_name,
+                "embeddings": params.embeddings,
+                "enable_generator_detection": params.enable_generator_detection,
+            }
 
             if params.meta:
                 data["meta"] = params.meta
@@ -63,6 +75,7 @@ class Deepfakes(BaseClient):
         url: str,
         name: Optional[str] = None,
         embeddings: bool = False,
+        enable_generator_detection: bool = False,
         meta: Optional[str] = None,
     ) -> ProcessItem:
         """Uploads an S3 presigned url pointing to an audio file and returns the process item.
@@ -70,13 +83,20 @@ class Deepfakes(BaseClient):
         Args:
             url (str): The S3 presigned url.
             name (str, optional): Optional name for the job request. Defaults to filename.
-            embeddings (bool): Whether to include speaker and behavioral embeddings. Defaults to False.
+            embeddings (bool): Whether to include speaker embeddings. Defaults to False.
+            enable_generator_detection (bool): Whether to include prediction for the source of the deepfake (generator model). Defaults to False.
             meta (str, optional): Metadata json containing any extra user-defined metadata.
         Returns:
             ProcessItem: The process item containing details about the submitted process.
         """
         # Create and validate parameters
-        params = S3UrlUploadParams(url=url, name=name, embeddings=embeddings, meta=meta)
+        params = DeepfakeS3UrlUploadParams(
+            url=url,
+            name=name,
+            embeddings=embeddings,
+            meta=meta,
+            enable_generator_detection=enable_generator_detection,
+        )
 
         # Use provided name or default to filename
         job_name = params.name
@@ -84,7 +104,8 @@ class Deepfakes(BaseClient):
         payload = {
             "url": params.url,
             "name": job_name,
-            "embeddings": params.embeddings
+            "embeddings": params.embeddings,
+            "enable_generator_detection": params.enable_generator_detection,
         }
 
         if params.meta:
@@ -96,7 +117,7 @@ class Deepfakes(BaseClient):
             path=f"detection/clients/{self.config.cid}/processes/s3-presigned-url",
             method="POST",
             json=payload,
-            headers=headers
+            headers=headers,
         )
 
         return ProcessItem(**response)
@@ -172,7 +193,7 @@ class Deepfakes(BaseClient):
 
             def _request_generator() -> Iterator[pb.AudioStream]:
                 # Streaming API always requires the first message to contain
-                # the audio configurationand authentication details
+                # the audio configuration and authentication details
                 audio_config = options.to_pb_config()
                 req = pb.AudioStream(
                     cid=int(self.config.cid),

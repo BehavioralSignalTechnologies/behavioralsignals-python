@@ -30,8 +30,15 @@ def parse_args():
         type=str,
         default="behavioral",
         choices=["behavioral", "deepfakes"],
-        help="API to use for streaming",
+        help="API to use for processing",
     )
+    parser.add_argument(
+        "--embeddings",
+        action="store_true",
+        help="Whether to include embeddings in the output (only for behavioral API)",
+    )
+
+
     return parser.parse_args()
 
 
@@ -48,7 +55,7 @@ if __name__ == "__main__":
         client = base_client.behavioral
     elif args.api == "deepfakes":
         client = base_client.deepfakes
-    upload_response = client.upload_audio(file_path=file_path)
+    upload_response = client.upload_audio(file_path=file_path, embeddings=args.embeddings)
     pid = upload_response.pid
     print(f"Sent audio for processing! Process ID (pid): {pid}")
 

@@ -9,8 +9,8 @@ from .models import (
     ResultResponse,
     StreamingOptions,
     AudioUploadParams,
-    S3UrlUploadParams,
     ProcessListParams,
+    S3UrlUploadParams,
     ProcessListResponse,
     StreamingResultResponse,
 )
@@ -172,7 +172,7 @@ class Behavioral(BaseClient):
 
             def _request_generator() -> Iterator[pb.AudioStream]:
                 # Streaming API always requires the first message to contain
-                # the audio configurationand authentication details
+                # the audio configuration and authentication details
                 audio_config = options.to_pb_config()
                 req = pb.AudioStream(
                     cid=int(self.config.cid),
