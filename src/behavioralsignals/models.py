@@ -193,6 +193,11 @@ class ModelPredictions(BaseModel):
     posterior: Optional[str] = Field(
         None, description="The probability of this class being present", example="0.754"
     )
+    score: Optional[str] = Field(
+        None,
+        description="The regression score for continuous tasks (e.g. intensity), bounded in (0,1)",
+        example="0.62",
+    )
     dominantInSegments: Optional[List[int]] = Field(
         None, description="The segments in which this class is dominant"
     )
