@@ -10,6 +10,7 @@ from .models import (
     StreamingOptions,
     ProcessListParams,
     ProcessListResponse,
+    VideoResultResponse,
     StreamingResultResponse,
     DeepfakeAudioUploadParams,
     DeepfakeS3UrlUploadParams,
@@ -184,6 +185,175 @@ class Deepfakes(BaseClient):
             method="GET",
         )
         return ResultResponse(**data)
+
+    def upload_video(
+        self,
+        file_path: str,
+        name: Optional[str] = None,
+        embeddings: bool = False,
+        enable_generator_detection: bool = False,
+        meta: Optional[str] = None,
+    ) -> ProcessItem:
+        """Uploads a video file for deepfake detection and returns the process item.
+
+        Args:
+            file_path (str): Path to the video file to upload.
+            name (str, optional): Optional name for the job request. Defaults to filename.
+            embeddings (bool): Whether to include speaker and deepfake embeddings in the audio results. Defaults to False.
+            enable_generator_detection (bool): Whether to include prediction for the source of the deepfake (generator model) in the audio results. Defaults to False.
+            meta (str, optional): Metadata json containing any extra user-defined metadata.
+        Returns:
+            ProcessItem: The process item containing details about the submitted process.
+        """
+        # Create and validate parameters
+        params = DeepfakeAudioUploadParams(
+            file_path=file_path,
+            name=name,
+            embeddings=embeddings,
+            meta=meta,
+            enable_generator_detection=enable_generator_detection,
+        )
+
+        # Use provided name or default to filename
+        job_name = params.name or Path(params.file_path).name
+
+        with open(params.file_path, "rb") as video_file:
+            files = {"file": video_file}
+            data = {
+                "name": job_name,
+                "embeddings": params.embeddings,
+                "enable_generator_detection": params.enable_generator_detection,
+            }
+
+            if params.meta:
+                data["meta"] = params.meta
+
+            data = self._send_request(
+                path=f"detection/clients/{self.config.cid}/processes/video",
+                method="POST",
+                files=files,
+                data=data,
+            )
+
+        return ProcessItem(**data)
+
+    def upload_s3_presigned_video_url(
+        self,
+        url: str,
+        name: Optional[str] = None,
+        embeddings: bool = False,
+        enable_generator_detection: bool = False,
+        meta: Optional[str] = None,
+    ) -> ProcessItem:
+        """Uploads an S3 presigned url pointing to a video file and returns the process item.
+
+        Args:
+            url (str): The S3 presigned url.
+            name (str, optional): Optional name for the job request.
+            embeddings (bool): Whether to include speaker and deepfake embeddings in the audio results. Defaults to False.
+            enable_generator_detection (bool): Whether to include prediction for the source of the deepfake (generator model) in the audio results. Defaults to False.
+            meta (str, optional): Metadata json containing any extra user-defined metadata.
+        Returns:
+            ProcessItem: The process item containing details about the submitted process.
+        """
+        # Create and validate parameters
+        params = DeepfakeS3UrlUploadParams(
+            url=url,
+            name=name,
+            embeddings=embeddings,
+            meta=meta,
+            enable_generator_detection=enable_generator_detection,
+        )
+
+        # Use provided name or default to filename
+        job_name = params.name
+
+        payload = {
+            "url": params.url,
+            "name": job_name,
+            "embeddings": params.embeddings,
+            "enable_generator_detection": params.enable_generator_detection,
+        }
+
+        if params.meta:
+            payload["meta"] = params.meta
+
+        headers = {"content-type": "application/json"}
+
+        response = self._send_request(
+            path=f"detection/clients/{self.config.cid}/processes/s3-presigned-video-url",
+            method="POST",
+            json=payload,
+            headers=headers,
+        )
+
+        return ProcessItem(**response)
+
+    def list_video_processes(
+        self,
+        page: int = 0,
+        page_size: int = 1000,
+        sort: Literal["asc", "desc"] = "asc",
+        start_date: Optional[str] = None,
+        end_date: Optional[str] = None,
+    ) -> ProcessListResponse:
+        """Lists all video deepfake detection processes for the authenticated user.
+
+        Args:
+            page (int): Page number for pagination (default is 0).
+            page_size (int): Number of processes per page (default is 1000).
+            sort (str): Sort order for the processes, should be "asc" or "desc". Defaults to "asc".
+            start_date (str, optional: Filter processes created on or after this date (YYYY-MM-DD).
+            end_date (str, optional): Filter processes created on or before this date (YYYY-MM-DD).
+        Returns:
+            ProcessListResponse: A list of video processes associated with the user.
+        """
+
+        query_params = ProcessListParams(
+            page=page, page_size=page_size, sort=sort, start_date=start_date, end_date=end_date
+        )
+        query_params = query_params.model_dump(by_alias=True, exclude_none=True)
+
+        data = self._send_request(
+            path=f"detection/clients/{self.config.cid}/processes/video",
+            method="GET",
+            data=query_params,
+        )
+
+        return ProcessListResponse(processes=data)
+
+    def get_video_process(self, pid: int) -> ProcessItem:
+        """Retrieves details of a specific video process by its ID.
+
+        Args:
+            pid (int): The process ID to retrieve.
+        Returns:
+            ProcessItem: The process item containing details about the specified process.
+        """
+
+        data = self._send_request(
+            path=f"detection/clients/{self.config.cid}/processes/video/{pid}",
+            method="GET",
+        )
+
+        return ProcessItem(**data)
+
+    def get_video_result(self, pid: int) -> VideoResultResponse:
+        """Retrieves the result of a completed video process by its ID.
+
+        The response contains separate result lists for the audio track
+        (``audio_results``) and the video frames (``video_results``).
+
+        Args:
+            pid (int): The process ID for which to retrieve the result
+        Returns:
+            VideoResultResponse: The result response containing audio and video results.
+        """
+        data = self._send_request(
+            path=f"detection/clients/{self.config.cid}/processes/video/{pid}/results",
+            method="GET",
+        )
+        return VideoResultResponse(**data)
 
     def stream_audio(
         self, audio_stream: Iterator[bytes], options: StreamingOptions

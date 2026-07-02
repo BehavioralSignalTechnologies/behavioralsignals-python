@@ -147,6 +147,28 @@ output = client.deepfakes.get_result(pid=response.pid)
 
 See more in our [API documentation](https://behavioralsignals.readme.io/v5.4.0/docs/generator-detection#/).
 
+#### 🎬 Video Deepfake Detection (Batch Only)
+
+In addition to audio, the Deepfakes API can detect deepfakes in video files. You upload a video the same way you upload audio, and the API analyzes both the audio track and the video frames.
+
+```python
+from behavioralsignals import Client
+
+client = Client(YOUR_CID, YOUR_API_KEY)
+
+response = client.deepfakes.upload_video(file_path="video.mp4")
+output = client.deepfakes.get_video_result(pid=response.pid)
+```
+
+Unlike `get_result`, the video result response returns two separate lists — `audio_results` (deepfake detection on the audio track) and `video_results` (deepfake detection on the video frames):
+
+```python
+for item in output.video_results:
+    print(item.task, item.finalLabel)
+```
+
+You can also submit a video via an S3 presigned URL with `client.deepfakes.upload_s3_presigned_video_url(url=...)`, and list/inspect video processes with `client.deepfakes.list_video_processes()` and `client.deepfakes.get_video_process(pid=...)`. The `embeddings` and `enable_generator_detection` options are supported and apply to the audio-track results. Video deepfake detection is currently available in batch mode only.
+
 ### Deepfakes API Streaming Mode
 
 A similar streaming example for the Deepfakes API allows you to send audio data in real-time for speech deepfake detection:

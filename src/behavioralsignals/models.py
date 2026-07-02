@@ -100,17 +100,19 @@ class S3UrlUploadParams(BaseModel):
                 raise ValueError("meta must be valid JSON string")
         return v
 
+
 class DeepfakeAudioUploadParams(AudioUploadParams):
     enable_generator_detection: bool = Field(
-        False, description="Whether to include prediction for the source of the deepfake (generator model)"
+        False,
+        description="Whether to include prediction for the source of the deepfake (generator model)",
     )
 
 
 class DeepfakeS3UrlUploadParams(S3UrlUploadParams):
     enable_generator_detection: bool = Field(
-        False, description="Whether to include prediction for the source of the deepfake (generator model)"
+        False,
+        description="Whether to include prediction for the source of the deepfake (generator model)",
     )
-
 
 
 class ProcessItem(BaseModel):
@@ -208,7 +210,7 @@ class ResultItem(BaseModel):
     )
     task: Optional[str] = Field(
         None,
-        description="The behavioral attribute. Can be one of diarization, deepfake, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. "
+        description="The behavioral attribute. Can be one of diarization, deepfake, visual_deepfake, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         example="emotion",
     )
@@ -244,6 +246,26 @@ class ResultResponse(BaseModel):
     code: Optional[int] = Field(None, description="Code indicating status")
     message: Optional[str] = Field(None, description="Description of status")
     results: Optional[List[ResultItem]] = None
+
+
+class VideoResultResponse(BaseModel):
+    """Result of a video deepfake detection process.
+
+    Unlike the audio result response, a video process returns two separate result
+    lists: one for the deepfake detection performed on the audio track and one for
+    the deepfake detection performed on the video frames.
+    """
+
+    pid: Optional[int] = Field(None, description="Unique ID for the processing job")
+    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
+    code: Optional[int] = Field(None, description="Code indicating status")
+    message: Optional[str] = Field(None, description="Description of status")
+    audio_results: Optional[List[ResultItem]] = Field(
+        None, description="Audio deepfake detection results"
+    )
+    video_results: Optional[List[ResultItem]] = Field(
+        None, description="Video deepfake detection results"
+    )
 
 
 class StreamingResultResponse(BaseModel):
