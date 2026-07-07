@@ -100,17 +100,19 @@ class S3UrlUploadParams(BaseModel):
                 raise ValueError("meta must be valid JSON string")
         return v
 
+
 class DeepfakeAudioUploadParams(AudioUploadParams):
     enable_generator_detection: bool = Field(
-        False, description="Whether to include prediction for the source of the deepfake (generator model)"
+        False,
+        description="Whether to include prediction for the source of the deepfake (generator model)",
     )
 
 
 class DeepfakeS3UrlUploadParams(S3UrlUploadParams):
     enable_generator_detection: bool = Field(
-        False, description="Whether to include prediction for the source of the deepfake (generator model)"
+        False,
+        description="Whether to include prediction for the source of the deepfake (generator model)",
     )
-
 
 
 class ProcessItem(BaseModel):
@@ -188,17 +190,34 @@ class ProcessListResponse(BaseModel):
         return [p for p in self.processes if p.is_failed]
 
 
-class ModelPredictions(BaseModel):
+class _SerializableModel(BaseModel):
+    """Base for result models that omits null fields on serialization by default."""
+
+    def model_dump(self, **kwargs):
+        kwargs.setdefault("exclude_none", True)
+        return super().model_dump(**kwargs)
+
+    def model_dump_json(self, **kwargs):
+        kwargs.setdefault("exclude_none", True)
+        return super().model_dump_json(**kwargs)
+
+
+class ModelPredictions(_SerializableModel):
     label: Optional[str] = Field(None, description="The name of the class", example="happy")
     posterior: Optional[str] = Field(
         None, description="The probability of this class being present", example="0.754"
+    )
+    score: Optional[str] = Field(
+        None,
+        description="The regression score for continuous tasks (e.g. intensity), bounded in (0,1)",
+        example="0.62",
     )
     dominantInSegments: Optional[List[int]] = Field(
         None, description="The segments in which this class is dominant"
     )
 
 
-class ResultItem(BaseModel):
+class ResultItem(_SerializableModel):
     id: Optional[str] = Field(None, description="The id of the segment/utterance", example="1")
     startTime: Optional[str] = Field(
         None, description="The start time of the segment/utterance in seconds", example="0.209"
@@ -238,7 +257,7 @@ class ResultItem(BaseModel):
         return float(self.endTime)
 
 
-class ResultResponse(BaseModel):
+class ResultResponse(_SerializableModel):
     pid: Optional[int] = Field(None, description="Unique ID for the processing job")
     cid: Optional[int] = Field(None, description="Client ID that requested the processing")
     code: Optional[int] = Field(None, description="Code indicating status")
@@ -246,7 +265,7 @@ class ResultResponse(BaseModel):
     results: Optional[List[ResultItem]] = None
 
 
-class StreamingResultResponse(BaseModel):
+class StreamingResultResponse(_SerializableModel):
     pid: Optional[int] = Field(None, description="Unique ID for the processing job")
     cid: Optional[int] = Field(None, description="Client ID that requested the processing")
     message_id: Optional[int] = Field(

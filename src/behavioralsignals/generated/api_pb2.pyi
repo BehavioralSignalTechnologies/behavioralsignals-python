@@ -46,14 +46,16 @@ class AudioStream(_message.Message):
     def __init__(self, cid: _Optional[int] = ..., x_auth_token: _Optional[str] = ..., config: _Optional[_Union[AudioConfig, _Mapping]] = ..., audio_content: _Optional[bytes] = ...) -> None: ...
 
 class Prediction(_message.Message):
-    __slots__ = ("label", "posterior", "logit")
+    __slots__ = ("label", "posterior", "logit", "score")
     LABEL_FIELD_NUMBER: _ClassVar[int]
     POSTERIOR_FIELD_NUMBER: _ClassVar[int]
     LOGIT_FIELD_NUMBER: _ClassVar[int]
+    SCORE_FIELD_NUMBER: _ClassVar[int]
     label: str
     posterior: str
     logit: str
-    def __init__(self, label: _Optional[str] = ..., posterior: _Optional[str] = ..., logit: _Optional[str] = ...) -> None: ...
+    score: str
+    def __init__(self, label: _Optional[str] = ..., posterior: _Optional[str] = ..., logit: _Optional[str] = ..., score: _Optional[str] = ...) -> None: ...
 
 class InferenceResult(_message.Message):
     __slots__ = ("id", "start_time", "end_time", "task", "prediction", "final_label", "embedding", "level")
