@@ -34,6 +34,15 @@ With the `--api` argument you can specify which API to use (either `behavioral` 
 
 The results are saved to `audio_results.json` file once they are ready.
 
+## Video deepfake detection
+
+The `video_deepfake_polling.py` script submits a video file to the Deepfakes API for video deepfake detection and polls for the results until they are ready.
+```bash
+python video_deepfake_polling.py --file_path video.mp4 --output video_results.json
+```
+
+Video deepfake detection is available in batch mode only. Unlike the audio results, the video result response splits the results into two lists — `audio_results` (deepfake detection on the audio track) and `video_results` (deepfake detection on the video frames) — and both are saved to the output JSON file.
+
 ## Evaluation from HuggingFace 🤗 Dataset
 
 We also provide `batch_upload_dataset.py`, which demonstrates how to upload a dataset from HuggingFace 🤗 and evaluate it using the Behavioral Signals API.
