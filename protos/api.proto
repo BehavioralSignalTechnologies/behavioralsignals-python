@@ -68,6 +68,8 @@ message Prediction {
   optional string posterior = 2;
   // logit
   optional string logit = 3;
+  // regression score for continuous tasks (e.g. intensity), in (0,1)
+  optional string score = 4;
 }
 
 message InferenceResult {
