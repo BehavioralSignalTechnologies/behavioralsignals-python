@@ -115,6 +115,7 @@ class DeepfakeS3UrlUploadParams(S3UrlUploadParams):
     )
 
 
+
 class ProcessItem(BaseModel):
     """Individual process in the list"""
 
@@ -227,7 +228,7 @@ class ResultItem(_SerializableModel):
     )
     task: Optional[str] = Field(
         None,
-        description="The behavioral attribute. Can be one of diarization, deepfake, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. "
+        description="The behavioral attribute. Can be one of diarization, deepfake, visual_deepfake, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         example="emotion",
     )
@@ -263,6 +264,26 @@ class ResultResponse(_SerializableModel):
     code: Optional[int] = Field(None, description="Code indicating status")
     message: Optional[str] = Field(None, description="Description of status")
     results: Optional[List[ResultItem]] = None
+
+
+class VideoResultResponse(_SerializableModel):
+    """Result of a video deepfake detection process.
+
+    Unlike the audio result response, a video process returns two separate result
+    lists: one for the deepfake detection performed on the audio track and one for
+    the deepfake detection performed on the video frames.
+    """
+
+    pid: Optional[int] = Field(None, description="Unique ID for the processing job")
+    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
+    code: Optional[int] = Field(None, description="Code indicating status")
+    message: Optional[str] = Field(None, description="Description of status")
+    audio_results: Optional[List[ResultItem]] = Field(
+        None, description="Audio deepfake detection results"
+    )
+    video_results: Optional[List[ResultItem]] = Field(
+        None, description="Video deepfake detection results"
+    )
 
 
 class StreamingResultResponse(_SerializableModel):
