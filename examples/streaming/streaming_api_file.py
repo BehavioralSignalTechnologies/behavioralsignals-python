@@ -1,4 +1,3 @@
-import os
 import json
 import argparse
 
@@ -40,7 +39,7 @@ if __name__ == "__main__":
 
     # Step 1. Initialize the client with your user ID and API key
     load_dotenv()
-    client = Client(cid=os.getenv("CID"), api_key=os.getenv("API_KEY"))
+    client = Client()
 
     # Step 2. Read the audio file, and wrap it inside an iterator of chunks
     audio_stream, sample_rate = make_audio_stream(file_path, chunk_size=0.25)

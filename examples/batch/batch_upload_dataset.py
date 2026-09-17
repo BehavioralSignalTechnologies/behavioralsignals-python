@@ -1,4 +1,3 @@
-import os
 import time
 
 import numpy as np
@@ -7,15 +6,15 @@ from dotenv import load_dotenv
 from datasets import Dataset, load_dataset
 from sklearn.metrics import confusion_matrix
 
-from behavioralsignals import Client
+from behavioralsignals import Client, Deepfakes
 
 
-def upload_dataset(ds: Dataset, client: Client) -> list[int]:
+def upload_dataset(ds: Dataset, client: Deepfakes) -> list[int]:
     """Uploads audio files from the dataset to the Behavioral Signals API (batch mode).
 
     Args:
         ds (Dataset): The dataset containing audio files and labels.
-        client (Client): The Behavioral Signals API client.
+        client (Deepfakes): The Deepfakes API client.
     Returns:
         list[int]: A list of process IDs corresponding to the uploaded audio files.
     """
@@ -27,13 +26,13 @@ def upload_dataset(ds: Dataset, client: Client) -> list[int]:
     return pids
 
 
-def get_all_results(ds: Dataset, client: Client) -> list[str]:
+def get_all_results(ds: Dataset, client: Deepfakes) -> list[str]:
     """Retrieves results for all processes in the dataset. It returns the final labels
     for each audio file.
 
     Args:
         ds (Dataset): The dataset containing audio files and their process IDs.
-        client (Client): The Behavioral Signals API client.
+        client (Deepfakes): The Deepfakes API client.
 
     Returns:
         list[str]: A list of final labels for each audio file, indicating whether it is
@@ -63,7 +62,7 @@ def get_all_results(ds: Dataset, client: Client) -> list[str]:
 
         if process.is_completed:
             data = client.get_result(pid=pid)
-            results = [item for item in data.results if item.task == "deepfake"]
+            results = [item for item in data.results or [] if item.task == "deepfake"]
 
             # NOTE: Here, each audio file (which is, in principle, a single utterance)
             # may have multiple results - maybe because diarization has segmented it
@@ -76,7 +75,7 @@ def get_all_results(ds: Dataset, client: Client) -> list[str]:
             if len(results) == 0:
                 print(f"Process {pid} has no results.")
             else:
-                final_label = results[0].finalLabel
+                final_label = results[0].finalLabel or "failed"
 
         predicted.append(final_label)
 
@@ -85,7 +84,7 @@ def get_all_results(ds: Dataset, client: Client) -> list[str]:
 
 def main():
     load_dotenv()
-    client = Client(cid=os.getenv("CID"), api_key=os.getenv("API_KEY")).deepfakes
+    client = Client().deepfakes
 
     ds = load_dataset("behavioralsignals/deepfake-detection-demo", split="test")
     pids = upload_dataset(ds, client)

@@ -1,3 +1,4 @@
+import os
 import time
 from collections.abc import Callable
 
@@ -11,27 +12,53 @@ from .configuration import DEFAULT_TIMEOUT, DEFAULT_UPLOAD_TIMEOUT, TimeoutType,
 POLL_INTERVAL_SECONDS = 1.0
 
 
+class BehavioralSignalsError(Exception):
+    """Raised when the API returns an error response."""
+
+    def __init__(self, message: str, status_code: int):
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def _value_or_env(value: str | int | None, arg_name: str, env_var: str) -> str:
+    """Returns the value, or the environment variable if the value is not given."""
+    if value is None:
+        value = os.environ.get(env_var)
+    if not value:
+        raise ValueError(f"Missing {arg_name}: pass it or set the {env_var} environment variable")
+    return str(value)
+
+
 class BaseClient:
     def __init__(
         self,
-        cid: str,
-        api_key: str,
+        cid: str | int | None = None,
+        api_key: str | None = None,
         timeout: TimeoutType | None = DEFAULT_TIMEOUT,
         upload_timeout: TimeoutType | None = DEFAULT_UPLOAD_TIMEOUT,
     ):
         """Creates a client and checks your credentials with the API.
 
         Args:
-            cid (str): Your client ID.
-            api_key (str): Your API key.
+            cid (str or int, optional): Your client ID. Defaults to the BEHAVIORALSIGNALS_CID
+                environment variable.
+            api_key (str, optional): Your API key. Defaults to the BEHAVIORALSIGNALS_API_KEY
+                environment variable.
             timeout (float or tuple, optional): Seconds to wait on each HTTP request, as one number
                 or a (connect, read) pair. Defaults to (10, 60). None means no limit.
                 This is not the total wait of `wait_for_result`, which has its own `timeout`.
             upload_timeout (float or tuple, optional): Same as `timeout`, for upload requests.
                 Defaults to (10, 300).
+
+        Raises:
+            ValueError: If cid or api_key is not passed and its environment variable is not set.
+            BehavioralSignalsError: If the API rejects the credentials.
         """
         self.config = Configuration(
-            cid=cid, api_key=api_key, timeout=timeout, upload_timeout=upload_timeout
+            cid=_value_or_env(cid, "cid", "BEHAVIORALSIGNALS_CID"),
+            api_key=_value_or_env(api_key, "api_key", "BEHAVIORALSIGNALS_API_KEY"),
+            timeout=timeout,
+            upload_timeout=upload_timeout,
         )
         self.session = requests.Session()
         self._authenticate()
@@ -46,9 +73,13 @@ class BaseClient:
         if response.status_code != 200:
             try:
                 error = APIError(**response.json())
-                raise Exception(f"API Error {error.code}: {error.message}")  # noqa: TRY002
-            except ValueError:
-                raise Exception(f"HTTP {response.status_code}: {response.text}")  # noqa: TRY002
+                raise BehavioralSignalsError(
+                    f"API Error {error.code}: {error.message}", response.status_code
+                )
+            except (ValueError, TypeError):
+                raise BehavioralSignalsError(
+                    f"HTTP {response.status_code}: {response.text}", response.status_code
+                ) from None
         return response.json()
 
     def _authenticate(self):

@@ -1,27 +1,25 @@
-import importlib
+from functools import cached_property
 
 from .base import BaseClient
-
-
-client_map = {
-    "behavioral": ("behavioralsignals.behavioral", "Behavioral"),
-    "deepfakes": ("behavioralsignals.deepfakes", "Deepfakes"),
-}
+from .deepfakes import Deepfakes
+from .behavioral import Behavioral
 
 
 class Client(BaseClient):
-    def __getattr__(self, name):
-        if name in client_map:
-            module_path, class_name = client_map[name]
-            module = importlib.import_module(module_path)
-            client_class = getattr(module, class_name)
-            instance = client_class(
-                cid=self.config.cid,
-                api_key=self.config.api_key,
-                timeout=self.config.timeout,
-                upload_timeout=self.config.upload_timeout,
-            )
-            setattr(self, name, instance)
-            return instance
+    @cached_property
+    def behavioral(self) -> Behavioral:
+        """Client for the Behavioral API."""
+        return Behavioral(**self._sub_client_args())
 
-        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+    @cached_property
+    def deepfakes(self) -> Deepfakes:
+        """Client for the Deepfakes API."""
+        return Deepfakes(**self._sub_client_args())
+
+    def _sub_client_args(self) -> dict:
+        return {
+            "cid": self.config.cid,
+            "api_key": self.config.api_key,
+            "timeout": self.config.timeout,
+            "upload_timeout": self.config.upload_timeout,
+        }

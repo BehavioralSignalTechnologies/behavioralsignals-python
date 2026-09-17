@@ -27,10 +27,10 @@ class APIError(BaseModel):
 
 
 class StreamingOptions(BaseModel):
-    sample_rate: int = Field(16000, gt=0, description="PCM sample rate (Hz).")
+    sample_rate: int = Field(default=16000, gt=0, description="PCM sample rate (Hz).")
     encoding: Literal["LINEAR_PCM"] = Field(..., description="Audio encoding format.")
     level: Literal["segment", "utterance", "all"] = Field(
-        "segment",
+        default="segment",
         description="Level of granularity for the streaming results. "
         "Use 'segment' for segment-level results, 'utterance' for utterance-level results. "
         "Use 'all' for both segment and utterance results.",
@@ -203,14 +203,14 @@ class _SerializableModel(BaseModel):
 
 
 class ModelPredictions(_SerializableModel):
-    label: str | None = Field(None, description="The name of the class", example="happy")
+    label: str | None = Field(None, description="The name of the class", examples=["happy"])
     posterior: str | None = Field(
-        None, description="The probability of this class being present", example="0.754"
+        None, description="The probability of this class being present", examples=["0.754"]
     )
     score: str | None = Field(
         None,
         description="The regression score for continuous tasks (e.g. intensity), bounded in (0,1)",
-        example="0.62",
+        examples=["0.62"],
     )
     dominantInSegments: list[int] | None = Field(
         None, description="The segments in which this class is dominant"
@@ -218,43 +218,43 @@ class ModelPredictions(_SerializableModel):
 
 
 class ResultItem(_SerializableModel):
-    id: str | None = Field(None, description="The id of the segment/utterance", example="1")
+    id: str | None = Field(None, description="The id of the segment/utterance", examples=["1"])
     startTime: str | None = Field(
-        None, description="The start time of the segment/utterance in seconds", example="0.209"
+        None, description="The start time of the segment/utterance in seconds", examples=["0.209"]
     )
     endTime: str | None = Field(
-        None, description="The end time of the segment/utterance in seconds", example="7.681"
+        None, description="The end time of the segment/utterance in seconds", examples=["7.681"]
     )
     task: str | None = Field(
         None,
         description="The behavioral attribute. Can be one of diarization, deepfake, visual_deepfake, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
-        example="emotion",
+        examples=["emotion"],
     )
     prediction: list[ModelPredictions] | None = None
     finalLabel: str | None = Field(
-        None, description="The dominant value of the behavioral attribute", example="happy"
+        None, description="The dominant value of the behavioral attribute", examples=["happy"]
     )
     level: str | None = Field(
         None,
         description="Whether this result corresponds to a segment/utterance",
-        example="utterance",
+        examples=["utterance"],
     )
     embedding: str | None = Field(
         None,
         description="The corresponding embedding (present in diarization or features). It's a stringified array of length 728.",
-        example="[11.614513397216797, -15.228992462158203, -4.92175817489624, ...]",
+        examples=["[11.614513397216797, -15.228992462158203, -4.92175817489624, ...]"],
     )
 
     @computed_field
     @property
-    def st(self) -> float:
-        return float(self.startTime)
+    def st(self) -> float | None:
+        return None if self.startTime is None else float(self.startTime)
 
     @computed_field
     @property
-    def et(self) -> float:
-        return float(self.endTime)
+    def et(self) -> float | None:
+        return None if self.endTime is None else float(self.endTime)
 
 
 class ResultResponse(_SerializableModel):

@@ -24,7 +24,7 @@ uv pip install -e ".[dev]"
 
 To call the API, get a CID and API key from the
 [Behavioral Signals portal](https://portal.behavioralsignals.com/). The [examples](examples/) read
-them from the `CID` and `API_KEY` environment variables.
+them from the `BEHAVIORALSIGNALS_CID` and `BEHAVIORALSIGNALS_API_KEY` environment variables.
 
 ## Code style
 

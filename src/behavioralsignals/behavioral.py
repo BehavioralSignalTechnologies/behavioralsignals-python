@@ -182,7 +182,7 @@ class Behavioral(BaseClient):
 
     def stream_audio(
         self, audio_stream: Iterator[bytes], options: StreamingOptions
-    ) -> Iterator[ResultResponse]:
+    ) -> Iterator[StreamingResultResponse]:
         with self._get_channel_context() as channel:
             stub = pb_grpc.BehavioralStreamingApiStub(channel)
 

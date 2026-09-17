@@ -11,17 +11,17 @@ source venv/bin/activate
 uv pip install behavioralsignals python-dotenv
 ```
 
-For convenience, all of our examples read your API credentials from the environment variables `CID` and `API_KEY`.
+For convenience, all of our examples read your API credentials from the environment variables `BEHAVIORALSIGNALS_CID` and `BEHAVIORALSIGNALS_API_KEY`.
 You can either set them in your shell:
 ```bash
-export CID=your_cid
-export API_KEY=your_api_key
+export BEHAVIORALSIGNALS_CID=your_cid
+export BEHAVIORALSIGNALS_API_KEY=your_api_key
 ```
 
 or create a `.env` file in the same directory as the scripts with the following content, which will be automatically loaded by the examples:
 ```bash
-CID=your_cid
-API_KEY=your_api_key
+BEHAVIORALSIGNALS_CID=your_cid
+BEHAVIORALSIGNALS_API_KEY=your_api_key
 ```
 
 ## 🎤 Record from microphone

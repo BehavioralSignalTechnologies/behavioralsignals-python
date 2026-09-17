@@ -11,22 +11,22 @@ source venv/bin/activate
 uv pip install behavioralsignals python-dotenv
 ```
 
-For convenience, all of our examples read your API credentials from the environment variables `CID` and `API_KEY`.
+For convenience, all of our examples read your API credentials from the environment variables `BEHAVIORALSIGNALS_CID` and `BEHAVIORALSIGNALS_API_KEY`.
 You can either set them in your shell:
 ```bash
-export CID=your_cid
-export API_KEY=your_api_key
+export BEHAVIORALSIGNALS_CID=your_cid
+export BEHAVIORALSIGNALS_API_KEY=your_api_key
 ```
 
 or create a `.env` file in the same directory as the scripts with the following content, which will be automatically loaded by the examples:
 ```bash
-CID=your_cid
-API_KEY=your_api_key
+BEHAVIORALSIGNALS_CID=your_cid
+BEHAVIORALSIGNALS_API_KEY=your_api_key
 ```
 
 ## Submit file
 
-The `batch_api_polling.py` is a simple script that submits and audio file to the Behavioral Signals API and then polls for the results until they are ready.
+The `batch_api_polling.py` is a simple script that submits and audio file to the Behavioral Signals API and then waits for the results with `wait_for_result`.
 ```bash
 python batch_api_polling.py --file_path audio.wav --output audio_results.json --api behavioral
 ```
@@ -36,7 +36,7 @@ The results are saved to `audio_results.json` file once they are ready.
 
 ## Video deepfake detection
 
-The `video_deepfake_polling.py` script submits a video file to the Deepfakes API for video deepfake detection and polls for the results until they are ready.
+The `video_deepfake_polling.py` script submits a video file to the Deepfakes API for video deepfake detection and waits for the results with `wait_for_video_result`.
 ```bash
 python video_deepfake_polling.py --file_path video.mp4 --output video_results.json
 ```

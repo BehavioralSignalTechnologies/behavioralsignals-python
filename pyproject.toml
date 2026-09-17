@@ -18,7 +18,8 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Operating System :: OS Independent",
-  "License :: OSI Approved :: Apache Software License"
+  "License :: OSI Approved :: Apache Software License",
+  "Typing :: Typed"
 ]
 
 dependencies = [
@@ -52,3 +53,6 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+behavioralsignals = ["py.typed"]
