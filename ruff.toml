@@ -1,6 +1,6 @@
 line-length = 100
 indent-width = 4
-include = ["src/behavioralsignals/*", "examples/*"]
+include = ["src/behavioralsignals/*", "examples/*", "tests/*"]
 exclude = ["src/behavioralsignals/generated/*"]
 extend-exclude = ["*.md", "*.json"]
 
