@@ -26,7 +26,7 @@ API_KEY=your_api_key
 
 ## 🎤 Record from microphone
 
-You can use the streaming_api_microphone.py script to capture audio directly from your microphone and stream it to the Behavioral Signals API in real time.
+You can use the streaming_from_mic.py script to capture audio directly from your microphone and stream it to the Behavioral Signals API in real time.
 This is a common use case when integrating with audio streaming APIs for live analysis or feedback.
 
 First, make sure you install some additional dependencies required for audio capture and live display:
@@ -43,7 +43,7 @@ python streaming_from_mic.py --api behavioral --response_level all
 * The `--api` argument specifies which API to use (either `behavioral` or `deepfakes`).
 * The `--response_level` argument controls the level of response granularity. Options include `segment`, `utterance` and `all`:
     - `segment`: Provides segment-level results, i.e. interim results for 2-second segments of continuous speech
-    - `utterance`: Provides utterance-level results, i.e. results for complete utterances. Conceptually, an utterance is made up of one or more segments (though with `--response-level utterances`, only the uttterance-level results are returned).
+    - `utterance`: Provides utterance-level results, i.e. results for complete utterances. Conceptually, an utterance is made up of one or more segments (though with `--response_level utterance`, only the utterance-level results are returned).
     - `all`: Provides all available results for each utterance, including segment-level results and utterance-level.
 
 

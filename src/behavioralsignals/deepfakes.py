@@ -186,6 +186,25 @@ class Deepfakes(BaseClient):
         )
         return ResultResponse(**data)
 
+    def wait_for_result(self, pid: int, timeout: Optional[float] = None) -> ResultResponse:
+        """Waits for a process to finish and returns its result.
+
+        Checks the process status until processing is complete, then returns the result.
+
+        Args:
+            pid (int): The process ID to wait for.
+            timeout (float, optional): Maximum seconds to wait. Defaults to None (no limit).
+        Returns:
+            ResultResponse: The result response containing the results of the specified process.
+        Raises:
+            TimeoutError: If the process has not finished within `timeout` seconds.
+            RuntimeError: If the process failed or could not run (e.g. insufficient credits).
+            requests.RequestException: On network errors. Connection errors and timeouts are
+                retried until `timeout` runs out.
+        """
+        self._wait_for_process(self.get_process, pid, timeout)
+        return self.get_result(pid)
+
     def upload_video(
         self,
         file_path: str,
@@ -354,6 +373,27 @@ class Deepfakes(BaseClient):
             method="GET",
         )
         return VideoResultResponse(**data)
+
+    def wait_for_video_result(
+        self, pid: int, timeout: Optional[float] = None
+    ) -> VideoResultResponse:
+        """Waits for a video process to finish and returns its result.
+
+        Checks the process status until processing is complete, then returns the result.
+
+        Args:
+            pid (int): The video process ID to wait for.
+            timeout (float, optional): Maximum seconds to wait. Defaults to None (no limit).
+        Returns:
+            VideoResultResponse: The result response containing audio and video results.
+        Raises:
+            TimeoutError: If the process has not finished within `timeout` seconds.
+            RuntimeError: If the process failed or could not run (e.g. insufficient credits).
+            requests.RequestException: On network errors. Connection errors and timeouts are
+                retried until `timeout` runs out.
+        """
+        self._wait_for_process(self.get_video_process, pid, timeout)
+        return self.get_video_result(pid)
 
     def stream_audio(
         self, audio_stream: Iterator[bytes], options: StreamingOptions

@@ -35,7 +35,7 @@ def parse_args():
     parser.add_argument(
         "--embeddings",
         action="store_true",
-        help="Whether to include embeddings in the output (only for behavioral API)",
+        help="Whether to include embeddings in the output",
     )
 
 

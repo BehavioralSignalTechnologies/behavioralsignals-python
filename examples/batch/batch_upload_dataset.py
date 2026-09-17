@@ -48,7 +48,7 @@ def get_all_results(ds: Dataset, client: Client) -> list[str]:
                 continue
             pid = row["pid"]
             process = client.get_process(pid=pid)
-            if not process.is_pending and not done[i]:
+            if not process.is_pending and not process.is_processing and not done[i]:
                 if process.is_failed:
                     print(f"Process {pid} failed: {process.statusmsg}")
                 done[i] = True

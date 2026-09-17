@@ -1,4 +1,4 @@
-# Behavioral Signals Python SDK
+# Behavioral Signals API Python SDK
 
 <p align="center">
   <img src="assets/logo.png" alt="Behavioral Signal Technologies"/>
@@ -20,7 +20,7 @@ Our API enables developers to integrate behavioral analysis into their applicati
 
 
 ## Table of Contents
-* [Behavioral Signals Python SDK](#behavioral-signals-python-sdk)
+* [Behavioral Signals API Python SDK](#behavioral-signals-api-python-sdk)
   * [Features](#features)
   * [Requirements](#requirements)
   * [API Key Setup](#api-key-setup)
@@ -75,6 +75,8 @@ You can also find more detailed examples for both [batch](examples/batch/README.
 ### Behavioral API Batch Mode
 
 In batch mode, you can send audio files to the Behavioral Signals API for analysis. The API will return a unique process ID (PID) that you can use to retrieve the results later.
+`wait_for_result` checks the process status until processing is complete, then returns the results (available since version 0.6.0).
+Pass `timeout` in seconds to stop waiting after that long; it raises `TimeoutError` if processing has not finished.
 
 ```python
 from behavioralsignals import Client
@@ -82,15 +84,25 @@ from behavioralsignals import Client
 client = Client(YOUR_CID, YOUR_API_KEY)
 
 response = client.behavioral.upload_audio(file_path="audio.wav")
-output = client.behavioral.get_result(pid=response.pid)
+output = client.behavioral.wait_for_result(pid=response.pid, timeout=600)
 ```
 
 Setting `embeddings=True` during audio upload will include speaker and behavioral embeddings in the output (see [documentation](https://behavioralsignals.readme.io/v5.4.0/docs/embeddings#/)):
 
 ```python
 response = client.behavioral.upload_audio(file_path="audio.wav", embeddings=True)
-output = client.behavioral.get_result(pid=response.pid)
+output = client.behavioral.wait_for_result(pid=response.pid, timeout=600)
 ```
+
+Each HTTP request also has its own time limit: 10 seconds to connect, then up to 60 seconds of waiting for the server (300 seconds for uploads).
+You can change these when creating the client, or pass `None` for no limit:
+
+```python
+client = Client(YOUR_CID, YOUR_API_KEY, timeout=(10, 120), upload_timeout=(10, 900))
+```
+
+These limits apply to single requests. The `timeout` of `wait_for_result` limits the whole wait.
+If an upload times out, the server may still have received the file and started a process, so check `list_processes()` (or `list_video_processes()` for videos) before uploading again.
 
 ### Behavioral API Streaming Mode
 
@@ -101,7 +113,7 @@ from behavioralsignals import Client, StreamingOptions
 from behavioralsignals.utils import make_audio_stream
 
 client = Client(YOUR_CID, YOUR_API_KEY)
-audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=250)
+audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=0.25)
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 
 for result in client.behavioral.stream_audio(audio_stream=audio_stream, options=options):
@@ -118,14 +130,14 @@ from behavioralsignals import Client
 client = Client(YOUR_CID, YOUR_API_KEY)
 
 response = client.deepfakes.upload_audio(file_path="audio.wav")
-output = client.deepfakes.get_result(pid=response.pid)
+output = client.deepfakes.wait_for_result(pid=response.pid, timeout=600)
 ```
 
 Setting `embeddings=True` during audio upload will include speaker and deepfake embeddings in the output (see [documentation](https://behavioralsignals.readme.io/v5.4.0/docs/embeddings-1#/)):
 
 ```python
 response = client.deepfakes.upload_audio(file_path="audio.wav", embeddings=True)
-output = client.deepfakes.get_result(pid=response.pid)
+output = client.deepfakes.wait_for_result(pid=response.pid, timeout=600)
 ```
 
 
@@ -142,7 +154,7 @@ from behavioralsignals import Client
 client = Client(YOUR_CID, YOUR_API_KEY)
 
 response = client.deepfakes.upload_audio(file_path="audio.wav", enable_generator_detection=True)
-output = client.deepfakes.get_result(pid=response.pid)
+output = client.deepfakes.wait_for_result(pid=response.pid, timeout=600)
 ```
 
 See more in our [API documentation](https://behavioralsignals.readme.io/v5.4.0/docs/generator-detection#/).
@@ -157,10 +169,10 @@ from behavioralsignals import Client
 client = Client(YOUR_CID, YOUR_API_KEY)
 
 response = client.deepfakes.upload_video(file_path="video.mp4")
-output = client.deepfakes.get_video_result(pid=response.pid)
+output = client.deepfakes.wait_for_video_result(pid=response.pid, timeout=600)
 ```
 
-Unlike `get_result`, the video result response returns two separate lists — `audio_results` (deepfake detection on the audio track) and `video_results` (deepfake detection on the video frames):
+Unlike `wait_for_result`, the video result response returns two separate lists — `audio_results` (deepfake detection on the audio track) and `video_results` (deepfake detection on the video frames):
 
 ```python
 for item in output.video_results:
@@ -178,7 +190,7 @@ from behavioralsignals import Client, StreamingOptions
 from behavioralsignals.utils import make_audio_stream
 
 client = Client(YOUR_CID, YOUR_API_KEY)
-audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=250)
+audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=0.25)
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 
 for result in client.deepfakes.stream_audio(audio_stream=audio_stream, options=options):

@@ -55,7 +55,7 @@ First, make sure you install some additional dependencies required for dataset h
 uv pip install "datasets<4.0.0" soundfile librosa tqdm
 ```
 
-Then, run the script aset and evaluate it:
+Then, run the script to upload the dataset and evaluate it:
 ```bash
 python batch_upload_dataset.py
 ```

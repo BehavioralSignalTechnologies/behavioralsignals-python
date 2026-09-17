@@ -164,6 +164,25 @@ class Behavioral(BaseClient):
         )
         return ResultResponse(**data)
 
+    def wait_for_result(self, pid: int, timeout: Optional[float] = None) -> ResultResponse:
+        """Waits for a process to finish and returns its result.
+
+        Checks the process status until processing is complete, then returns the result.
+
+        Args:
+            pid (int): The process ID to wait for.
+            timeout (float, optional): Maximum seconds to wait. Defaults to None (no limit).
+        Returns:
+            ResultResponse: The result response containing the results of the specified process.
+        Raises:
+            TimeoutError: If the process has not finished within `timeout` seconds.
+            RuntimeError: If the process failed or could not run (e.g. insufficient credits).
+            requests.RequestException: On network errors. Connection errors and timeouts are
+                retried until `timeout` runs out.
+        """
+        self._wait_for_process(self.get_process, pid, timeout)
+        return self.get_result(pid)
+
     def stream_audio(
         self, audio_stream: Iterator[bytes], options: StreamingOptions
     ) -> Iterator[ResultResponse]:

@@ -5,6 +5,8 @@ from pydantic.dataclasses import dataclass
 
 
 TimeoutType = Union[float, tuple[float, float]]
+DEFAULT_TIMEOUT: TimeoutType = (10.0, 60.0)  # (connect, read) seconds per HTTP request
+DEFAULT_UPLOAD_TIMEOUT: TimeoutType = (10.0, 300.0)  # (connect, read) seconds per upload request
 
 
 @dataclass
@@ -13,7 +15,8 @@ class Configuration:
     api_key: str
     api_url: str = "https://api.behavioralsignals.com/v5"
     streaming_api_url: str = "streaming.behavioralsignals.com:443"
-    timeout: Optional[TimeoutType] = None
+    timeout: Optional[TimeoutType] = DEFAULT_TIMEOUT
+    upload_timeout: Optional[TimeoutType] = DEFAULT_UPLOAD_TIMEOUT
     use_ssl: bool = True
 
     @field_validator("cid", mode="before")
