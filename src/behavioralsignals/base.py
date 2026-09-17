@@ -1,5 +1,5 @@
 import time
-from typing import Callable, Optional
+from collections.abc import Callable
 
 import grpc
 import requests
@@ -16,8 +16,8 @@ class BaseClient:
         self,
         cid: str,
         api_key: str,
-        timeout: Optional[TimeoutType] = DEFAULT_TIMEOUT,
-        upload_timeout: Optional[TimeoutType] = DEFAULT_UPLOAD_TIMEOUT,
+        timeout: TimeoutType | None = DEFAULT_TIMEOUT,
+        upload_timeout: TimeoutType | None = DEFAULT_UPLOAD_TIMEOUT,
     ):
         """Creates a client and checks your credentials with the API.
 
@@ -37,35 +37,33 @@ class BaseClient:
         self._authenticate()
 
     def _get_default_headers(self):
-        headers = {
+        return {
             "accept": "application/json",
             "X-Auth-Token": self.config.api_key,
         }
-        return headers
 
     def _handle_response(self, response: requests.Response) -> dict:
         if response.status_code != 200:
             try:
                 error = APIError(**response.json())
-                raise Exception(f"API Error {error.code}: {error.message}")
+                raise Exception(f"API Error {error.code}: {error.message}")  # noqa: TRY002
             except ValueError:
-                raise Exception(f"HTTP {response.status_code}: {response.text}")
+                raise Exception(f"HTTP {response.status_code}: {response.text}")  # noqa: TRY002
         return response.json()
 
     def _authenticate(self):
         headers = self._get_default_headers()
         headers["X-Auth-Client"] = self.config.cid
-        response = self._send_request(path="auth", method="GET", headers=headers)
-        return response
+        return self._send_request(path="auth", method="GET", headers=headers)
 
     def _send_request(
         self,
         path: str,
         method: str = "GET",
-        data: Optional[dict] = None,
-        json: Optional[dict] = None,
-        headers: Optional[dict] = None,
-        files: Optional[dict] = None,
+        data: dict | None = None,
+        json: dict | None = None,
+        headers: dict | None = None,
+        files: dict | None = None,
     ):
         url = self.config.api_url + "/" + path
         if headers is None:
@@ -93,7 +91,7 @@ class BaseClient:
         return self._handle_response(response)
 
     def _wait_for_process(
-        self, get_process: Callable[[int], ProcessItem], pid: int, timeout: Optional[float]
+        self, get_process: Callable[[int], ProcessItem], pid: int, timeout: float | None
     ) -> None:
         """Polls a process until it is no longer pending or processing.
 
@@ -115,7 +113,7 @@ class BaseClient:
             raise RuntimeError(f"Process {pid} did not complete: {process.statusmsg}")
 
     def _get_process_with_retry(
-        self, get_process: Callable[[int], ProcessItem], pid: int, deadline: Optional[float]
+        self, get_process: Callable[[int], ProcessItem], pid: int, deadline: float | None
     ) -> ProcessItem:
         """Gets a process, retrying connection errors and timeouts until the deadline passes."""
         while True:

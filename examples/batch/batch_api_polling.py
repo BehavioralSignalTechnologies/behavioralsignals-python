@@ -38,7 +38,6 @@ def parse_args():
         help="Whether to include embeddings in the output",
     )
 
-
     return parser.parse_args()
 
 

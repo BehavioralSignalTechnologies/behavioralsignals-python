@@ -1,5 +1,6 @@
-from typing import Literal, Iterator, Optional
+from typing import Literal
 from pathlib import Path
+from collections.abc import Iterator
 
 from google.protobuf.json_format import MessageToDict
 
@@ -23,10 +24,10 @@ class Deepfakes(BaseClient):
     def upload_audio(
         self,
         file_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         embeddings: bool = False,
         enable_generator_detection: bool = False,
-        meta: Optional[str] = None,
+        meta: str | None = None,
     ) -> ProcessItem:
         """Uploads an audio file for processing and returns the process item.
 
@@ -74,10 +75,10 @@ class Deepfakes(BaseClient):
     def upload_s3_presigned_url(
         self,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         embeddings: bool = False,
         enable_generator_detection: bool = False,
-        meta: Optional[str] = None,
+        meta: str | None = None,
     ) -> ProcessItem:
         """Uploads an S3 presigned url pointing to an audio file and returns the process item.
 
@@ -128,8 +129,8 @@ class Deepfakes(BaseClient):
         page: int = 0,
         page_size: int = 1000,
         sort: Literal["asc", "desc"] = "asc",
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
     ) -> ProcessListResponse:
         """Lists all processes for the authenticated user.
 
@@ -186,7 +187,7 @@ class Deepfakes(BaseClient):
         )
         return ResultResponse(**data)
 
-    def wait_for_result(self, pid: int, timeout: Optional[float] = None) -> ResultResponse:
+    def wait_for_result(self, pid: int, timeout: float | None = None) -> ResultResponse:
         """Waits for a process to finish and returns its result.
 
         Checks the process status until processing is complete, then returns the result.
@@ -208,10 +209,10 @@ class Deepfakes(BaseClient):
     def upload_video(
         self,
         file_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         embeddings: bool = False,
         enable_generator_detection: bool = False,
-        meta: Optional[str] = None,
+        meta: str | None = None,
     ) -> ProcessItem:
         """Uploads a video file for deepfake detection and returns the process item.
 
@@ -259,10 +260,10 @@ class Deepfakes(BaseClient):
     def upload_s3_presigned_video_url(
         self,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         embeddings: bool = False,
         enable_generator_detection: bool = False,
-        meta: Optional[str] = None,
+        meta: str | None = None,
     ) -> ProcessItem:
         """Uploads an S3 presigned url pointing to a video file and returns the process item.
 
@@ -313,8 +314,8 @@ class Deepfakes(BaseClient):
         page: int = 0,
         page_size: int = 1000,
         sort: Literal["asc", "desc"] = "asc",
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
     ) -> ProcessListResponse:
         """Lists all video deepfake detection processes for the authenticated user.
 
@@ -374,9 +375,7 @@ class Deepfakes(BaseClient):
         )
         return VideoResultResponse(**data)
 
-    def wait_for_video_result(
-        self, pid: int, timeout: Optional[float] = None
-    ) -> VideoResultResponse:
+    def wait_for_video_result(self, pid: int, timeout: float | None = None) -> VideoResultResponse:
         """Waits for a video process to finish and returns its result.
 
         Checks the process status until processing is complete, then returns the result.

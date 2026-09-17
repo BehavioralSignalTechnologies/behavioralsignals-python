@@ -1,5 +1,6 @@
-from typing import Literal, Iterator, Optional
+from typing import Literal
 from pathlib import Path
+from collections.abc import Iterator
 
 from google.protobuf.json_format import MessageToDict
 
@@ -22,9 +23,9 @@ class Behavioral(BaseClient):
     def upload_audio(
         self,
         file_path: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         embeddings: bool = False,
-        meta: Optional[str] = None,
+        meta: str | None = None,
     ) -> ProcessItem:
         """Uploads an audio file for processing and returns the process item.
 
@@ -61,9 +62,9 @@ class Behavioral(BaseClient):
     def upload_s3_presigned_url(
         self,
         url: str,
-        name: Optional[str] = None,
+        name: str | None = None,
         embeddings: bool = False,
-        meta: Optional[str] = None,
+        meta: str | None = None,
     ) -> ProcessItem:
         """Uploads an S3 presigned url pointing to an audio file and returns the process item.
 
@@ -81,11 +82,7 @@ class Behavioral(BaseClient):
         # Use provided name or default to filename
         job_name = params.name
 
-        payload = {
-            "url": params.url,
-            "name": job_name,
-            "embeddings": params.embeddings
-        }
+        payload = {"url": params.url, "name": job_name, "embeddings": params.embeddings}
 
         if params.meta:
             payload["meta"] = params.meta
@@ -96,7 +93,7 @@ class Behavioral(BaseClient):
             path=f"clients/{self.config.cid}/processes/s3-presigned-url",
             method="POST",
             json=payload,
-            headers=headers
+            headers=headers,
         )
 
         return ProcessItem(**response)
@@ -106,8 +103,8 @@ class Behavioral(BaseClient):
         page: int = 0,
         page_size: int = 1000,
         sort: Literal["asc", "desc"] = "asc",
-        start_date: Optional[str] = None,
-        end_date: Optional[str] = None,
+        start_date: str | None = None,
+        end_date: str | None = None,
     ) -> ProcessListResponse:
         """Lists all processes for the authenticated user.
 
@@ -164,7 +161,7 @@ class Behavioral(BaseClient):
         )
         return ResultResponse(**data)
 
-    def wait_for_result(self, pid: int, timeout: Optional[float] = None) -> ResultResponse:
+    def wait_for_result(self, pid: int, timeout: float | None = None) -> ResultResponse:
         """Waits for a process to finish and returns its result.
 
         Checks the process status until processing is complete, then returns the result.

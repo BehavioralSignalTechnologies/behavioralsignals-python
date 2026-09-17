@@ -20,7 +20,7 @@ def upload_dataset(ds: Dataset, client: Client) -> list[int]:
         list[int]: A list of process IDs corresponding to the uploaded audio files.
     """
     pids = []
-    for _, row in enumerate(ds):
+    for row in ds:
         process = client.upload_audio(file_path=row["audio"]["path"])
         pids.append(process.pid)
 
@@ -56,7 +56,7 @@ def get_all_results(ds: Dataset, client: Client) -> list[str]:
         time.sleep(1.0)
 
     predicted = []
-    for _, row in enumerate(ds):
+    for row in ds:
         pid = row["pid"]
         process = client.get_process(pid=pid)
         final_label = "failed"

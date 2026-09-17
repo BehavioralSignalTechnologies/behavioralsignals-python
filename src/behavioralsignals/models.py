@@ -1,6 +1,6 @@
 import json
 from enum import IntEnum
-from typing import List, Literal, Optional
+from typing import Literal
 from pathlib import Path
 from datetime import date
 from datetime import datetime as datetime_aliased
@@ -23,7 +23,7 @@ class ProcessStatus(IntEnum):
 class APIError(BaseModel):
     code: int
     message: str
-    details: Optional[dict] = None
+    details: dict | None = None
 
 
 class StreamingOptions(BaseModel):
@@ -53,11 +53,11 @@ class StreamingOptions(BaseModel):
 
 class AudioUploadParams(BaseModel):
     file_path: str = Field(..., description="Path to the audio file to upload")
-    name: Optional[str] = Field(None, description="Optional name for the job request")
+    name: str | None = Field(None, description="Optional name for the job request")
     embeddings: bool = Field(
         False, description="Whether to include speaker and behavioral embeddings in the result"
     )
-    meta: Optional[str] = Field(
+    meta: str | None = Field(
         None, description="Metadata json containing any extra user-defined metadata"
     )
 
@@ -82,11 +82,11 @@ class AudioUploadParams(BaseModel):
 
 class S3UrlUploadParams(BaseModel):
     url: str = Field(..., description="The S3 presigned url containing the audio")
-    name: Optional[str] = Field(None, description="Optional name for the job request")
+    name: str | None = Field(None, description="Optional name for the job request")
     embeddings: bool = Field(
         False, description="Whether to include speaker and behavioral embeddings in the result"
     )
-    meta: Optional[str] = Field(
+    meta: str | None = Field(
         None, description="Metadata json containing any extra user-defined metadata"
     )
 
@@ -115,24 +115,23 @@ class DeepfakeS3UrlUploadParams(S3UrlUploadParams):
     )
 
 
-
 class ProcessItem(BaseModel):
     """Individual process in the list"""
 
     pid: int = Field(..., description="Unique ID for the processing job")
-    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
-    name: Optional[str] = Field(None, description="Label of the processing job (Client defined)")
-    status: Optional[int] = Field(
+    cid: int | None = Field(None, description="Client ID that requested the processing")
+    name: str | None = Field(None, description="Label of the processing job (Client defined)")
+    status: int | None = Field(
         None,
         description="Shows the processing state of the job. Status is 0: pending, 1: processing, 2: completed, -1:failed, -2 aborted",
     )
-    statusmsg: Optional[str] = Field(None, description="Reason for success or failure")
-    duration: Optional[float] = Field(None, description="duration of the audio signal (in sec)")
-    datetime: Optional[datetime_aliased] = Field(
+    statusmsg: str | None = Field(None, description="Reason for success or failure")
+    duration: float | None = Field(None, description="duration of the audio signal (in sec)")
+    datetime: datetime_aliased | None = Field(
         None,
         description="date and time the request for processing was inserted into the system",
     )
-    meta: Optional[str] = Field(None, description="A JSON string containing additional metadata")
+    meta: str | None = Field(None, description="A JSON string containing additional metadata")
 
     @property
     def is_completed(self) -> bool:
@@ -159,12 +158,12 @@ class ProcessListParams(BaseModel):
         1000, ge=1, le=1000, description="Number of processes per page.", alias="pageSize"
     )
     sort: Literal["asc", "desc"] = "asc"
-    start_date: Optional[date] = Field(
+    start_date: date | None = Field(
         None,
         alias="startDate",
         description="Filter processes created on or after this date (YYYY-MM-DD)",
     )
-    end_date: Optional[date] = Field(
+    end_date: date | None = Field(
         None,
         alias="endDate",
         description="Filter processes created on or before this date (YYYY-MM-DD)",
@@ -174,20 +173,20 @@ class ProcessListParams(BaseModel):
 class ProcessListResponse(BaseModel):
     """Response from list processes endpoint"""
 
-    processes: List[ProcessItem]
+    processes: list[ProcessItem]
 
     @computed_field
     @property
     def total_count(self) -> int:
         return len(self.processes)
 
-    def completed_processes(self) -> List[ProcessItem]:
+    def completed_processes(self) -> list[ProcessItem]:
         return [p for p in self.processes if p.is_completed]
 
-    def processing_processes(self) -> List[ProcessItem]:
+    def processing_processes(self) -> list[ProcessItem]:
         return [p for p in self.processes if p.is_processing]
 
-    def failed_processes(self) -> List[ProcessItem]:
+    def failed_processes(self) -> list[ProcessItem]:
         return [p for p in self.processes if p.is_failed]
 
 
@@ -204,44 +203,44 @@ class _SerializableModel(BaseModel):
 
 
 class ModelPredictions(_SerializableModel):
-    label: Optional[str] = Field(None, description="The name of the class", example="happy")
-    posterior: Optional[str] = Field(
+    label: str | None = Field(None, description="The name of the class", example="happy")
+    posterior: str | None = Field(
         None, description="The probability of this class being present", example="0.754"
     )
-    score: Optional[str] = Field(
+    score: str | None = Field(
         None,
         description="The regression score for continuous tasks (e.g. intensity), bounded in (0,1)",
         example="0.62",
     )
-    dominantInSegments: Optional[List[int]] = Field(
+    dominantInSegments: list[int] | None = Field(
         None, description="The segments in which this class is dominant"
     )
 
 
 class ResultItem(_SerializableModel):
-    id: Optional[str] = Field(None, description="The id of the segment/utterance", example="1")
-    startTime: Optional[str] = Field(
+    id: str | None = Field(None, description="The id of the segment/utterance", example="1")
+    startTime: str | None = Field(
         None, description="The start time of the segment/utterance in seconds", example="0.209"
     )
-    endTime: Optional[str] = Field(
+    endTime: str | None = Field(
         None, description="The end time of the segment/utterance in seconds", example="7.681"
     )
-    task: Optional[str] = Field(
+    task: str | None = Field(
         None,
         description="The behavioral attribute. Can be one of diarization, deepfake, visual_deepfake, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, politeness. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         example="emotion",
     )
-    prediction: Optional[List[ModelPredictions]] = None
-    finalLabel: Optional[str] = Field(
+    prediction: list[ModelPredictions] | None = None
+    finalLabel: str | None = Field(
         None, description="The dominant value of the behavioral attribute", example="happy"
     )
-    level: Optional[str] = Field(
+    level: str | None = Field(
         None,
         description="Whether this result corresponds to a segment/utterance",
         example="utterance",
     )
-    embedding: Optional[str] = Field(
+    embedding: str | None = Field(
         None,
         description="The corresponding embedding (present in diarization or features). It's a stringified array of length 728.",
         example="[11.614513397216797, -15.228992462158203, -4.92175817489624, ...]",
@@ -259,11 +258,11 @@ class ResultItem(_SerializableModel):
 
 
 class ResultResponse(_SerializableModel):
-    pid: Optional[int] = Field(None, description="Unique ID for the processing job")
-    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
-    code: Optional[int] = Field(None, description="Code indicating status")
-    message: Optional[str] = Field(None, description="Description of status")
-    results: Optional[List[ResultItem]] = None
+    pid: int | None = Field(None, description="Unique ID for the processing job")
+    cid: int | None = Field(None, description="Client ID that requested the processing")
+    code: int | None = Field(None, description="Code indicating status")
+    message: str | None = Field(None, description="Description of status")
+    results: list[ResultItem] | None = None
 
 
 class VideoResultResponse(_SerializableModel):
@@ -274,24 +273,24 @@ class VideoResultResponse(_SerializableModel):
     the deepfake detection performed on the video frames.
     """
 
-    pid: Optional[int] = Field(None, description="Unique ID for the processing job")
-    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
-    code: Optional[int] = Field(None, description="Code indicating status")
-    message: Optional[str] = Field(None, description="Description of status")
-    audio_results: Optional[List[ResultItem]] = Field(
+    pid: int | None = Field(None, description="Unique ID for the processing job")
+    cid: int | None = Field(None, description="Client ID that requested the processing")
+    code: int | None = Field(None, description="Code indicating status")
+    message: str | None = Field(None, description="Description of status")
+    audio_results: list[ResultItem] | None = Field(
         None, description="Audio deepfake detection results"
     )
-    video_results: Optional[List[ResultItem]] = Field(
+    video_results: list[ResultItem] | None = Field(
         None, description="Video deepfake detection results"
     )
 
 
 class StreamingResultResponse(_SerializableModel):
-    pid: Optional[int] = Field(None, description="Unique ID for the processing job")
-    cid: Optional[int] = Field(None, description="Client ID that requested the processing")
-    message_id: Optional[int] = Field(
+    pid: int | None = Field(None, description="Unique ID for the processing job")
+    cid: int | None = Field(None, description="Client ID that requested the processing")
+    message_id: int | None = Field(
         None, alias="messageId", description="Incremental message ID for the stream"
     )
-    results: Optional[List[ResultItem]] = Field(
+    results: list[ResultItem] | None = Field(
         None, alias="result", description="List of result items"
     )

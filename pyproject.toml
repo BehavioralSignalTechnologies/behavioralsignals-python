@@ -22,7 +22,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "grpcio>=1.64.0",
+    "grpcio>=1.73.1",
     "protobuf>=6.31.1",
     "pydantic>=2.11.7",
     "pydub>=0.25.1",
@@ -32,8 +32,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "grpcio-tools>=1.64.0",
-    "ruff",
+    "grpcio-tools>=1.73.1",
+    "ruff==0.16.8",
 ]
 
 [project.urls]
