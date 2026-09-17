@@ -51,6 +51,6 @@ python streaming_from_mic.py --api behavioral --response_level all
 
 Use `streaming_api_file.py` to send audio data from a file to the Behavioral Signals API in real-time. This has limited usability but we include it for completeness.
 ```bash
-python streaming_api_file.py --file audio.wav --output results.json --api behavioral --response_level all
+python streaming_api_file.py --file_path audio.wav --output results.json --api behavioral --response_level all
 ```
 The results will be printed to the console in raw format as they are processed, and will be also saved to a file named `results.json`.
