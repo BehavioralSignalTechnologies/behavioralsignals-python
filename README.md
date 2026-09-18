@@ -155,6 +155,8 @@ for result in client.behavioral.stream_audio(audio_stream=audio_stream, options=
     for item in result.results or []:
         top = item.prediction[0]
         label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
+        if not label:
+            continue  # the features row carries embeddings, not a result
         confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
         print(f"{item.st} {item.et} {item.task} {label}{confidence}")
 ```
@@ -239,6 +241,8 @@ for result in client.deepfakes.stream_audio(audio_stream=audio_stream, options=o
     for item in result.results or []:
         top = item.prediction[0]
         label = item.finalLabel or top.score  # some tasks have no label, only a score
+        if not label:
+            continue  # the features row carries embeddings, not a result
         confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
         print(f"{item.st} {item.et} {item.task} {label}{confidence}")
 ```
