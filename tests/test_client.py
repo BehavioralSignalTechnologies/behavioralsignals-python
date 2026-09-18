@@ -1,3 +1,4 @@
+from datetime import date
 from collections import namedtuple
 
 import pytest
@@ -21,7 +22,7 @@ class FakeResponse:
 API_URL = "https://api.behavioralsignals.com/v5"
 S3_URL = "https://example.com/a.wav"
 
-Request = namedtuple("Request", "method url headers timeout")
+Request = namedtuple("Request", "method url headers timeout params data files json")
 
 
 def fake_requests(monkeypatch, response=None):
@@ -29,13 +30,26 @@ def fake_requests(monkeypatch, response=None):
     calls = []
     response = response or FakeResponse(body={"pid": 1})
 
-    def fake_get(self, url, **kwargs):
-        calls.append(Request("GET", url, kwargs["headers"], kwargs["timeout"]))
+    def record(method, url, kwargs):
+        calls.append(
+            Request(
+                method,
+                url,
+                kwargs["headers"],
+                kwargs["timeout"],
+                kwargs.get("params"),
+                kwargs.get("data"),
+                kwargs.get("files"),
+                kwargs.get("json"),
+            )
+        )
         return response
 
+    def fake_get(self, url, **kwargs):
+        return record("GET", url, kwargs)
+
     def fake_post(self, url, **kwargs):
-        calls.append(Request("POST", url, kwargs["headers"], kwargs["timeout"]))
-        return response
+        return record("POST", url, kwargs)
 
     monkeypatch.setattr(requests.Session, "get", fake_get)
     monkeypatch.setattr(requests.Session, "post", fake_post)
@@ -303,3 +317,98 @@ def test_list_processes_parses_the_response(monkeypatch):
     assert output.total_count == 2
     assert [process.pid for process in output.completed_processes()] == [7]
     assert [process.pid for process in output.processing_processes()] == [8]
+
+
+@pytest.mark.parametrize(
+    ("list_processes", "path"),
+    [
+        (lambda client: client.behavioral.list_processes, "clients/1/processes"),
+        (lambda client: client.deepfakes.list_processes, "detection/clients/1/processes"),
+        (
+            lambda client: client.deepfakes.list_video_processes,
+            "detection/clients/1/processes/video",
+        ),
+    ],
+)
+def test_list_processes_sends_the_query_parameters(monkeypatch, list_processes, path):
+    calls = fake_requests(monkeypatch, FakeResponse(body=[]))
+    client = Client(cid="1", api_key="k")
+    list_processes(client)(page=2, page_size=50, sort="desc", start_date="2026-01-01")
+    assert (calls[-1].method, calls[-1].url) == ("GET", f"{API_URL}/{path}")
+    assert calls[-1].params == {
+        "page": 2,
+        "pageSize": 50,
+        "sort": "desc",
+        "startDate": date(2026, 1, 1),
+    }
+
+
+@pytest.mark.parametrize(
+    ("upload", "extra_fields"),
+    [
+        (lambda client, file: client.behavioral.upload_audio(file_path=file), {}),
+        (
+            lambda client, file: client.deepfakes.upload_audio(file_path=file),
+            {"enable_generator_detection": False},
+        ),
+        (
+            lambda client, file: client.deepfakes.upload_video(file_path=file),
+            {"enable_generator_detection": False},
+        ),
+    ],
+    ids=["behavioral-audio", "deepfakes-audio", "deepfakes-video"],
+)
+def test_file_uploads_send_the_file_and_the_form_fields(
+    monkeypatch, audio_file, upload, extra_fields
+):
+    calls = fake_requests(monkeypatch)
+    upload(Client(cid="1", api_key="k"), audio_file)
+    assert calls[-1].files["file"].name == audio_file
+    assert calls[-1].data == {"name": "audio.wav", "embeddings": False, **extra_fields}
+
+
+@pytest.mark.parametrize(
+    ("upload", "extra_fields"),
+    [
+        (lambda client: client.behavioral.upload_s3_presigned_url(url=S3_URL, name="job"), {}),
+        (
+            lambda client: client.deepfakes.upload_s3_presigned_url(url=S3_URL, name="job"),
+            {"enable_generator_detection": False},
+        ),
+        (
+            lambda client: client.deepfakes.upload_s3_presigned_video_url(url=S3_URL, name="job"),
+            {"enable_generator_detection": False},
+        ),
+    ],
+    ids=["behavioral-url", "deepfakes-url", "deepfakes-video-url"],
+)
+def test_url_uploads_send_the_payload_as_json(monkeypatch, upload, extra_fields):
+    calls = fake_requests(monkeypatch)
+    upload(Client(cid="1", api_key="k"))
+    assert calls[-1].json == {
+        "url": S3_URL,
+        "name": "job",
+        "embeddings": False,
+        **extra_fields,
+    }
+    assert calls[-1].headers["content-type"] == "application/json"
+
+
+@pytest.mark.parametrize(
+    ("get_process", "path"),
+    [
+        (lambda client: client.behavioral.get_process(pid=7), "clients/1/processes/7"),
+        (lambda client: client.deepfakes.get_process(pid=7), "detection/clients/1/processes/7"),
+        (
+            lambda client: client.deepfakes.get_video_process(pid=7),
+            "detection/clients/1/processes/video/7",
+        ),
+    ],
+)
+def test_get_process_parses_the_response(monkeypatch, get_process, path):
+    body = {"pid": 7, "cid": 1, "name": "a.wav", "status": 2, "duration": 3.5}
+    calls = fake_requests(monkeypatch, FakeResponse(body=body))
+    process = get_process(Client(cid="1", api_key="k"))
+    assert calls[-1].url == f"{API_URL}/{path}"
+    assert (process.pid, process.name, process.duration) == (7, "a.wav", 3.5)
+    assert process.is_completed
