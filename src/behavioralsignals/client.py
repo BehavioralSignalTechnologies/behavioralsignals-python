@@ -1,4 +1,5 @@
 from functools import cached_property
+from contextlib import ExitStack
 
 from .base import BaseClient
 from .deepfakes import Deepfakes
@@ -18,11 +19,13 @@ class Client(BaseClient):
 
     def close(self):
         """Close the session, and the sessions of the sub-clients that were used."""
-        for name in ("behavioral", "deepfakes"):
-            sub_client = self.__dict__.get(name)
-            if sub_client is not None:
-                sub_client.close()
-        super().close()
+        with ExitStack() as stack:
+            # Callbacks run in reverse, so this session closes last, even if a sub-client fails.
+            stack.callback(super().close)
+            for name in ("behavioral", "deepfakes"):
+                sub_client = self.__dict__.get(name)
+                if sub_client is not None:
+                    stack.callback(sub_client.close)
 
     def _sub_client_args(self) -> dict:
         return {
