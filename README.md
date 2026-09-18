@@ -101,6 +101,8 @@ output = client.behavioral.wait_for_result(pid=response.pid, timeout=600)
 for item in output.results or []:
     top = item.prediction[0]
     label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
+    if not label:
+        continue  # the features row carries embeddings, not a result
     confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
     print(f"{item.st} {item.et} {item.task} {label}{confidence}")
 ```
@@ -174,7 +176,12 @@ response = client.deepfakes.upload_audio(file_path="audio.wav")
 output = client.deepfakes.wait_for_result(pid=response.pid, timeout=600)
 
 for item in output.results or []:
-    print(item.st, item.et, item.task, item.finalLabel)
+    top = item.prediction[0]
+    label = item.finalLabel or top.score  # some tasks have no label, only a score
+    if not label:
+        continue  # the features row carries embeddings, not a result
+    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
+    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
 ```
 
 Setting `embeddings=True` during audio upload will include speaker and deepfake embeddings in the output (see [documentation](https://behavioralsignals.readme.io/docs/embeddings-1#/)):
@@ -220,7 +227,12 @@ Unlike `wait_for_result`, the video result response returns two separate lists â
 
 ```python
 for item in output.video_results or []:
-    print(item.st, item.et, item.task, item.finalLabel)
+    top = item.prediction[0]
+    label = item.finalLabel or top.score  # some tasks have no label, only a score
+    if not label:
+        continue  # the features row carries embeddings, not a result
+    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
+    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
 ```
 
 You can also submit a video via an S3 presigned URL with `client.deepfakes.upload_s3_presigned_video_url(url=...)`, and list/inspect video processes with `client.deepfakes.list_video_processes()` and `client.deepfakes.get_video_process(pid=...)`. The `embeddings` and `enable_generator_detection` options are supported and apply to the audio-track results. Video deepfake detection is currently available in batch mode only.
