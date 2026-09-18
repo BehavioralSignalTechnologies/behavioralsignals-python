@@ -99,19 +99,25 @@ response = client.behavioral.upload_audio(file_path="audio.wav")
 output = client.behavioral.wait_for_result(pid=response.pid, timeout=600)
 
 for item in output.results or []:
-    print(item.st, item.et, item.task, item.finalLabel)
+    top = item.prediction[0]
+    label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
+    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
+    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
 ```
 
-Each result row has the start and end time in seconds, the task, and the top label. For a 10-second clip of one speaker, the output starts like this:
+Each result row has the start and end time in seconds, the task, and the top label with its probability.
+Continuous tasks such as `intensity` have no label, only a score, and `asr` and `diarization` have a label without a probability.
+For a 10-second clip of one speaker, the output starts like this:
 
 ```
 0.487 3.001 asr  The birch canoe slid on the smooth plank.
 0.487 3.001 diarization SPEAKER_00
-0.487 3.001 language en
-0.487 3.001 gender female
-0.487 3.001 age 18 - 22
-0.487 3.001 emotion sad
+0.487 3.001 language en (98.9%)
+0.487 3.001 gender female (99.7%)
+0.487 3.001 age 18 - 22 (46.8%)
+0.487 3.001 emotion sad (70.6%)
 ...
+0.487 3.001 intensity 0.0873
 ```
 
 Each row also has `prediction`, the list of all labels with their probabilities. Use `output.model_dump()` to get the results as a dictionary.
@@ -147,7 +153,10 @@ options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 
 for result in client.behavioral.stream_audio(audio_stream=audio_stream, options=options):
     for item in result.results or []:
-        print(item.st, item.et, item.task, item.finalLabel)
+        top = item.prediction[0]
+        label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
+        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
+        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
 ```
 
 ### Deepfakes API Batch Mode
