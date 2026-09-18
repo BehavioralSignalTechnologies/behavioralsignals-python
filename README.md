@@ -146,7 +146,8 @@ audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=0.25)
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 
 for result in client.behavioral.stream_audio(audio_stream=audio_stream, options=options):
-    print(result)
+    for item in result.results or []:
+        print(item.st, item.et, item.task, item.finalLabel)
 ```
 
 ### Deepfakes API Batch Mode
@@ -160,6 +161,9 @@ client = Client(YOUR_CID, YOUR_API_KEY)
 
 response = client.deepfakes.upload_audio(file_path="audio.wav")
 output = client.deepfakes.wait_for_result(pid=response.pid, timeout=600)
+
+for item in output.results or []:
+    print(item.st, item.et, item.task, item.finalLabel)
 ```
 
 Setting `embeddings=True` during audio upload will include speaker and deepfake embeddings in the output (see [documentation](https://behavioralsignals.readme.io/docs/embeddings-1#/)):
@@ -204,8 +208,8 @@ output = client.deepfakes.wait_for_video_result(pid=response.pid, timeout=600)
 Unlike `wait_for_result`, the video result response returns two separate lists — `audio_results` (deepfake detection on the audio track) and `video_results` (deepfake detection on the video frames):
 
 ```python
-for item in output.video_results:
-    print(item.task, item.finalLabel)
+for item in output.video_results or []:
+    print(item.st, item.et, item.task, item.finalLabel)
 ```
 
 You can also submit a video via an S3 presigned URL with `client.deepfakes.upload_s3_presigned_video_url(url=...)`, and list/inspect video processes with `client.deepfakes.list_video_processes()` and `client.deepfakes.get_video_process(pid=...)`. The `embeddings` and `enable_generator_detection` options are supported and apply to the audio-track results. Video deepfake detection is currently available in batch mode only.
