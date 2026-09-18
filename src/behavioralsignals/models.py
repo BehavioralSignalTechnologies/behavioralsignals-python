@@ -175,6 +175,16 @@ class ProcessListResponse(BaseModel):
 
     processes: list[ProcessItem]
 
+    def __iter__(self):
+        """Iterates over the processes, so the response can be used like a list."""
+        return iter(self.processes)
+
+    def __len__(self) -> int:
+        return len(self.processes)
+
+    def __getitem__(self, index):
+        return self.processes[index]
+
     @computed_field
     @property
     def total_count(self) -> int:
