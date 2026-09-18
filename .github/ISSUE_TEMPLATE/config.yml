@@ -1,0 +1,10 @@
+contact_links:
+  - name: Security problem
+    url: https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/security/policy
+    about: Please report security problems privately, not in a public issue.
+  - name: API documentation
+    url: https://behavioralsignals.readme.io/
+    about: Guides and reference for the Behavioral Signals API.
+  - name: Discord
+    url: https://discord.com/invite/fxjRrbMH3Q
+    about: Ask questions and talk with other users.

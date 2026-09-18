@@ -1,10 +1,10 @@
-from typing import Tuple, Iterator
+from collections.abc import Iterator
 
 from pydub import AudioSegment
 from pydub.utils import make_chunks
 
 
-def make_audio_stream(file_path: str, chunk_size: float = 0.25) -> Tuple[Iterator[bytes], int]:
+def make_audio_stream(file_path: str, chunk_size: float = 0.25) -> tuple[Iterator[bytes], int]:
     """Create an audio stream from a file, yielding chunks of raw audio data.
 
     Args:
