@@ -36,6 +36,16 @@ ruff check
 ruff format
 ```
 
+## Tests
+
+The tests don't call the API, so they need no credentials. Run them with:
+
+```bash
+pytest
+```
+
+CI runs ruff and the tests on Python 3.10 to 3.13 for every pull request.
+
 ## Regenerate the gRPC code
 
 You only need this if you change `protos/api.proto`. Use grpcio-tools 1.73.1, which matches the

@@ -34,6 +34,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "grpcio-tools>=1.73.1",
+    "pytest>=8",
     "ruff==0.16.8",
 ]
 

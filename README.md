@@ -11,6 +11,7 @@
 [![Discord](https://badgen.net/discord/members/fxjRrbMH3Q/?color=8978cc&icon=discord)](https://discord.com/invite/fxjRrbMH3Q)
 [![Twitter](https://badgen.net/badge/b/behavioralsignals/icon?icon=twitter&label&color=black)](https://x.com/behaviorsignals)
 [![readme.io](https://badgen.net/badge/readme.io/Documentation/?color=black)](https://behavioralsignals.readme.io/)
+[![CI](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/actions/workflows/ci.yml/badge.svg)](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/actions/workflows/ci.yml)
 [![PyPI](https://badgen.net/pypi/v/behavioralsignals)](https://pypi.org/project/behavioralsignals/)
 [![Python](https://badgen.net/pypi/python/behavioralsignals)](https://pypi.org/project/behavioralsignals/)
 [![License](https://badgen.net/badge/license/Apache-2.0/blue)](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/blob/main/LICENSE)
