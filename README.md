@@ -236,7 +236,11 @@ audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=0.25)
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
 
 for result in client.deepfakes.stream_audio(audio_stream=audio_stream, options=options):
-    print(result)
+    for item in result.results or []:
+        top = item.prediction[0]
+        label = item.finalLabel or top.score  # some tasks have no label, only a score
+        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
+        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
 ```
 
 ## Available Methods
