@@ -9,7 +9,7 @@ DEFAULT_UPLOAD_TIMEOUT: TimeoutType = (10.0, 300.0)  # (connect, read) seconds p
 
 @dataclass
 class Configuration:
-    cid: str | int
+    cid: str
     api_key: str
     api_url: str = "https://api.behavioralsignals.com/v5"
     streaming_api_url: str = "streaming.behavioralsignals.com:443"

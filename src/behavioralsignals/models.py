@@ -249,12 +249,12 @@ class ResultItem(_SerializableModel):
     @computed_field
     @property
     def st(self) -> float | None:
-        return None if self.startTime is None else float(self.startTime)
+        return float(self.startTime) if self.startTime else None
 
     @computed_field
     @property
     def et(self) -> float | None:
-        return None if self.endTime is None else float(self.endTime)
+        return float(self.endTime) if self.endTime else None
 
 
 class ResultResponse(_SerializableModel):
