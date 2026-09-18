@@ -20,7 +20,8 @@ class Client(BaseClient):
     def close(self):
         """Close the session, and the sessions of the sub-clients that were used."""
         with ExitStack() as stack:
-            # Callbacks run in reverse, so this session closes last, even if a sub-client fails.
+            # ExitStack runs every callback, even if one raises.
+            # Registering this session first means it closes last.
             stack.callback(super().close)
             for name in ("behavioral", "deepfakes"):
                 sub_client = self.__dict__.get(name)
