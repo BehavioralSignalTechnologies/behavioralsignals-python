@@ -16,6 +16,14 @@ class Client(BaseClient):
         """Client for the Deepfakes API."""
         return Deepfakes(**self._sub_client_args())
 
+    def close(self):
+        """Close the session, and the sessions of the sub-clients that were used."""
+        for name in ("behavioral", "deepfakes"):
+            sub_client = self.__dict__.get(name)
+            if sub_client is not None:
+                sub_client.close()
+        super().close()
+
     def _sub_client_args(self) -> dict:
         return {
             "cid": self.config.cid,
