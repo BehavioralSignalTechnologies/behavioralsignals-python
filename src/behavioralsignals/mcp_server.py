@@ -271,9 +271,9 @@ def _format_result(
 
 
 def _process_row(process: ProcessItem) -> list[str]:
-    """Returns the process as a row; the reason is shown only for failed processes."""
+    """Returns the process as a row; the reason's first line is shown only for failed processes."""
     failed = process.status is not None and process.status < 0
-    reason = process.statusmsg if failed else None
+    reason = process.statusmsg.splitlines()[0] if failed and process.statusmsg else None
     status = _status_name(process.status)
     values = (process.pid, process.name, status, process.duration, process.datetime, reason)
     return [_cell(value) for value in values]

@@ -287,7 +287,7 @@ async def test_list_processes_shows_status_names_and_failure_reasons(api):
             ProcessItem(
                 pid=1, name="a.wav", status=2, statusmsg="done", duration=1.5, datetime=created
             ),
-            ProcessItem(pid=2, name="b.wav", status=-1, statusmsg="bad audio"),
+            ProcessItem(pid=2, name="b.wav", status=-1, statusmsg="bad audio\n\nffmpeg log"),
             ProcessItem(pid=3, status=5),
         ]
     )
