@@ -166,7 +166,7 @@ class ProcessListParams(BaseModel):
     end_date: date | None = Field(
         None,
         alias="endDate",
-        description="Filter processes created on or before this date (YYYY-MM-DD)",
+        description="Filter processes created before this date (YYYY-MM-DD)",
     )
 
 

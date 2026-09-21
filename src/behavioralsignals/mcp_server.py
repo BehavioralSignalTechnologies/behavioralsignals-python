@@ -116,7 +116,8 @@ def list_processes(
     """Lists your jobs of one kind, newest first by default, with why a job failed.
 
     `analysis` is "behavioral", "deepfake_audio" or "deepfake_video". `start_date` and
-    `end_date` are dates in YYYY-MM-DD format.
+    `end_date` are dates in YYYY-MM-DD format. `end_date` itself is not included: for jobs from
+    one day, pass the next day as `end_date`.
     """
     with _tool_errors(), _api(analysis) as api:
         list_method = (
