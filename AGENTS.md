@@ -8,7 +8,7 @@ pull request steps are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 - `src/behavioralsignals/client.py`: `Client`, which holds the `behavioral` and `deepfakes` clients.
 - `src/behavioralsignals/behavioral.py`, `deepfakes.py`: the two APIs. `base.py`: HTTP requests,
-  errors, `wait_for_result` and the gRPC channel.
+  errors, the wait loop behind `wait_for_result`, and the gRPC channel.
 - `src/behavioralsignals/models.py`: pydantic models of requests and responses.
   `configuration.py`: API URLs and timeouts.
 - `src/behavioralsignals/mcp_server.py`: the MCP server (`behavioralsignals-mcp`).
