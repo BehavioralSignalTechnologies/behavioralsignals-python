@@ -365,5 +365,5 @@ The server has 4 tools:
 
 Notes:
 * Each upload uses credits, and the files you name are sent to the Behavioral Signals API.
-* The upload tools wait up to `wait_seconds` (45 by default). If processing takes longer, they return the process ID, and the assistant checks it later with `get_result`.
+* The upload tools wait up to `wait_seconds` (45 by default, 50 at most). If processing takes longer, they return the process ID, and the assistant checks it later with `get_result`.
 * Don't commit config files that contain your API key.

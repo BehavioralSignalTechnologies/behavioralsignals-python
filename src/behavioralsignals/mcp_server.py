@@ -31,7 +31,8 @@ from .behavioral import Behavioral
 
 
 Analysis = Literal["behavioral", "deepfake_audio", "deepfake_video"]
-WaitSeconds = Annotated[float, Field(ge=0)]
+# Clients built on the MCP TypeScript SDK cancel a tool call after 60 seconds by default.
+WaitSeconds = Annotated[float, Field(ge=0, le=50)]
 
 DEFAULT_WAIT = 45
 DEFAULT_LIMIT = 300

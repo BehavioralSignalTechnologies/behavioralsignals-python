@@ -202,6 +202,12 @@ async def test_failed_job_shows_only_the_first_line_of_its_reason(api, tool, arg
     assert is_error and text.endswith("Process 7 did not complete: bad audio")
 
 
+async def test_wait_seconds_stays_below_client_timeouts(api):
+    is_error, text = await call("get_result", pid=7, analysis="behavioral", wait_seconds=51)
+    assert is_error and "less than or equal to 50" in text
+    assert api.calls == []
+
+
 async def test_missing_credentials_reach_the_model(monkeypatch):
     monkeypatch.delenv("BEHAVIORALSIGNALS_CID", raising=False)
     monkeypatch.delenv("BEHAVIORALSIGNALS_API_KEY", raising=False)
