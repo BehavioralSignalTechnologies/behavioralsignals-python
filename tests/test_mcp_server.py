@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 from types import SimpleNamespace
+from datetime import datetime
 
 import pytest
 import requests
@@ -13,6 +14,7 @@ from behavioralsignals.models import (
     ProcessItem,
     ResultResponse,
     ModelPredictions,
+    ProcessListResponse,
     VideoResultResponse,
 )
 
@@ -266,3 +268,58 @@ async def test_upload_error_reaches_the_model(api):
     api.responses["upload_audio"] = FileNotFoundError("No such file: '/data/missing.wav'")
     is_error, text = await call("analyze_behavior", source="/data/missing.wav")
     assert is_error and "No such file" in text and "Uploaded" not in text
+
+
+async def test_lists_the_four_tools_and_marks_read_only_ones():
+    async with Client(mcp_server.server) as client:
+        tools = {tool.name: tool for tool in (await client.list_tools()).tools}
+    assert set(tools) == {"analyze_behavior", "detect_deepfake", "get_result", "list_processes"}
+    read_only = {
+        name for name, tool in tools.items() if tool.annotations and tool.annotations.read_only_hint
+    }
+    assert read_only == {"get_result", "list_processes"}
+
+
+async def test_list_processes_shows_status_names_and_failure_reasons(api):
+    created = datetime(2026, 9, 20, 10, 11, 12)
+    api.responses["list_processes"] = ProcessListResponse(
+        processes=[
+            ProcessItem(
+                pid=1, name="a.wav", status=2, statusmsg="done", duration=1.5, datetime=created
+            ),
+            ProcessItem(pid=2, name="b.wav", status=-1, statusmsg="bad audio"),
+            ProcessItem(pid=3, status=5),
+        ]
+    )
+    _, text = await call(
+        "list_processes", analysis="behavioral", page_size=3, start_date="2026-09-01"
+    )
+    assert api.calls == [
+        (
+            "list_processes",
+            {
+                "page": 0,
+                "page_size": 3,
+                "sort": "desc",
+                "start_date": "2026-09-01",
+                "end_date": None,
+            },
+        )
+    ]
+    assert text.splitlines() == [
+        "pid\tname\tstatus\tduration\tcreated\treason",
+        "1\ta.wav\tcompleted\t1.5\t2026-09-20 10:11:12\t",
+        "2\tb.wav\tfailed\t\t\tbad audio",
+        "3\t\t5\t\t\t",
+        (
+            'More: list_processes(analysis="behavioral", page=1, page_size=3, sort="desc", '
+            'start_date="2026-09-01")'
+        ),
+    ]
+
+
+async def test_list_processes_uses_the_video_list_for_video(api):
+    api.responses["list_video_processes"] = ProcessListResponse(processes=[])
+    _, text = await call("list_processes", analysis="deepfake_video")
+    assert api.built == ["Deepfakes"] and api.calls[0][0] == "list_video_processes"
+    assert text == "No processes found."

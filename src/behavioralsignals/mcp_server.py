@@ -25,7 +25,7 @@ except ImportError as error:
     ) from error
 
 from .base import BehavioralSignalsError
-from .models import ResultItem, ProcessItem
+from .models import ResultItem, ProcessItem, ProcessStatus
 from .deepfakes import Deepfakes
 from .behavioral import Behavioral
 
@@ -36,6 +36,7 @@ WaitSeconds = Annotated[float, Field(ge=0)]
 DEFAULT_WAIT = 45
 DEFAULT_LIMIT = 300
 RESULT_COLUMNS = ["start", "end", "task", "label", "confidence"]
+PROCESS_COLUMNS = ["pid", "name", "status", "duration", "created", "reason"]
 READ_ONLY = ToolAnnotations(read_only_hint=True)
 
 server = MCPServer(
@@ -101,6 +102,46 @@ def get_result(
     """
     with _tool_errors(), _api(analysis) as api:
         return _result_text(api, analysis, pid, wait_seconds, tasks, offset, limit)
+
+
+@server.tool(annotations=READ_ONLY, structured_output=False)
+def list_processes(
+    analysis: Analysis,
+    page: Annotated[int, Field(ge=0)] = 0,
+    page_size: Annotated[int, Field(ge=1, le=1000)] = 50,
+    sort: Literal["asc", "desc"] = "desc",
+    start_date: str | None = None,
+    end_date: str | None = None,
+) -> str:
+    """Lists your jobs of one kind, newest first by default, with why a job failed.
+
+    `analysis` is "behavioral", "deepfake_audio" or "deepfake_video". `start_date` and
+    `end_date` are dates in YYYY-MM-DD format.
+    """
+    with _tool_errors(), _api(analysis) as api:
+        list_method = (
+            api.list_video_processes if analysis == "deepfake_video" else api.list_processes
+        )
+        processes = list(
+            list_method(
+                page=page, page_size=page_size, sort=sort, start_date=start_date, end_date=end_date
+            )
+        )
+    if not processes:
+        return "No processes found."
+    lines = [_tsv(PROCESS_COLUMNS), *(_tsv(_process_row(process)) for process in processes)]
+    if len(processes) == page_size:
+        more = _call(
+            "list_processes",
+            analysis=analysis,
+            page=page + 1,
+            page_size=page_size,
+            sort=sort,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        lines.append(f"More: {more}")
+    return "\n".join(lines)
 
 
 def main():
@@ -227,6 +268,23 @@ def _format_result(
         more = _call("get_result", pid=pid, analysis=analysis, tasks=tasks, offset=end)
         lines.append(f"More rows: {more}")
     return "\n".join(lines)
+
+
+def _process_row(process: ProcessItem) -> list[str]:
+    """Returns the process as a row; the reason is shown only for failed processes."""
+    failed = process.status is not None and process.status < 0
+    reason = process.statusmsg if failed else None
+    status = _status_name(process.status)
+    values = (process.pid, process.name, status, process.duration, process.datetime, reason)
+    return [_cell(value) for value in values]
+
+
+def _status_name(status: int | None) -> str | int | None:
+    """Returns the status name in lower case, or the number if it is not a known status."""
+    try:
+        return ProcessStatus(status).name.lower()
+    except ValueError:
+        return status
 
 
 def _call(tool: str, **args) -> str:
