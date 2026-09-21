@@ -34,6 +34,6 @@ CI runs `ruff check`, `ruff format --check` and `pytest` on Python 3.10 to 3.13.
 - Tests never call the API and need no credentials. Fake HTTP as `tests/test_client.py` does.
 - `mcp` is an optional extra: never import `mcp_server` from `__init__.py`.
 - `mcp_server.py` must never print to stdout; stdout carries the MCP protocol.
-- When a public method changes, update the README method table, `examples/`, and the MCP tools
-  and README MCP section if they use it.
+- When a public method or MCP tool changes, update the README method table, `examples/`, and
+  the MCP tools and README MCP section if they use it.
 - Never commit credentials.
