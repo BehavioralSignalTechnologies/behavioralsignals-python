@@ -211,6 +211,9 @@ def _result_text(
     except TimeoutError:
         retry = _call("get_result", pid=pid, analysis=analysis)
         return f"pid {pid} is still processing. Call {retry} to wait again."
+    except RuntimeError as error:
+        # The job failed. Keep the reason's first line; a long ffmpeg log can follow it.
+        raise ToolError(str(error).splitlines()[0]) from error
     return _format_result(pid, analysis, _result_rows(result, analysis), tasks, offset, limit)
 
 

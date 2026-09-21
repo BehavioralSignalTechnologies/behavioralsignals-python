@@ -188,6 +188,20 @@ async def test_errors_reach_the_model(api, error):
     assert is_error and str(error) in text
 
 
+@pytest.mark.parametrize(
+    ("tool", "args"),
+    [
+        ("get_result", {"pid": 7, "analysis": "behavioral"}),
+        ("analyze_behavior", {"source": "/data/call.wav"}),
+    ],
+)
+async def test_failed_job_shows_only_the_first_line_of_its_reason(api, tool, args):
+    reason = "Process 7 did not complete: bad audio\n\nffmpeg log"
+    api.responses["wait_for_result"] = RuntimeError(reason)
+    is_error, text = await call(tool, **args)
+    assert is_error and text.endswith("Process 7 did not complete: bad audio")
+
+
 async def test_missing_credentials_reach_the_model(monkeypatch):
     monkeypatch.delenv("BEHAVIORALSIGNALS_CID", raising=False)
     monkeypatch.delenv("BEHAVIORALSIGNALS_API_KEY", raising=False)
