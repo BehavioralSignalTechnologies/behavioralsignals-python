@@ -142,7 +142,7 @@ def list_processes(
             start_date=start_date,
             end_date=end_date,
         )
-        lines.append(f"More: {more}")
+        lines.append(f"Next page: {more}")
     return "\n".join(lines)
 
 

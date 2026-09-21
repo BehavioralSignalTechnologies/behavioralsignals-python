@@ -332,7 +332,7 @@ async def test_list_processes_shows_status_names_and_failure_reasons(api):
         "2\tb.wav\tfailed\t\t\tbad audio",
         "3\t\t5\t\t\t",
         (
-            'More: list_processes(analysis="behavioral", page=1, page_size=3, sort="desc", '
+            'Next page: list_processes(analysis="behavioral", page=1, page_size=3, sort="desc", '
             'start_date="2026-09-01")'
         ),
     ]
