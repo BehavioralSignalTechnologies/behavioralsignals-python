@@ -1,5 +1,7 @@
+import os
 import sys
 import subprocess
+from types import SimpleNamespace
 
 import pytest
 import requests
@@ -16,6 +18,7 @@ from behavioralsignals.models import (
 
 
 pytestmark = pytest.mark.anyio
+HOME_FILE = os.path.expanduser("~/call.wav")
 
 
 @pytest.fixture
@@ -201,3 +204,65 @@ def test_missing_mcp_package_gives_an_install_hint():
         [sys.executable, "-c", code], capture_output=True, text=True, check=False
     )
     assert "pip install 'behavioralsignals[mcp]'" in result.stderr
+
+
+async def test_analyze_behavior_uploads_a_local_file(api):
+    api.responses["wait_for_result"] = emotions(1)
+    _, text = await call("analyze_behavior", source="~/call.wav")
+    assert api.built == ["Behavioral"]
+    assert api.calls[0] == ("upload_audio", {"file_path": HOME_FILE})
+    assert api.calls[1][0] == "wait_for_result"
+    assert text.startswith("pid 7 completed. Rows 1-1 of 1.")
+
+
+async def test_url_upload_sends_the_file_name_without_the_query(api):
+    api.responses["wait_for_result"] = emotions(1)
+    url = "https://bucket.s3.amazonaws.com/calls/my%20call.wav?X-Amz-Signature=secret"
+    await call("detect_deepfake", source=url, generator_detection=True)
+    assert api.built == ["Deepfakes"]
+    expected = {"url": url, "name": "my call.wav", "enable_generator_detection": True}
+    assert api.calls[0] == ("upload_s3_presigned_url", expected)
+
+
+async def test_detect_deepfake_video_uses_the_video_methods(api):
+    api.responses["wait_for_video_result"] = VideoResultResponse(pid=7)
+    url = "https://bucket.s3.amazonaws.com/clip.mp4?X-Amz-Signature=secret"
+    await call("detect_deepfake", source="/data/clip.mp4", media="video")
+    await call("detect_deepfake", source=url, media="video")
+    assert [name for name, _ in api.calls] == [
+        "upload_video",
+        "wait_for_video_result",
+        "upload_s3_presigned_video_url",
+        "wait_for_video_result",
+    ]
+    assert api.calls[0][1] == {"file_path": "/data/clip.mp4", "enable_generator_detection": False}
+
+
+@pytest.mark.parametrize(("upload_seconds", "left"), [(10.0, 35.0), (60.0, 0.0)])
+async def test_upload_time_counts_toward_wait_seconds(api, monkeypatch, upload_seconds, left):
+    clock = iter([0.0, upload_seconds])
+    monkeypatch.setattr(mcp_server, "time", SimpleNamespace(monotonic=lambda: next(clock)))
+    api.responses["wait_for_result"] = emotions(1)
+    await call("analyze_behavior", source="/data/call.wav", wait_seconds=45)
+    assert api.calls[1] == ("wait_for_result", {"pid": 7, "timeout": left})
+
+
+async def test_error_after_upload_keeps_the_pid(api):
+    api.responses["wait_for_result"] = requests.ConnectionError("connection reset")
+    is_error, text = await call("analyze_behavior", source="/data/call.wav")
+    assert is_error
+    assert "Uploaded as pid 7, but getting the result failed: connection reset." in text
+    assert 'Retry with get_result(pid=7, analysis="behavioral").' in text
+
+
+async def test_failed_job_after_upload_is_not_retried(api):
+    api.responses["wait_for_result"] = RuntimeError("Process 7 did not complete: bad audio")
+    is_error, text = await call("analyze_behavior", source="/data/call.wav")
+    assert is_error and "Process 7 did not complete: bad audio" in text
+    assert "Retry" not in text
+
+
+async def test_upload_error_reaches_the_model(api):
+    api.responses["upload_audio"] = FileNotFoundError("No such file: '/data/missing.wav'")
+    is_error, text = await call("analyze_behavior", source="/data/missing.wav")
+    assert is_error and "No such file" in text and "Uploaded" not in text

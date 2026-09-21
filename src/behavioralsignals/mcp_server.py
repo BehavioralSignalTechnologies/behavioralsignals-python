@@ -4,9 +4,12 @@ Run it with `behavioralsignals-mcp` after `pip install "behavioralsignals[mcp]"`
 over stdio, so it must never print to stdout.
 """
 
+import os
 import json
+import time
 from typing import Literal, Annotated
 from contextlib import contextmanager
+from urllib.parse import unquote, urlparse
 
 from pydantic import Field
 
@@ -22,7 +25,7 @@ except ImportError as error:
     ) from error
 
 from .base import BehavioralSignalsError
-from .models import ResultItem
+from .models import ResultItem, ProcessItem
 from .deepfakes import Deepfakes
 from .behavioral import Behavioral
 
@@ -44,6 +47,41 @@ server = MCPServer(
         "or to filter tasks. Each upload uses credits."
     ),
 )
+
+
+@server.tool(structured_output=False)
+def analyze_behavior(source: str, wait_seconds: WaitSeconds = DEFAULT_WAIT) -> str:
+    """Analyzes speech in an audio file: transcript, speakers, language, gender, age, emotion,
+    positivity, strength, speaking rate, hesitation, engagement and intensity.
+
+    `source` is an absolute path to a local audio file, or an S3 presigned URL. Each call uploads
+    the audio again and uses credits: to check a job you started, call get_result. If an upload
+    call failed or timed out, call list_processes before uploading again; the job may have
+    started. Returns the first rows of the result, or a pid if the job is still processing.
+    """
+    return _upload_and_wait("behavioral", source, wait_seconds)
+
+
+@server.tool(structured_output=False)
+def detect_deepfake(
+    source: str,
+    media: Literal["audio", "video"] = "audio",
+    generator_detection: bool = False,
+    wait_seconds: WaitSeconds = DEFAULT_WAIT,
+) -> str:
+    """Detects whether speech (media="audio") or a video (media="video") is a deepfake.
+
+    `source` is an absolute path to a local file, or an S3 presigned URL. With
+    generator_detection=True, the result also names the likely generator (experimental). Each
+    call uploads the file again and uses credits: to check a job you started, call get_result.
+    If an upload call failed or timed out, call list_processes before uploading again; the job
+    may have started. Returns the first rows of the result, or a pid if the job is still
+    processing.
+    """
+    analysis = "deepfake_video" if media == "video" else "deepfake_audio"
+    return _upload_and_wait(
+        analysis, source, wait_seconds, enable_generator_detection=generator_detection
+    )
 
 
 @server.tool(annotations=READ_ONLY, structured_output=False)
@@ -82,6 +120,37 @@ def _tool_errors():
         yield
     except (ValueError, OSError, RuntimeError, BehavioralSignalsError) as error:
         raise ToolError(str(error)) from error
+
+
+def _upload_and_wait(analysis: str, source: str, wait_seconds: float, **options) -> str:
+    """Uploads the source, then waits for the result for what is left of wait_seconds."""
+    started = time.monotonic()
+    with _tool_errors(), _api(analysis) as api:
+        pid = _upload(api, analysis, source, **options).pid
+        remaining = max(0.0, wait_seconds - (time.monotonic() - started))
+        try:
+            return _result_text(api, analysis, pid, remaining, None, 0, DEFAULT_LIMIT)
+        except (ValueError, OSError, BehavioralSignalsError) as error:
+            retry = _call("get_result", pid=pid, analysis=analysis)
+            raise ToolError(
+                f"Uploaded as pid {pid}, but getting the result failed: {error}. "
+                f"Retry with {retry}."
+            ) from error
+
+
+def _upload(api: Behavioral | Deepfakes, analysis: str, source: str, **options) -> ProcessItem:
+    """Uploads a local file or an S3 presigned URL and returns the new process."""
+    video = analysis == "deepfake_video"
+    if source.startswith(("http://", "https://")):
+        upload = api.upload_s3_presigned_video_url if video else api.upload_s3_presigned_url
+        return upload(url=source, name=_url_file_name(source), **options)
+    upload = api.upload_video if video else api.upload_audio
+    return upload(file_path=os.path.expanduser(source), **options)
+
+
+def _url_file_name(url: str) -> str | None:
+    """Returns the file name in the URL path, leaving out the query (it holds the signature)."""
+    return unquote(urlparse(url).path.rsplit("/", 1)[-1]) or None
 
 
 def _result_text(
