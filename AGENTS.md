@@ -18,10 +18,10 @@ pull request steps are in [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Commands
 
 ```bash
-uv pip install -e ".[dev]"  # in a venv, see CONTRIBUTING.md
-pytest
-ruff check
-ruff format
+uv sync -p 3.10 --extra dev  # see CONTRIBUTING.md
+uv run pytest
+uv run ruff check
+uv run ruff format
 ```
 
 CI runs `ruff check`, `ruff format --check` and `pytest` on Python 3.10 to 3.13.
@@ -29,6 +29,7 @@ CI runs `ruff check`, `ruff format --check` and `pytest` on Python 3.10 to 3.13.
 ## Rules
 
 - Support Python 3.10: no newer syntax or modules.
+- If you change `pyproject.toml`, run `uv lock` and commit `uv.lock`; CI fails otherwise.
 - `Behavioral` and `Deepfakes` repeat the audio methods; change both.
 - Don't edit `generated/` by hand; regenerate it (see CONTRIBUTING.md).
 - Tests never call the API and need no credentials. Fake HTTP as `tests/test_client.py` does.
