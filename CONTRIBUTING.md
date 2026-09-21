@@ -12,15 +12,31 @@ To report a security problem, follow [SECURITY.md](SECURITY.md) instead.
 
 ## Set up
 
-You need Python 3.10+, [ffmpeg](https://ffmpeg.org/) and [uv](https://docs.astral.sh/uv/).
+You need Python 3.10+ and [ffmpeg](https://ffmpeg.org/). Use pip or
+[uv](https://docs.astral.sh/uv/), whichever you prefer.
 
 ```bash
 git clone https://github.com/BehavioralSignalTechnologies/behavioralsignals-python.git
 cd behavioralsignals-python
-uv venv -p python3.10 venv
-source venv/bin/activate
-uv pip install -e ".[dev]"
 ```
+
+With uv:
+
+```bash
+uv sync -p 3.10 --extra dev
+source .venv/bin/activate
+```
+
+With pip:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -e ".[dev]"
+```
+
+CI uses uv with the versions pinned in `uv.lock`. If you change `pyproject.toml`, run `uv lock` and
+commit `uv.lock`, or CI may fail. This step needs uv, even if you use pip for everything else.
 
 To call the API, get a CID and API key from the
 [Behavioral Signals portal](https://portal.behavioralsignals.com/). The [examples](examples/) read
@@ -53,7 +69,7 @@ You only need this if you change `protos/api.proto`. Use grpcio-tools 1.73.1, wh
 grpcio-tools that generated it, so if you use a newer grpcio-tools, raise that minimum to match.
 
 ```bash
-uv pip install grpcio-tools==1.73.1
+uv pip install grpcio-tools==1.73.1  # without uv: pip install grpcio-tools==1.73.1
 python -m grpc_tools.protoc -I protos \
   --python_out=src/behavioralsignals/generated \
   --pyi_out=src/behavioralsignals/generated \
@@ -69,5 +85,5 @@ Then, in `src/behavioralsignals/generated/api_pb2_grpc.py`, change `import api_p
 1. Create a branch from `main`.
 2. Keep each pull request to one change.
 3. If you change how the SDK is used, update `README.md` and `examples/`.
-4. If the change needs a new release, bump `version` in `pyproject.toml`.
+4. If the change needs a new release, bump `version` in `pyproject.toml` and run `uv lock`.
 5. Open the pull request and fill in the template.
