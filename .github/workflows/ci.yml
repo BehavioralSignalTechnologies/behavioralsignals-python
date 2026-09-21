@@ -57,11 +57,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: uv sync --locked --extra dev
-      - run: uv run pytest --cov
+      # Check the 90% minimum after the comment, so the comment shows even when coverage drops.
+      - run: uv run pytest --cov --cov-fail-under=0
       - uses: py-cov-action/python-coverage-comment-action@v4.3
         with:
           GITHUB_TOKEN: ${{ github.token }}
           MINIMUM_GREEN: 90
+      - run: uv run coverage report
 
   build:
     runs-on: ubuntu-latest

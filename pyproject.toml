@@ -66,6 +66,7 @@ behavioralsignals = ["py.typed"]
 source = ["behavioralsignals"]
 omit = ["*/behavioralsignals/generated/*"]
 relative_files = true
+branch = true
 
 [tool.coverage.report]
 fail_under = 90
