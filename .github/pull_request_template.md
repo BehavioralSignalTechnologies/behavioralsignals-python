@@ -11,4 +11,4 @@
 
 - [ ] Ran `ruff check`, `ruff format` and `pytest`
 - [ ] Updated `README.md` and `examples/`, if usage changed
-- [ ] Bumped `version` in `pyproject.toml`, if this needs a release
+- [ ] Bumped `version` in `pyproject.toml` and ran `uv lock`, if this needs a release

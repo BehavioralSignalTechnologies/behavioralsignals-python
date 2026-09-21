@@ -4,3 +4,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    # Only update uv.lock; never raise the minimum versions in pyproject.toml.
+    versioning-strategy: lockfile-only
