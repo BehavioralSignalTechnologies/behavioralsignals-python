@@ -13,9 +13,13 @@
 [![readme.io](https://badgen.net/badge/readme.io/Documentation/?color=black)](https://behavioralsignals.readme.io/)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![CI](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/actions/workflows/ci.yml/badge.svg)](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/actions/workflows/ci.yml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![PyPI](https://badgen.net/pypi/v/behavioralsignals)](https://pypi.org/project/behavioralsignals/)
+[![Status](https://img.shields.io/pypi/status/behavioralsignals)](https://pypi.org/project/behavioralsignals/)
+[![Downloads](https://badgen.net/pypi/dm/behavioralsignals)](https://pypistats.org/packages/behavioralsignals)
 [![Python](https://badgen.net/pypi/python/behavioralsignals)](https://pypi.org/project/behavioralsignals/)
 [![License](https://badgen.net/badge/license/Apache-2.0/blue)](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/blob/main/LICENSE)
+[![Contributor Covenant](https://badgen.net/badge/Contributor%20Covenant/2.1/4baaaa)](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/blob/main/CODE_OF_CONDUCT.md)
 
 </div>
 
