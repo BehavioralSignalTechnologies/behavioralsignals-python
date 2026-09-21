@@ -23,7 +23,7 @@ cd behavioralsignals-python
 With uv:
 
 ```bash
-uv sync --extra dev
+uv sync -p 3.10 --extra dev
 source .venv/bin/activate
 ```
 
@@ -35,8 +35,9 @@ source venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-CI uses uv with the versions pinned in `uv.lock`. If you change dependencies in `pyproject.toml`,
-run `uv lock` and commit `uv.lock`.
+CI uses uv with the versions pinned in `uv.lock`. If you change the dependencies or `version` in
+`pyproject.toml`, run `uv lock` and commit `uv.lock`, or CI fails. This step needs uv, even if you
+use pip for everything else.
 
 To call the API, get a CID and API key from the
 [Behavioral Signals portal](https://portal.behavioralsignals.com/). The [examples](examples/) read
@@ -69,7 +70,7 @@ You only need this if you change `protos/api.proto`. Use grpcio-tools 1.73.1, wh
 grpcio-tools that generated it, so if you use a newer grpcio-tools, raise that minimum to match.
 
 ```bash
-uv pip install grpcio-tools==1.73.1
+pip install grpcio-tools==1.73.1  # with uv: uv pip install grpcio-tools==1.73.1
 python -m grpc_tools.protoc -I protos \
   --python_out=src/behavioralsignals/generated \
   --pyi_out=src/behavioralsignals/generated \
@@ -85,5 +86,5 @@ Then, in `src/behavioralsignals/generated/api_pb2_grpc.py`, change `import api_p
 1. Create a branch from `main`.
 2. Keep each pull request to one change.
 3. If you change how the SDK is used, update `README.md` and `examples/`.
-4. If the change needs a new release, bump `version` in `pyproject.toml`.
+4. If the change needs a new release, bump `version` in `pyproject.toml` and run `uv lock`.
 5. Open the pull request and fill in the template.
