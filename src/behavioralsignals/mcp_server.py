@@ -185,9 +185,9 @@ def _upload(api: Behavioral | Deepfakes, analysis: str, source: str, **options) 
     """Uploads a local file or an S3 presigned URL and returns the new process."""
     video = analysis == "deepfake_video"
     if source.startswith(("http://", "https://")):
-        upload = api.upload_s3_presigned_video_url if video else api.upload_s3_presigned_url
+        upload = api.upload_s3_presigned_video_url if video else api.upload_s3_presigned_url  # type: ignore[union-attr]
         return upload(url=source, name=_url_file_name(source), **options)
-    upload = api.upload_video if video else api.upload_audio
+    upload = api.upload_video if video else api.upload_audio  # type: ignore[union-attr]
     return upload(file_path=os.path.expanduser(source), **options)
 
 
@@ -206,7 +206,7 @@ def _result_text(
     limit: int,
 ) -> str:
     """Waits up to wait_seconds for the result and formats one page of it."""
-    wait = api.wait_for_video_result if analysis == "deepfake_video" else api.wait_for_result
+    wait = api.wait_for_video_result if analysis == "deepfake_video" else api.wait_for_result  # type: ignore[union-attr]
     try:
         result = wait(pid=pid, timeout=wait_seconds)
     except TimeoutError:
@@ -286,6 +286,8 @@ def _process_row(process: ProcessItem) -> list[str]:
 
 def _status_name(status: int | None) -> str | int | None:
     """Returns the status name in lower case, or the number if it is not a known status."""
+    if status is None:
+        return None
     try:
         return ProcessStatus(status).name.lower()
     except ValueError:
