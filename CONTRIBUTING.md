@@ -12,15 +12,31 @@ To report a security problem, follow [SECURITY.md](SECURITY.md) instead.
 
 ## Set up
 
-You need Python 3.10+, [ffmpeg](https://ffmpeg.org/) and [uv](https://docs.astral.sh/uv/).
+You need Python 3.10+ and [ffmpeg](https://ffmpeg.org/). Use pip or
+[uv](https://docs.astral.sh/uv/), whichever you prefer.
 
 ```bash
 git clone https://github.com/BehavioralSignalTechnologies/behavioralsignals-python.git
 cd behavioralsignals-python
-uv venv -p python3.10 venv
-source venv/bin/activate
-uv pip install -e ".[dev]"
 ```
+
+With uv:
+
+```bash
+uv sync --extra dev
+source .venv/bin/activate
+```
+
+With pip:
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -e ".[dev]"
+```
+
+CI uses uv with the versions pinned in `uv.lock`. If you change dependencies in `pyproject.toml`,
+run `uv lock` and commit `uv.lock`.
 
 To call the API, get a CID and API key from the
 [Behavioral Signals portal](https://portal.behavioralsignals.com/). The [examples](examples/) read
