@@ -30,14 +30,13 @@ source .venv/bin/activate
 With pip:
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-CI uses uv with the versions pinned in `uv.lock`. If you change the dependencies or `version` in
-`pyproject.toml`, run `uv lock` and commit `uv.lock`, or CI fails. This step needs uv, even if you
-use pip for everything else.
+CI uses uv with the versions pinned in `uv.lock`. If you change `pyproject.toml`, run `uv lock` and
+commit `uv.lock`, or CI may fail. This step needs uv, even if you use pip for everything else.
 
 To call the API, get a CID and API key from the
 [Behavioral Signals portal](https://portal.behavioralsignals.com/). The [examples](examples/) read
@@ -70,7 +69,7 @@ You only need this if you change `protos/api.proto`. Use grpcio-tools 1.73.1, wh
 grpcio-tools that generated it, so if you use a newer grpcio-tools, raise that minimum to match.
 
 ```bash
-pip install grpcio-tools==1.73.1  # with uv: uv pip install grpcio-tools==1.73.1
+uv pip install grpcio-tools==1.73.1  # without uv: pip install grpcio-tools==1.73.1
 python -m grpc_tools.protoc -I protos \
   --python_out=src/behavioralsignals/generated \
   --pyi_out=src/behavioralsignals/generated \
