@@ -22,9 +22,11 @@ uv sync -p 3.10 --extra dev  # see CONTRIBUTING.md
 uv run pytest
 uv run ruff check
 uv run ruff format
+uv run mypy src
 ```
 
-CI runs `ruff check`, `ruff format --check` and `pytest` on Python 3.10 to 3.13.
+CI runs `ruff check`, `ruff format --check`, `mypy src` and `pytest` on Python 3.10 to 3.13. It
+also runs the tests with the lowest versions allowed in `pyproject.toml`, and needs 90% coverage.
 
 ## Rules
 
