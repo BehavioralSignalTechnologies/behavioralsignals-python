@@ -35,8 +35,12 @@ dependencies = [
 dev = [
     "grpcio-tools>=1.73.1",
     "mcp>=2.2.0,<3",
+    "mypy==2.3.1",
     "pytest>=8",
+    "pytest-cov>=7",
     "ruff==0.16.8",
+    "types-grpcio>=1.83.0",
+    "types-protobuf>=7.35.1",
 ]
 mcp = ["mcp>=2.2.0,<3"]
 
@@ -62,3 +66,24 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 behavioralsignals = ["py.typed"]
+
+[tool.coverage.run]
+source = ["behavioralsignals"]
+omit = ["*/behavioralsignals/generated/*"]
+relative_files = true
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "behavioralsignals.generated.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "pydub.*"
+ignore_missing_imports = true

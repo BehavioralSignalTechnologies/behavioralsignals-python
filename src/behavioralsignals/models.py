@@ -185,7 +185,7 @@ class ProcessListResponse(BaseModel):
     def __getitem__(self, index):
         return self.processes[index]
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def total_count(self) -> int:
         return len(self.processes)
@@ -256,12 +256,12 @@ class ResultItem(_SerializableModel):
         examples=["[11.614513397216797, -15.228992462158203, -4.92175817489624, ...]"],
     )
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def st(self) -> float | None:
         return float(self.startTime) if self.startTime else None
 
-    @computed_field
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def et(self) -> float | None:
         return float(self.endTime) if self.endTime else None

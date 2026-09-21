@@ -44,12 +44,14 @@ them from the `BEHAVIORALSIGNALS_CID` and `BEHAVIORALSIGNALS_API_KEY` environmen
 
 ## Code style
 
-We use [ruff](https://docs.astral.sh/ruff/) with the settings in `ruff.toml` (line length 100).
-The dev install above includes the ruff version we use. Before you open a pull request, run:
+We use [ruff](https://docs.astral.sh/ruff/) with the settings in `ruff.toml` (line length 100),
+and [mypy](https://mypy.readthedocs.io/) to check types. The dev install above includes the
+versions we use. Before you open a pull request, run:
 
 ```bash
 ruff check
 ruff format
+mypy src
 ```
 
 ## Tests
@@ -60,7 +62,10 @@ The tests don't call the API, so they need no credentials. Run them with:
 pytest
 ```
 
-CI runs ruff and the tests on Python 3.10 to 3.13 for every pull request.
+To see which lines the tests miss, run `pytest --cov`. It fails if coverage is below 90%.
+
+CI runs ruff and mypy, and runs the tests on Python 3.10 to 3.13, for every pull request. It also
+runs the tests with the lowest versions allowed in `pyproject.toml`, and checks coverage.
 
 ## Regenerate the gRPC code
 
@@ -87,3 +92,8 @@ Then, in `src/behavioralsignals/generated/api_pb2_grpc.py`, change `import api_p
 3. If you change how the SDK is used, update `README.md` and `examples/`.
 4. If the change needs a new release, bump `version` in `pyproject.toml` and run `uv lock`.
 5. Open the pull request and fill in the template.
+
+## Releases
+
+Maintainers release from `main`. Publish a GitHub release with a tag like `v1.0.0` that matches
+`version` in `pyproject.toml`. The Release workflow then builds the package and uploads it to PyPI.

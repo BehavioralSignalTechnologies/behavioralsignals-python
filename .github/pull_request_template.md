@@ -9,6 +9,6 @@
 
 ## Checklist
 
-- [ ] Ran `ruff check`, `ruff format` and `pytest`
+- [ ] Ran `ruff check`, `ruff format`, `mypy src` and `pytest`
 - [ ] Updated `README.md` and `examples/`, if usage changed
 - [ ] Bumped `version` in `pyproject.toml` and ran `uv lock`, if this needs a release

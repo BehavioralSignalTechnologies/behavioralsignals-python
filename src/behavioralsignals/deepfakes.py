@@ -146,8 +146,7 @@ class Deepfakes(BaseClient):
 
         query_params = ProcessListParams(
             page=page, page_size=page_size, sort=sort, start_date=start_date, end_date=end_date
-        )
-        query_params = query_params.model_dump(by_alias=True, exclude_none=True)
+        ).model_dump(by_alias=True, exclude_none=True)
 
         data = self._send_request(
             path=f"detection/clients/{self.config.cid}/processes",
@@ -331,8 +330,7 @@ class Deepfakes(BaseClient):
 
         query_params = ProcessListParams(
             page=page, page_size=page_size, sort=sort, start_date=start_date, end_date=end_date
-        )
-        query_params = query_params.model_dump(by_alias=True, exclude_none=True)
+        ).model_dump(by_alias=True, exclude_none=True)
 
         data = self._send_request(
             path=f"detection/clients/{self.config.cid}/processes/video",
