@@ -1,12 +1,12 @@
 [project]
 name = "behavioralsignals"
-version = "0.6.0"
+version = "0.7.0"
 description = "Official Python SDK for the Behavioral Signals API: voice emotion/behavior analysis and audio/video deepfake detection"
 readme = "README.md"
 authors = [{ name = "Behavioral Signal Technologies" }]
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
-keywords = ["emotion-recognition", "speech", "voice", "deepfake-detection", "audio", "video", "grpc", "sdk"]
+keywords = ["emotion-recognition", "speech", "voice", "deepfake-detection", "audio", "video", "grpc", "sdk", "mcp"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
@@ -34,6 +34,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "grpcio-tools>=1.73.1",
+    "mcp>=2.2.0,<3",
     "mypy==2.3.1",
     "pytest>=8",
     "pytest-cov>=7",
@@ -41,6 +42,10 @@ dev = [
     "types-grpcio>=1.83.0",
     "types-protobuf>=7.35.1",
 ]
+mcp = ["mcp>=2.2.0,<3"]
+
+[project.scripts]
+behavioralsignals-mcp = "behavioralsignals.mcp_server:main"
 
 [project.urls]
 Homepage = "https://behavioralsignals.com/"

@@ -43,6 +43,8 @@ See the [API documentation](https://behavioralsignals.readme.io/) for details. I
     * [Deepfakes API Streaming Mode](#deepfakes-api-streaming-mode)
   * [Available Methods](#available-methods)
   * [Error Handling](#error-handling)
+  * [Use with AI assistants (MCP)](#use-with-ai-assistants-mcp)
+    * [Running the MCP server manually](#running-the-mcp-server-manually)
 
 ## Features
 
@@ -56,6 +58,8 @@ See the [API documentation](https://behavioralsignals.readme.io/) for details. I
   - Automatic Speech Recognition (ASR)  
   - Speaker Diarization  
   - Language Identification
+
+- **MCP server**: Let AI assistants such as Claude and Cursor analyze files for you. See [Use with AI assistants (MCP)](#use-with-ai-assistants-mcp).
 
 ## Requirements
 
@@ -305,3 +309,78 @@ except BehavioralSignalsError as error:
 
 `BehavioralSignalsError` is a subclass of `Exception`, so code that catches `Exception` keeps working.
 Network problems raise the usual `requests` exceptions, such as `requests.ConnectionError`.
+
+## Use with AI assistants (MCP)
+
+The SDK includes an [MCP](https://modelcontextprotocol.io/) server (available since version 0.7.0), so AI assistants such as Claude Code, Codex, Claude Desktop and Cursor can analyze audio and video files for you.
+The setups below start the server with `uvx`, so install [uv](https://docs.astral.sh/uv/) first.
+
+The server reads your credentials from `BEHAVIORALSIGNALS_CID` and `BEHAVIORALSIGNALS_API_KEY` (see [API Key Setup](#api-key-setup)).
+Your assistant starts the server, so set them in the assistant's config, as shown below.
+
+**Claude Code.** With the two variables set in your shell, run:
+
+```bash
+claude mcp add --env BEHAVIORALSIGNALS_CID="$BEHAVIORALSIGNALS_CID" \
+  --env BEHAVIORALSIGNALS_API_KEY="$BEHAVIORALSIGNALS_API_KEY" --transport stdio \
+  behavioralsignals -- uvx --python ">=3.10" --from "behavioralsignals[mcp]" behavioralsignals-mcp
+```
+
+This adds the server for you in the current project only. Your key stays out of your shell history and out of the repository.
+
+**Codex.** With the two variables set in your shell, run:
+
+```bash
+codex mcp add behavioralsignals --env BEHAVIORALSIGNALS_CID="$BEHAVIORALSIGNALS_CID" \
+  --env BEHAVIORALSIGNALS_API_KEY="$BEHAVIORALSIGNALS_API_KEY" \
+  -- uvx --python ">=3.10" --from "behavioralsignals[mcp]" behavioralsignals-mcp
+```
+
+This adds the server for all your projects, in `~/.codex/config.toml`.
+
+**Claude Desktop and Cursor.** Add this to `claude_desktop_config.json` (in Claude Desktop, Settings > Developer > Edit Config) or to `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "behavioralsignals": {
+      "command": "uvx",
+      "args": ["--python", ">=3.10", "--from", "behavioralsignals[mcp]", "behavioralsignals-mcp"],
+      "env": {
+        "BEHAVIORALSIGNALS_CID": "your_cid",
+        "BEHAVIORALSIGNALS_API_KEY": "your_api_key"
+      }
+    }
+  }
+}
+```
+
+If the app cannot find `uvx`, use its full path (run `which uvx` to find it).
+
+The server has 4 tools:
+
+| Tool | What it does |
+|---|---|
+| `analyze_behavior` | Uploads an audio file or S3 presigned URL for behavioral analysis and returns the results |
+| `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection and returns the results |
+| `get_result` | Returns the results of a process, in pages, optionally only for some tasks |
+| `list_processes` | Lists your processes, newest first, with the reason when one failed |
+
+Notes:
+* Each upload uses credits, and the files you name are sent to the Behavioral Signals API.
+* The upload tools wait up to `wait_seconds` (45 by default, 50 at most). If processing takes longer, they return the process ID, and the assistant checks it later with `get_result`.
+* Don't commit config files that contain your API key.
+
+### Running the MCP server manually
+
+With uv installed, you can run it without installing anything else:
+
+```bash
+uvx --python ">=3.10" --from "behavioralsignals[mcp]" behavioralsignals-mcp
+```
+
+Or install it with pip and run `behavioralsignals-mcp`:
+
+```bash
+pip install "behavioralsignals[mcp]"
+```

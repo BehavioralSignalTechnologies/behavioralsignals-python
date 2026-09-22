@@ -139,7 +139,7 @@ class Deepfakes(BaseClient):
             page_size (int): Number of processes per page (default is 1000).
             sort (str): Sort order for the processes, should be "asc" or "desc". Defaults to "asc".
             start_date (str, optional: Filter processes created on or after this date (YYYY-MM-DD).
-            end_date (str, optional): Filter processes created on or before this date (YYYY-MM-DD).
+            end_date (str, optional): Filter processes created before this date (YYYY-MM-DD).
         Returns:
             ProcessListResponse: A list of processes associated with the user.
         """
@@ -323,7 +323,7 @@ class Deepfakes(BaseClient):
             page_size (int): Number of processes per page (default is 1000).
             sort (str): Sort order for the processes, should be "asc" or "desc". Defaults to "asc".
             start_date (str, optional: Filter processes created on or after this date (YYYY-MM-DD).
-            end_date (str, optional): Filter processes created on or before this date (YYYY-MM-DD).
+            end_date (str, optional): Filter processes created before this date (YYYY-MM-DD).
         Returns:
             ProcessListResponse: A list of video processes associated with the user.
         """
