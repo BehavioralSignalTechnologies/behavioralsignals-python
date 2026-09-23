@@ -1,6 +1,6 @@
 [project]
 name = "behavioralsignals"
-version = "0.7.0"
+version = "0.7.1"
 description = "Official Python SDK for the Behavioral Signals API: voice emotion/behavior analysis and audio/video deepfake detection"
 readme = "README.md"
 authors = [{ name = "Behavioral Signal Technologies" }]

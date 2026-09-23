@@ -81,6 +81,7 @@ client = Client("your_cid", "your_api_key")
 
 ```python
 from behavioralsignals import Client
+from behavioralsignals.utils import print_results
 
 client = Client()
 
@@ -90,18 +91,12 @@ result = client.behavioral.wait_for_result(
     timeout=600,
 )
 
-for item in result.results or []:
-    top = item.prediction[0]
-    label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
-    if not label:
-        continue  # the features row carries embeddings, not a result
-    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+print_results(result.results)
 ```
 
 `upload_audio()` returns a process with a unique process ID (`pid`). `wait_for_result()` polls until processing completes and returns the analysis result.
 
-Each result row has the start and end time in seconds, the task, and the top label with its probability.
+`print_results()` (available since version 0.7.1) prints one line per result: the start and end time in seconds, the task, and the top label with its probability.
 Continuous tasks such as `intensity` have no label, only a score, and `asr` and `diarization` have a label without a probability.
 For a 10-second clip of one speaker, the output starts like this:
 
@@ -135,6 +130,7 @@ Batch deepfake detection follows the same workflow as Behavioral Analysis:
 
 ```python
 from behavioralsignals import Client
+from behavioralsignals.utils import print_results
 
 client = Client()
 
@@ -144,13 +140,7 @@ result = client.deepfakes.wait_for_result(
     timeout=600,
 )
 
-for item in result.results or []:
-    top = item.prediction[0]
-    label = item.finalLabel or top.score  # some tasks have no label, only a score
-    if not label:
-        continue  # the features row carries embeddings, not a result
-    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+print_results(result.results)
 ```
 
 To include speaker and deepfake embeddings:
@@ -195,13 +185,7 @@ Unlike an audio result, a video result contains two separate lists:
 For example:
 
 ```python
-for item in result.video_results or []:
-    top = item.prediction[0]
-    label = item.finalLabel or top.score  # some tasks have no label, only a score
-    if not label:
-        continue  # the features row carries embeddings, not a result
-    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+print_results(result.video_results)
 ```
 
 You can also submit a video using an S3 presigned URL with `upload_s3_presigned_video_url()` and inspect video processes using `list_video_processes()` and `get_video_process()`.
@@ -216,7 +200,7 @@ To stream an audio file:
 
 ```python
 from behavioralsignals import Client, StreamingOptions
-from behavioralsignals.utils import make_audio_stream
+from behavioralsignals.utils import make_audio_stream, print_results
 
 client = Client()
 
@@ -234,13 +218,7 @@ for result in client.behavioral.stream_audio(
     audio_stream=audio_stream,
     options=options,
 ):
-    for item in result.results or []:
-        top = item.prediction[0]
-        label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
-        if not label:
-            continue  # the features row carries embeddings, not a result
-        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+    print_results(result.results)
 ```
 
 `chunk_size` is specified in **seconds**, so `0.25` corresponds to 250 ms.
@@ -254,13 +232,7 @@ for result in client.deepfakes.stream_audio(
     audio_stream=audio_stream,
     options=options,
 ):
-    for item in result.results or []:
-        top = item.prediction[0]
-        label = item.finalLabel or top.score  # some tasks have no label, only a score
-        if not label:
-            continue  # the features row carries embeddings, not a result
-        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+    print_results(result.results)
 ```
 
 See the [streaming examples](examples/streaming/) and [streaming documentation](https://behavioralsignals.readme.io/docs/streaming-using-python-sdk) for more.
@@ -284,6 +256,8 @@ See the [streaming examples](examples/streaming/) and [streaming documentation](
 | `get_video_result(pid)` | Deepfakes only: returns the results of a finished video process |
 | `get_video_process(pid)` | Deepfakes only: returns a video process and its status |
 | `list_video_processes(...)` | Deepfakes only: lists video processes |
+
+`behavioralsignals.utils` also has two helpers: `make_audio_stream(file_path, chunk_size=0.25)` turns an audio file into chunks for `stream_audio()`, and `print_results(items)` prints result rows as shown in [Analyze audio](#analyze-audio).
 
 For detailed parameters and result schemas, see the [full API documentation](https://behavioralsignals.readme.io/).
 
