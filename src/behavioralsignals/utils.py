@@ -1,8 +1,5 @@
 from collections.abc import Iterable, Iterator
 
-from pydub import AudioSegment
-from pydub.utils import make_chunks
-
 from .models import ResultItem
 
 
@@ -17,6 +14,9 @@ def make_audio_stream(file_path: str, chunk_size: float = 0.25) -> tuple[Iterato
         Iterator[bytes]: An iterator yielding raw audio data chunks.
         int: Sample rate of the audio.
     """
+    # Imported here because pydub warns on import when ffmpeg is missing.
+    from pydub import AudioSegment
+    from pydub.utils import make_chunks
 
     snd = AudioSegment.from_file(file_path)
     snd = snd.set_sample_width(2)
@@ -41,4 +41,4 @@ def print_results(items: Iterable[ResultItem] | None) -> None:
         if not label:
             continue
         confidence = f" ({float(top.posterior):.1%})" if top and top.posterior else ""
-        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+        print(f"{item.st} {item.et} {item.task} {str(label).strip()}{confidence}")

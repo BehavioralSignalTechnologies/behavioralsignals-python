@@ -101,7 +101,7 @@ Continuous tasks such as `intensity` have no label, only a score, and `asr` and 
 For a 10-second clip of one speaker, the output starts like this:
 
 ```
-0.487 3.001 asr  The birch canoe slid on the smooth plank.
+0.487 3.001 asr The birch canoe slid on the smooth plank.
 0.487 3.001 diarization SPEAKER_00
 0.487 3.001 language en (98.9%)
 0.487 3.001 gender female (99.7%)

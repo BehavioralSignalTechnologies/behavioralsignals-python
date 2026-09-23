@@ -1,4 +1,6 @@
+import sys
 import wave
+import subprocess
 
 import pytest
 
@@ -45,6 +47,7 @@ def test_print_results_prints_one_line_per_result(capsys):
             _item("features", [{"label": None}]),
             _item("gender", None),
             _item("language", None, "en"),
+            _item("asr", None, " Hello there."),
         ]
     )
     assert capsys.readouterr().out == (
@@ -52,9 +55,17 @@ def test_print_results_prints_one_line_per_result(capsys):
         "0.487 3.001 intensity 0.0873\n"
         "0.487 3.001 diarization SPEAKER_00\n"
         "0.487 3.001 language en\n"
+        "0.487 3.001 asr Hello there.\n"
     )
 
 
 def test_print_results_accepts_none(capsys):
     print_results(None)
     assert capsys.readouterr().out == ""
+
+
+def test_importing_utils_does_not_load_pydub():
+    """pydub warns when ffmpeg is missing, so only make_audio_stream() should load it."""
+    code = "import sys, behavioralsignals.utils; print('pydub' in sys.modules)"
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+    assert out.stdout.strip() == "False"
