@@ -32,6 +32,16 @@ Analyze human behavior and detect deepfake speech using batch and real-time audi
 [PyPI](https://pypi.org/project/behavioralsignals/) ·
 [Contributing](CONTRIBUTING.md)
 
+## Features
+
+- **Behavioral Analysis** — analyze human behavior from speech in batch and real-time streaming modes
+- **Deepfake Detection** — detect synthetic or manipulated speech in batch and real-time streaming modes
+- **Video Deepfake Detection (Experimental, Batch Only)** — analyze both the video frames and audio track of supported video files
+- **Core Speech Attributes (Batch Only)** — automatic speech recognition (ASR), speaker diarization, and language identification
+- **Embeddings** — retrieve speaker and behavioral embeddings from the Behavioral API, or speaker and deepfake embeddings from the Deepfakes API
+- **S3 Input** — submit audio and video using S3 presigned URLs
+- **MCP Server** — use Behavioral Signals from MCP-compatible AI assistants
+
 ## Quickstart
 
 ### Install
@@ -117,73 +127,6 @@ process = client.behavioral.upload_audio(
 )
 ```
 
-## Features
-
-- **Behavioral Analysis** — analyze human behavior from speech in batch and real-time streaming modes
-- **Deepfake Detection** — detect synthetic or manipulated speech in batch and real-time streaming modes
-- **Video Deepfake Detection (Experimental, Batch Only)** — analyze both the video frames and audio track of supported video files
-- **Core Speech Attributes (Batch Only)** — automatic speech recognition (ASR), speaker diarization, and language identification
-- **Embeddings** — retrieve speaker and behavioral embeddings from the Behavioral API, or speaker and deepfake embeddings from the Deepfakes API
-- **S3 Input** — submit audio and video using S3 presigned URLs
-- **MCP Server** — use Behavioral Signals from MCP-compatible AI assistants
-
-## Streaming
-
-Both the Behavioral and Deepfakes APIs support real-time **audio** streaming over gRPC.
-
-To stream an audio file:
-
-```python
-from behavioralsignals import Client, StreamingOptions
-from behavioralsignals.utils import make_audio_stream
-
-client = Client()
-
-audio_stream, sample_rate = make_audio_stream(
-    "audio.wav",
-    chunk_size=0.25,
-)
-
-options = StreamingOptions(
-    sample_rate=sample_rate,
-    encoding="LINEAR_PCM",
-)
-
-for result in client.behavioral.stream_audio(
-    audio_stream=audio_stream,
-    options=options,
-):
-    for item in result.results or []:
-        top = item.prediction[0]
-        label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
-        if not label:
-            continue  # the features row carries embeddings, not a result
-        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
-```
-
-`chunk_size` is specified in **seconds**, so `0.25` corresponds to 250 ms.
-
-`stream_audio()` can also accept your own `Iterator[bytes]`, for example from a microphone or live call.
-
-For real-time deepfake detection, use the same interface:
-
-```python
-for result in client.deepfakes.stream_audio(
-    audio_stream=audio_stream,
-    options=options,
-):
-    for item in result.results or []:
-        top = item.prediction[0]
-        label = item.finalLabel or top.score  # some tasks have no label, only a score
-        if not label:
-            continue  # the features row carries embeddings, not a result
-        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
-```
-
-See the [streaming examples](examples/streaming/) and [streaming documentation](https://behavioralsignals.readme.io/docs/streaming-using-python-sdk) for more.
-
 ## Deepfake Detection
 
 ### Audio
@@ -264,6 +207,63 @@ for item in result.video_results or []:
 You can also submit a video using an S3 presigned URL with `upload_s3_presigned_video_url()` and inspect video processes using `list_video_processes()` and `get_video_process()`.
 
 See the [video deepfake documentation](https://behavioralsignals.readme.io/docs/submit-a-file-for-processing) for supported formats, limits, and the current experimental status.
+
+## Streaming
+
+Both the Behavioral and Deepfakes APIs support real-time **audio** streaming over gRPC.
+
+To stream an audio file:
+
+```python
+from behavioralsignals import Client, StreamingOptions
+from behavioralsignals.utils import make_audio_stream
+
+client = Client()
+
+audio_stream, sample_rate = make_audio_stream(
+    "audio.wav",
+    chunk_size=0.25,
+)
+
+options = StreamingOptions(
+    sample_rate=sample_rate,
+    encoding="LINEAR_PCM",
+)
+
+for result in client.behavioral.stream_audio(
+    audio_stream=audio_stream,
+    options=options,
+):
+    for item in result.results or []:
+        top = item.prediction[0]
+        label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
+        if not label:
+            continue  # the features row carries embeddings, not a result
+        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
+        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+```
+
+`chunk_size` is specified in **seconds**, so `0.25` corresponds to 250 ms.
+
+`stream_audio()` can also accept your own `Iterator[bytes]`, for example from a microphone or live call.
+
+For real-time deepfake detection, use the same interface:
+
+```python
+for result in client.deepfakes.stream_audio(
+    audio_stream=audio_stream,
+    options=options,
+):
+    for item in result.results or []:
+        top = item.prediction[0]
+        label = item.finalLabel or top.score  # some tasks have no label, only a score
+        if not label:
+            continue  # the features row carries embeddings, not a result
+        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
+        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+```
+
+See the [streaming examples](examples/streaming/) and [streaming documentation](https://behavioralsignals.readme.io/docs/streaming-using-python-sdk) for more.
 
 ## Available Methods
 
