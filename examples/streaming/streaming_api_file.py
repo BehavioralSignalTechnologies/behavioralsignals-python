@@ -4,7 +4,7 @@ import argparse
 from dotenv import load_dotenv
 
 from behavioralsignals import Client, StreamingOptions
-from behavioralsignals.utils import make_audio_stream
+from behavioralsignals.utils import print_results, make_audio_stream
 
 
 def parse_args():
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     output_data = []
     for resp in responses:
-        print(resp)
+        print_results(resp.results)
         resp_data = resp.model_dump()
         output_data.append(resp_data)
 

@@ -1,7 +1,6 @@
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 
-from pydub import AudioSegment
-from pydub.utils import make_chunks
+from .models import ResultItem
 
 
 def make_audio_stream(file_path: str, chunk_size: float = 0.25) -> tuple[Iterator[bytes], int]:
@@ -15,6 +14,9 @@ def make_audio_stream(file_path: str, chunk_size: float = 0.25) -> tuple[Iterato
         Iterator[bytes]: An iterator yielding raw audio data chunks.
         int: Sample rate of the audio.
     """
+    # Imported here because pydub warns on import when ffmpeg is missing.
+    from pydub import AudioSegment
+    from pydub.utils import make_chunks
 
     snd = AudioSegment.from_file(file_path)
     snd = snd.set_sample_width(2)
@@ -22,3 +24,21 @@ def make_audio_stream(file_path: str, chunk_size: float = 0.25) -> tuple[Iterato
 
     chunks = iter([chunk.raw_data for chunk in make_chunks(snd, chunk_size * 1000)])
     return chunks, snd.frame_rate
+
+
+def print_results(items: Iterable[ResultItem] | None) -> None:
+    """Print one line per result: start time, end time, task, top label and its probability.
+
+    Continuous tasks (e.g. intensity) have no label, so their score is printed instead.
+    Rows without a label or score (e.g. the features row, which carries embeddings) are skipped.
+
+    Args:
+        items (Iterable[ResultItem] | None): Result items, e.g. `result.results`.
+    """
+    for item in items or []:
+        top = item.prediction[0] if item.prediction else None
+        label = item.finalLabel or (top.score if top else None)
+        if not label:
+            continue
+        confidence = f" ({float(top.posterior):.1%})" if top and top.posterior else ""
+        print(f"{item.st} {item.et} {item.task} {label.strip()}{confidence}")
