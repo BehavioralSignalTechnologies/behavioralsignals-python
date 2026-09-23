@@ -96,7 +96,7 @@ print_results(result.results)
 
 `upload_audio()` returns a process with a unique process ID (`pid`). `wait_for_result()` polls until processing completes and returns the analysis result.
 
-`print_results()` (available since version 0.7.1) prints one line per result: the start and end time in seconds, the task, and the top label with its probability.
+`print_results()` prints one line per result: the start and end time in seconds, the task, and the top label with its probability.
 Continuous tasks such as `intensity` have no label, only a score, and `asr` and `diarization` have a label without a probability.
 For a 10-second clip of one speaker, the output starts like this:
 

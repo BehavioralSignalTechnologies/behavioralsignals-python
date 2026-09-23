@@ -30,17 +30,15 @@ def print_results(items: Iterable[ResultItem] | None) -> None:
     """Print one line per result: start time, end time, task, top label and its probability.
 
     Continuous tasks (e.g. intensity) have no label, so their score is printed instead.
-    Rows without a prediction, label or score (e.g. the features row, which carries embeddings) are skipped.
+    Rows without a label or score (e.g. the features row, which carries embeddings) are skipped.
 
     Args:
         items (Iterable[ResultItem] | None): Result items, e.g. `result.results`.
     """
     for item in items or []:
-        if not item.prediction:
-            continue
-        top = item.prediction[0]
-        label = item.finalLabel or top.score
+        top = item.prediction[0] if item.prediction else None
+        label = item.finalLabel or (top.score if top else None)
         if not label:
             continue
-        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
+        confidence = f" ({float(top.posterior):.1%})" if top and top.posterior else ""
         print(f"{item.st} {item.et} {item.task} {label}{confidence}")

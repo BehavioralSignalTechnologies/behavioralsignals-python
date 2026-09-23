@@ -44,12 +44,14 @@ def test_print_results_prints_one_line_per_result(capsys):
             _item("diarization", [{"label": "SPEAKER_00"}], "SPEAKER_00"),
             _item("features", [{"label": None}]),
             _item("gender", None),
+            _item("language", None, "en"),
         ]
     )
     assert capsys.readouterr().out == (
         "0.487 3.001 emotion sad (70.6%)\n"
         "0.487 3.001 intensity 0.0873\n"
         "0.487 3.001 diarization SPEAKER_00\n"
+        "0.487 3.001 language en\n"
     )
 
 
