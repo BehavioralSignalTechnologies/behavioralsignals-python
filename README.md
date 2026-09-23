@@ -6,8 +6,6 @@
 
 <div align="center">
 
-
-
 [![Discord](https://badgen.net/discord/members/fxjRrbMH3Q/?color=8978cc&icon=discord)](https://discord.com/invite/fxjRrbMH3Q)
 [![Twitter](https://badgen.net/badge/b/behavioralsignals/icon?icon=twitter&label&color=black)](https://x.com/behaviorsignals)
 [![readme.io](https://badgen.net/badge/readme.io/Documentation/?color=black)](https://behavioralsignals.readme.io/)
@@ -25,300 +23,282 @@
 
 </div>
 
-Python SDK for the Behavioral Signals API. Behavioral Signals builds AI solutions that understand human behavior through voice and detect deepfake content in audio.
-Our API enables developers to integrate behavioral analysis into their applications, both in batch and streaming modes.
-See the [API documentation](https://behavioralsignals.readme.io/) for details. It is also available as [llms.txt](https://behavioralsignals.readme.io/llms.txt) for AI coding assistants.
+Official Python SDK for the [Behavioral Signals API](https://behavioralsignals.readme.io/).
 
+Analyze human behavior and detect deepfake speech using batch and real-time audio APIs. Experimental video deepfake detection is also available in batch mode.
 
-## Table of Contents
-* [Behavioral Signals API Python SDK](#behavioral-signals-api-python-sdk)
-  * [Features](#features)
-  * [Requirements](#requirements)
-  * [API Key Setup](#api-key-setup)
-  * [SDK Installation](#sdk-installation)
-  * [SDK Example Usage](#sdk-example-usage)
-    * [Behavioral API Batch Mode](#behavioral-api-batch-mode)
-    * [Behavioral API Streaming Mode](#behavioral-api-streaming-mode)
-    * [Deepfakes API Batch Mode](#deepfakes-api-batch-mode)
-    * [Deepfakes API Streaming Mode](#deepfakes-api-streaming-mode)
-  * [Available Methods](#available-methods)
-  * [Error Handling](#error-handling)
-  * [Use with AI assistants (MCP)](#use-with-ai-assistants-mcp)
-    * [Running the MCP server manually](#running-the-mcp-server-manually)
+[Python SDK Documentation](https://behavioralsignals.readme.io/docs/behavioral-signals-python-sdk) ·
+[Examples](examples/) ·
+[PyPI](https://pypi.org/project/behavioralsignals/) ·
+[Contributing](CONTRIBUTING.md)
 
-## Features
+## Quickstart
 
-- **Behavioral Analysis API** : Analyze human behavior in both batch (offline) and streaming (online) modes.
-
-- **Deepfake Detection API**: Detect synthetic or manipulated speech using advanced deepfake detection models.  
-  - Supports batch (offline) and streaming (online) modes  
-  - Compatible with a wide range of spoken languages
-
-- **Core Speech Attributes (Batch Only)**: Extract foundational conversational metadata from both APIs:  
-  - Automatic Speech Recognition (ASR)  
-  - Speaker Diarization  
-  - Language Identification
-
-- **MCP server**: Let AI assistants such as Claude and Cursor analyze files for you. See [Use with AI assistants (MCP)](#use-with-ai-assistants-mcp).
-
-## Requirements
-
-* `Python3.10+`,
-* `ffmpeg`,
-* Python dependencies as specified in `pyproject.toml`
-
-
-## API Key Setup
-
-To use the Behavioral Signals API, you need to create an account and obtain an API key from the [Behavioral Signals portal](https://portal.behavioralsignals.com/).
-
-You can pass your client ID (CID) and API key to `Client(YOUR_CID, YOUR_API_KEY)`, or set them as environment variables and call `Client()`:
-
-```bash
-export BEHAVIORALSIGNALS_CID=your_cid
-export BEHAVIORALSIGNALS_API_KEY=your_api_key
-```
-
-## SDK Installation
+### Install
 
 ```bash
 pip install behavioralsignals
 ```
 
-## SDK Example Usage
+Requires Python 3.10 or later.
 
-After obtaining your API key, you can use the SDK to interact with the Behavioral Signals APIs.
-We currently provide two main APIs:
+### Configure credentials
 
-* the **Behavioral API** for analyzing human behavior through voice, and
-* the **Deepfakes API** for detecting deepfake audio content in human speech.
+Create an account and API key in the [Behavioral Signals portal](https://portal.behavioralsignals.com/).
 
-Both APIs support batch and streaming modes, allowing you to send audio files or streams for analysis and receive results after processing and in real-time, respectively.
-You can also find more detailed examples for both [batch](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/blob/main/examples/batch/README.md) and [streaming](https://github.com/BehavioralSignalTechnologies/behavioralsignals-python/blob/main/examples/streaming/README.md) in the `examples/` directory.
+Set your client ID (CID) and API key as environment variables:
 
-### Behavioral API Batch Mode
+```bash
+export BEHAVIORALSIGNALS_CID="your_cid"
+export BEHAVIORALSIGNALS_API_KEY="your_api_key"
+```
 
-In batch mode, you can send audio files to the Behavioral Signals API for analysis. The API will return a unique process ID (PID) that you can use to retrieve the results later.
-`wait_for_result` checks the process status until processing is complete, then returns the results (available since version 0.6.0).
-Pass `timeout` in seconds to stop waiting after that long; it raises `TimeoutError` if processing has not finished.
+The SDK will pick them up automatically:
 
 ```python
 from behavioralsignals import Client
 
-client = Client(YOUR_CID, YOUR_API_KEY)
-
-response = client.behavioral.upload_audio(file_path="audio.wav")
-output = client.behavioral.wait_for_result(pid=response.pid, timeout=600)
-
-for item in output.results or []:
-    top = item.prediction[0]
-    label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
-    if not label:
-        continue  # the features row carries embeddings, not a result
-    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+client = Client()
 ```
 
-Each result row has the start and end time in seconds, the task, and the top label with its probability.
-Continuous tasks such as `intensity` have no label, only a score, and `asr` and `diarization` have a label without a probability.
-For a 10-second clip of one speaker, the output starts like this:
-
-```
-0.487 3.001 asr  The birch canoe slid on the smooth plank.
-0.487 3.001 diarization SPEAKER_00
-0.487 3.001 language en (98.9%)
-0.487 3.001 gender female (99.7%)
-0.487 3.001 age 18 - 22 (46.8%)
-0.487 3.001 emotion sad (70.6%)
-...
-0.487 3.001 intensity 0.0873
-```
-
-Each row also has `prediction`, the list of all labels with their probabilities. Use `output.model_dump()` to get the results as a dictionary.
-
-Setting `embeddings=True` during audio upload will include speaker and behavioral embeddings in the output (see [documentation](https://behavioralsignals.readme.io/docs/embeddings#/)):
+You can also pass the credentials directly:
 
 ```python
-response = client.behavioral.upload_audio(file_path="audio.wav", embeddings=True)
-output = client.behavioral.wait_for_result(pid=response.pid, timeout=600)
+client = Client("your_cid", "your_api_key")
 ```
 
-Each HTTP request also has its own time limit: 10 seconds to connect, then up to 60 seconds of waiting for the server (300 seconds for uploads).
-You can change these when creating the client, or pass `None` for no limit:
+### Analyze audio
 
 ```python
-client = Client(YOUR_CID, YOUR_API_KEY, timeout=(10, 120), upload_timeout=(10, 900))
+from behavioralsignals import Client
+
+client = Client()
+
+process = client.behavioral.upload_audio(file_path="audio.wav")
+result = client.behavioral.wait_for_result(
+    pid=process.pid,
+    timeout=600,
+)
+
+print(result.model_dump())
 ```
 
-These limits apply to single requests. The `timeout` of `wait_for_result` limits the whole wait.
-If an upload times out, the server may still have received the file and started a process, so check `list_processes()` (or `list_video_processes()` for videos) before uploading again.
+`upload_audio()` returns a process with a unique process ID (`pid`). `wait_for_result()` polls until processing completes and returns the analysis result.
 
-### Behavioral API Streaming Mode
+## Features
 
-In streaming mode, you can send audio data in real-time to the Behavioral Signals API. The API will return results as they are processed.
+- **Behavioral Analysis** — analyze human behavior from speech in batch and real-time streaming modes
+- **Deepfake Detection** — detect synthetic or manipulated speech in batch and real-time streaming modes
+- **Video Deepfake Detection (Experimental, Batch Only)** — analyze both the video frames and audio track of supported video files
+- **Core Speech Attributes (Batch Only)** — automatic speech recognition (ASR), speaker diarization, and language identification
+- **Embeddings** — retrieve speaker and behavioral embeddings from the Behavioral API, or speaker and deepfake embeddings from the Deepfakes API
+- **S3 Input** — submit audio and video using S3 presigned URLs
+- **MCP Server** — use Behavioral Signals from MCP-compatible AI assistants
+
+## Streaming
+
+Both the Behavioral and Deepfakes APIs support real-time **audio** streaming over gRPC.
+
+To stream an audio file:
 
 ```python
 from behavioralsignals import Client, StreamingOptions
 from behavioralsignals.utils import make_audio_stream
 
-client = Client(YOUR_CID, YOUR_API_KEY)
-audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=0.25)
-options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
+client = Client()
 
-for result in client.behavioral.stream_audio(audio_stream=audio_stream, options=options):
-    for item in result.results or []:
-        top = item.prediction[0]
-        label = item.finalLabel or top.score  # continuous tasks (e.g. intensity) have no label
-        if not label:
-            continue  # the features row carries embeddings, not a result
-        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+audio_stream, sample_rate = make_audio_stream(
+    "audio.wav",
+    chunk_size=0.25,
+)
+
+options = StreamingOptions(
+    sample_rate=sample_rate,
+    encoding="LINEAR_PCM",
+)
+
+for result in client.behavioral.stream_audio(
+    audio_stream=audio_stream,
+    options=options,
+):
+    print(result)
 ```
 
-### Deepfakes API Batch Mode
+`chunk_size` is specified in **seconds**, so `0.25` corresponds to 250 ms.
 
-A similar example for the Deepfakes API in batch mode allows you to send audio files for deepfake detection:
+`stream_audio()` can also accept your own `Iterator[bytes]`, for example from a microphone or live call.
+
+For real-time deepfake detection, use the same interface:
+
+```python
+for result in client.deepfakes.stream_audio(
+    audio_stream=audio_stream,
+    options=options,
+):
+    print(result)
+```
+
+See the [streaming examples](examples/streaming/) and [streaming documentation](https://behavioralsignals.readme.io/docs/streaming-using-python-sdk) for more.
+
+## Deepfake Detection
+
+### Audio
+
+Batch deepfake detection follows the same workflow as Behavioral Analysis:
 
 ```python
 from behavioralsignals import Client
 
-client = Client(YOUR_CID, YOUR_API_KEY)
+client = Client()
 
-response = client.deepfakes.upload_audio(file_path="audio.wav")
-output = client.deepfakes.wait_for_result(pid=response.pid, timeout=600)
+process = client.deepfakes.upload_audio(file_path="audio.wav")
+result = client.deepfakes.wait_for_result(
+    pid=process.pid,
+    timeout=600,
+)
 
-for item in output.results or []:
-    top = item.prediction[0]
-    label = item.finalLabel or top.score  # some tasks have no label, only a score
-    if not label:
-        continue  # the features row carries embeddings, not a result
-    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+print(result.model_dump())
 ```
 
-Setting `embeddings=True` during audio upload will include speaker and deepfake embeddings in the output (see [documentation](https://behavioralsignals.readme.io/docs/embeddings-1#/)):
+To include speaker and deepfake embeddings:
 
 ```python
-response = client.deepfakes.upload_audio(file_path="audio.wav", embeddings=True)
-output = client.deepfakes.wait_for_result(pid=response.pid, timeout=600)
+process = client.deepfakes.upload_audio(
+    file_path="audio.wav",
+    embeddings=True,
+)
 ```
 
+### Experimental Generator Detection
 
-#### 🔬 Experimental: Deepfake Generator Prediction (Batch Only)
-
-An experimental option is now available that attempts to predict the generator model used to produce a deepfake.
-When enabled, the returned results will contain an additional field - only for audios with detected deepfake content - indicating the predicted generator model along with a confidence score.
-
-You can activate this feature by passing `enable_generator_detection=True` during audio upload:
+Generator detection is an experimental batch feature that attempts to identify the model used to generate deepfake audio.
 
 ```python
-from behavioralsignals import Client
-
-client = Client(YOUR_CID, YOUR_API_KEY)
-
-response = client.deepfakes.upload_audio(file_path="audio.wav", enable_generator_detection=True)
-output = client.deepfakes.wait_for_result(pid=response.pid, timeout=600)
+process = client.deepfakes.upload_audio(
+    file_path="audio.wav",
+    enable_generator_detection=True,
+)
 ```
 
-See more in our [API documentation](https://behavioralsignals.readme.io/docs/generator-detection#/).
+See the [generator detection documentation](https://behavioralsignals.readme.io/docs/generator-detection) for details and supported generators.
 
-#### 🎬 Video Deepfake Detection (Batch Only)
+### Experimental Video Deepfake Detection
 
-In addition to audio, the Deepfakes API can detect deepfakes in video files. You upload a video the same way you upload audio, and the API analyzes both the audio track and the video frames.
+Video deepfake detection is available in **batch mode only** and is currently experimental.
 
 ```python
-from behavioralsignals import Client
-
-client = Client(YOUR_CID, YOUR_API_KEY)
-
-response = client.deepfakes.upload_video(file_path="video.mp4")
-output = client.deepfakes.wait_for_video_result(pid=response.pid, timeout=600)
+process = client.deepfakes.upload_video(file_path="video.mp4")
+result = client.deepfakes.wait_for_video_result(
+    pid=process.pid,
+    timeout=600,
+)
 ```
 
-Unlike `wait_for_result`, the video result response returns two separate lists — `audio_results` (deepfake detection on the audio track) and `video_results` (deepfake detection on the video frames):
+Unlike an audio result, a video result contains two separate lists:
+
+- `audio_results` — deepfake detection results for the video's audio track
+- `video_results` — deepfake detection results for the video frames
+
+For example:
 
 ```python
-for item in output.video_results or []:
-    top = item.prediction[0]
-    label = item.finalLabel or top.score  # some tasks have no label, only a score
-    if not label:
-        continue  # the features row carries embeddings, not a result
-    confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-    print(f"{item.st} {item.et} {item.task} {label}{confidence}")
+for item in result.video_results or []:
+    print(item)
 ```
 
-You can also submit a video via an S3 presigned URL with `client.deepfakes.upload_s3_presigned_video_url(url=...)`, and list/inspect video processes with `client.deepfakes.list_video_processes()` and `client.deepfakes.get_video_process(pid=...)`. The `embeddings` and `enable_generator_detection` options are supported and apply to the audio-track results. Video deepfake detection is currently available in batch mode only.
+You can also submit a video using an S3 presigned URL with `upload_s3_presigned_video_url()` and inspect video processes using `list_video_processes()` and `get_video_process()`.
 
-### Deepfakes API Streaming Mode
-
-A similar streaming example for the Deepfakes API allows you to send audio data in real-time for speech deepfake detection:
-
-```python
-from behavioralsignals import Client, StreamingOptions
-from behavioralsignals.utils import make_audio_stream
-
-client = Client(YOUR_CID, YOUR_API_KEY)
-audio_stream, sample_rate = make_audio_stream("audio.wav", chunk_size=0.25)
-options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM")
-
-for result in client.deepfakes.stream_audio(audio_stream=audio_stream, options=options):
-    for item in result.results or []:
-        top = item.prediction[0]
-        label = item.finalLabel or top.score  # some tasks have no label, only a score
-        if not label:
-            continue  # the features row carries embeddings, not a result
-        confidence = f" ({float(top.posterior):.1%})" if top.posterior else ""
-        print(f"{item.st} {item.et} {item.task} {label}{confidence}")
-```
+See the [video deepfake documentation](https://behavioralsignals.readme.io/docs/submit-a-file-for-processing) for supported formats, limits, and the current experimental status.
 
 ## Available Methods
 
-`client.behavioral` and `client.deepfakes` have the same methods for audio. Video methods are only on `client.deepfakes`.
+`client.behavioral` and `client.deepfakes` expose the same methods for audio. Video methods are available only on `client.deepfakes`.
 
 | Method | What it does |
 |---|---|
-| `upload_audio(file_path, ...)` | Uploads an audio file and returns the process, with its `pid` |
-| `upload_s3_presigned_url(url, ...)` | Same as `upload_audio`, for audio at an S3 presigned URL |
+| `upload_audio(file_path, ...)` | Uploads an audio file and returns the process, including its `pid` |
+| `upload_s3_presigned_url(url, ...)` | Submits audio using an S3 presigned URL |
 | `wait_for_result(pid, timeout=None)` | Waits for a process to finish and returns its results |
 | `get_result(pid)` | Returns the results of a finished process |
-| `get_process(pid)` | Returns a process and its status |
-| `list_processes(page=0, page_size=1000, sort="asc", start_date=None, end_date=None)` | Lists your processes |
-| `stream_audio(audio_stream, options)` | Sends audio as a stream and yields results as they arrive |
+| `get_process(pid)` | Returns a process and its current status |
+| `list_processes(...)` | Lists audio processes |
+| `stream_audio(audio_stream, options)` | Streams audio and yields results as they arrive |
 | `upload_video(file_path, ...)` | Deepfakes only: uploads a video file |
-| `upload_s3_presigned_video_url(url, ...)` | Deepfakes only: same as `upload_video`, for a video at an S3 presigned URL |
+| `upload_s3_presigned_video_url(url, ...)` | Deepfakes only: submits video using an S3 presigned URL |
 | `wait_for_video_result(pid, timeout=None)` | Deepfakes only: waits for a video process to finish and returns its results |
 | `get_video_result(pid)` | Deepfakes only: returns the results of a finished video process |
 | `get_video_process(pid)` | Deepfakes only: returns a video process and its status |
-| `list_video_processes(...)` | Deepfakes only: lists your video processes |
+| `list_video_processes(...)` | Deepfakes only: lists video processes |
 
-## Error Handling
+For detailed parameters and result schemas, see the [full API documentation](https://behavioralsignals.readme.io/).
 
-When the API returns an error, the SDK raises `BehavioralSignalsError`. Its `status_code` is the HTTP status code.
-`wait_for_result` also raises `TimeoutError` if processing is not done within `timeout` seconds, and `RuntimeError` if the process failed (for example, not enough credits).
+## Timeouts and Error Handling
+
+### Batch API
+
+Batch HTTP API errors raise `BehavioralSignalsError`. Its `status_code` contains the HTTP status code.
 
 ```python
 from behavioralsignals import BehavioralSignalsError, Client
 
-client = Client(YOUR_CID, YOUR_API_KEY)
+client = Client()
 
 try:
-    output = client.behavioral.get_result(pid=12345)
+    result = client.behavioral.get_result(pid=12345)
 except BehavioralSignalsError as error:
     print(error.status_code, error)
 ```
 
-`BehavioralSignalsError` is a subclass of `Exception`, so code that catches `Exception` keeps working.
+`wait_for_result()` and `wait_for_video_result()` also raise:
+
+- `TimeoutError` if processing has not finished within the supplied `timeout`
+- `RuntimeError` if the process finishes unsuccessfully, for example because of insufficient credits
+
 Network problems raise the usual `requests` exceptions, such as `requests.ConnectionError`.
 
-## Use with AI assistants (MCP)
+Each HTTP request also has its own timeout. By default, the SDK allows 10 seconds to connect and up to 60 seconds waiting for the server, or 300 seconds for uploads.
 
-The SDK includes an [MCP](https://modelcontextprotocol.io/) server (available since version 0.7.0), so AI assistants such as Claude Code, Codex, Claude Desktop and Cursor can analyze audio and video files for you.
+You can customize these limits when creating the client:
+
+```python
+client = Client(
+    timeout=(10, 120),
+    upload_timeout=(10, 900),
+)
+```
+
+These request timeouts are separate from the overall `timeout` passed to `wait_for_result()`.
+
+> If an upload request times out, the server may still have received the file and started processing it. Check `list_processes()` — or `list_video_processes()` for videos — before uploading the same file again.
+
+### Streaming API
+
+Streaming uses gRPC rather than the batch HTTP API. Streaming failures can therefore raise `grpc.RpcError` instead of `BehavioralSignalsError`.
+
+```python
+import grpc
+
+try:
+    for result in client.behavioral.stream_audio(
+        audio_stream=audio_stream,
+        options=options,
+    ):
+        print(result)
+except grpc.RpcError as error:
+    print(error.code(), error.details())
+```
+
+## Use with AI Assistants (MCP)
+
+The SDK includes an [MCP](https://modelcontextprotocol.io/) server (available since version 0.7.0), so AI assistants such as Claude Code, Codex, Claude Desktop, and Cursor can analyze audio and video files for you.
+
 The setups below start the server with `uvx`, so install [uv](https://docs.astral.sh/uv/) first.
 
-The server reads your credentials from `BEHAVIORALSIGNALS_CID` and `BEHAVIORALSIGNALS_API_KEY` (see [API Key Setup](#api-key-setup)).
-Your assistant starts the server, so set them in the assistant's config, as shown below.
+The server reads credentials from `BEHAVIORALSIGNALS_CID` and `BEHAVIORALSIGNALS_API_KEY`. Your assistant starts the server, so provide them in the assistant's MCP configuration as shown below.
 
-**Claude Code.** With the two variables set in your shell, run:
+### Claude Code
+
+With the two variables set in your shell, run:
 
 ```bash
 claude mcp add --env BEHAVIORALSIGNALS_CID="$BEHAVIORALSIGNALS_CID" \
@@ -326,9 +306,11 @@ claude mcp add --env BEHAVIORALSIGNALS_CID="$BEHAVIORALSIGNALS_CID" \
   behavioralsignals -- uvx --python ">=3.10" --from "behavioralsignals[mcp]" behavioralsignals-mcp
 ```
 
-This adds the server for you in the current project only. Your key stays out of your shell history and out of the repository.
+This adds the server to the current project only. Your key stays out of your shell history and out of the repository.
 
-**Codex.** With the two variables set in your shell, run:
+### Codex
+
+With the two variables set in your shell, run:
 
 ```bash
 codex mcp add behavioralsignals --env BEHAVIORALSIGNALS_CID="$BEHAVIORALSIGNALS_CID" \
@@ -336,16 +318,24 @@ codex mcp add behavioralsignals --env BEHAVIORALSIGNALS_CID="$BEHAVIORALSIGNALS_
   -- uvx --python ">=3.10" --from "behavioralsignals[mcp]" behavioralsignals-mcp
 ```
 
-This adds the server for all your projects, in `~/.codex/config.toml`.
+This adds the server for all your projects in `~/.codex/config.toml`.
 
-**Claude Desktop and Cursor.** Add this to `claude_desktop_config.json` (in Claude Desktop, Settings > Developer > Edit Config) or to `~/.cursor/mcp.json`:
+### Claude Desktop and Cursor
+
+Add this to `claude_desktop_config.json` (Claude Desktop: **Settings > Developer > Edit Config**) or `~/.cursor/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "behavioralsignals": {
       "command": "uvx",
-      "args": ["--python", ">=3.10", "--from", "behavioralsignals[mcp]", "behavioralsignals-mcp"],
+      "args": [
+        "--python",
+        ">=3.10",
+        "--from",
+        "behavioralsignals[mcp]",
+        "behavioralsignals-mcp"
+      ],
       "env": {
         "BEHAVIORALSIGNALS_CID": "your_cid",
         "BEHAVIORALSIGNALS_API_KEY": "your_api_key"
@@ -355,32 +345,63 @@ This adds the server for all your projects, in `~/.codex/config.toml`.
 }
 ```
 
-If the app cannot find `uvx`, use its full path (run `which uvx` to find it).
+If the app cannot find `uvx`, use its full path (`which uvx`).
 
-The server has 4 tools:
+### MCP Tools
+
+The server exposes four tools:
 
 | Tool | What it does |
 |---|---|
 | `analyze_behavior` | Uploads an audio file or S3 presigned URL for behavioral analysis and returns the results |
 | `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection and returns the results |
-| `get_result` | Returns the results of a process, in pages, optionally only for some tasks |
-| `list_processes` | Lists your processes, newest first, with the reason when one failed |
+| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks |
+| `list_processes` | Lists processes, newest first, including the failure reason when available |
 
 Notes:
-* Each upload uses credits, and the files you name are sent to the Behavioral Signals API.
-* The upload tools wait up to `wait_seconds` (45 by default, 50 at most). If processing takes longer, they return the process ID, and the assistant checks it later with `get_result`.
-* Don't commit config files that contain your API key.
 
-### Running the MCP server manually
+- Each upload uses API credits, and files named in MCP tool calls are sent to the Behavioral Signals API.
+- Upload tools wait up to `wait_seconds` (45 seconds by default, 50 seconds at most). If processing takes longer, they return the process ID so the assistant can check it later with `get_result`.
+- Do not commit configuration files containing your API key.
 
-With uv installed, you can run it without installing anything else:
+### Running the MCP Server Manually
+
+With `uv` installed, run the server without installing the package:
 
 ```bash
 uvx --python ">=3.10" --from "behavioralsignals[mcp]" behavioralsignals-mcp
 ```
 
-Or install it with pip and run `behavioralsignals-mcp`:
+Or install the MCP extra with pip:
 
 ```bash
 pip install "behavioralsignals[mcp]"
+behavioralsignals-mcp
 ```
+
+## Requirements
+
+- Python 3.10+
+- A Behavioral Signals account and API key
+
+`ffmpeg` is needed by `make_audio_stream()` for formats other than WAV, such as mp3.
+
+## Documentation and Examples
+
+- [Python SDK Documentation](https://behavioralsignals.readme.io/docs/behavioral-signals-python-sdk)
+- [Full API Documentation](https://behavioralsignals.readme.io/)
+- [Streaming with the Python SDK](https://behavioralsignals.readme.io/docs/streaming-using-python-sdk)
+- [Video Deepfake Detection](https://behavioralsignals.readme.io/docs/submit-a-file-for-processing)
+- [Batch Examples](examples/batch/)
+- [Streaming Examples](examples/streaming/)
+- [AI-friendly Documentation (`llms.txt`)](https://behavioralsignals.readme.io/llms.txt)
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, testing, formatting, and pull request guidelines.
+
+Please report security issues according to [SECURITY.md](SECURITY.md).
+
+## License
+
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE).
