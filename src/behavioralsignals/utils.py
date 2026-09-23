@@ -41,4 +41,4 @@ def print_results(items: Iterable[ResultItem] | None) -> None:
         if not label:
             continue
         confidence = f" ({float(top.posterior):.1%})" if top and top.posterior else ""
-        print(f"{item.st} {item.et} {item.task} {str(label).strip()}{confidence}")
+        print(f"{item.st} {item.et} {item.task} {label.strip()}{confidence}")
