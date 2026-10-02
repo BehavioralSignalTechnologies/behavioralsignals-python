@@ -225,7 +225,7 @@ class ModelPredictions(_SerializableModel):
         examples=["0.62"],
     )
     dominantInSegments: list[int] | None = Field(
-        None, description="The segments in which this class is dominant"
+        None, description="Internal field, usually empty. You can ignore it."
     )
 
 
@@ -246,17 +246,17 @@ class ResultItem(_SerializableModel):
     prediction: list[ModelPredictions] | None = None
     finalLabel: str | None = Field(
         None,
-        description="The label the API picks for this task, using tuned thresholds: it may not be the label with the highest posterior",
+        description="The label the API picks for this task. For behavioral tasks it is the label with the highest posterior.",
         examples=["happy"],
     )
     level: str | None = Field(
         None,
-        description="Whether this result corresponds to a segment/utterance",
+        description="'utterance' in batch results. Streaming can also return 'segment'.",
         examples=["utterance"],
     )
     embedding: str | None = Field(
         None,
-        description="The corresponding embedding (present in diarization or features). It's a stringified array of length 728.",
+        description="The embedding as a stringified array: the speaker embedding (192 values) on the diarization row of a speaker's first utterance, or the behavioral embedding (768 values) on the features row.",
         examples=["[11.614513397216797, -15.228992462158203, -4.92175817489624, ...]"],
     )
 

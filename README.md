@@ -139,12 +139,15 @@ All eight dimensions are scored together on every utterance longer than 1 second
 | `age` | Age range of the speaker | `18 - 22`, `23 - 30`, `31 - 45`, `46 - 65` | 4 |
 | **Total** | | | **24** |
 
-Plus `intensity`: how intense the emotion is, whichever emotion it is, as a score between 0 and 1. It has no labels and is not counted in the 24.
-Utterances of 1 second or less return only `diarization`, `asr`, `gender` and `language`.
+Plus `intensity`: how intense the emotion is, as one score between 0 and 1. It is not a score for any one emotion, even when `emotion` is `angry`. It has no labels and is not counted in the 24.
+Utterances of 1 second or less return only `diarization`, `asr` and `language`.
+`gender` and `age` are given per speaker: every utterance of a speaker longer than 1 second gets the same values, averaged over the file.
+The other tasks have open-ended values, not fixed labels: `diarization` (a speaker ID such as `SPEAKER_00`), `asr` (the transcript) and `language`. With `embeddings=True`, `features` holds the behavioral embedding.
+All results of one utterance share its `id`, `startTime` and `endTime`. To split results by speaker, use the `diarization` label of each utterance. Speaker IDs are generic: the API does not say who is the agent and who is the customer.
 
 `neutral` means something different in each task, so always read a label together with its task: `emotion: neutral` means no clear emotion, `strength: neutral` normal energy, `positivity: neutral` neither positive nor negative, and `engagement: neutral` neither engaged nor withdrawn.
 
-`finalLabel` gives one answer per task. It is picked with tuned thresholds, so it is not always the label with the highest probability.
+`finalLabel` gives one answer per task. For behavioral tasks it is the label with the highest probability.
 When you need a score instead of a label, use the probabilities in `prediction`. They are strings, so convert them with `float()`.
 For each task in the table they add up to 1, so each label's probability is a score from 0 to 1 that you can track over time, average over a call, or compare against your own threshold.
 For example, the `angry` probability of `emotion` is a score for anger. `intensity` is not: it does not say which emotion is intense.
