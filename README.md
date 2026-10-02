@@ -25,7 +25,7 @@
 
 Official Python SDK for the [Behavioral Signals API](https://behavioralsignals.readme.io/).
 
-Analyze human behavior and detect deepfake speech using batch and real-time audio APIs. Experimental video deepfake detection is also available in batch mode.
+Estimate behavioral signals from speech and detect deepfake speech using batch and real-time audio APIs. Experimental video deepfake detection is also available in batch mode.
 
 [Python SDK Documentation](https://behavioralsignals.readme.io/docs/behavioral-signals-python-sdk) ·
 [Examples](examples/) ·
@@ -34,7 +34,7 @@ Analyze human behavior and detect deepfake speech using batch and real-time audi
 
 ## Features
 
-- **Behavioral Analysis** — analyze human behavior from speech in batch and real-time streaming modes
+- **Behavioral Analysis** — estimate behavioral signals from speech in batch and real-time streaming modes
 - **Deepfake Detection** — detect synthetic or manipulated speech in batch and real-time streaming modes
 - **Video Deepfake Detection (Experimental, Batch Only)** — analyze both the video frames and audio track of supported video files
 - **Core Speech Attributes (Batch Only)** — automatic speech recognition (ASR), speaker diarization, and language identification
@@ -96,7 +96,7 @@ print_results(result.results)
 
 `upload_audio()` returns a process with a unique process ID (`pid`). `wait_for_result()` polls until processing completes and returns the analysis result.
 
-`print_results()` prints one line per result: the start and end time in seconds, the task, and the top label with its probability.
+`print_results()` prints one line per result: the start and end time in seconds, the task, and the final label with its probability.
 Continuous tasks such as `intensity` have no label, only a score, and `asr` and `diarization` have a label without a probability.
 For a 10-second clip of one speaker, the output starts like this:
 
@@ -121,6 +121,52 @@ process = client.behavioral.upload_audio(
     embeddings=True,
 )
 ```
+
+### Behavioral outputs
+
+The Behavioral API returns **24 signals** across 8 dimensions: 18 behavioral signals and 6 speaker signals. Each label is its own signal with its own probability.
+All eight dimensions are scored together on every utterance longer than 1 second, so one utterance can be *sad + weak + negative + slow + hesitating + withdrawn*, with a voice estimated as female and aged 31 - 45. That gives 4 × 3 × 3 × 3 × 2 × 3 × 2 × 4 = **5,184 possible profiles** per utterance.
+
+| Task | What it measures | Labels | # |
+|---|---|---|---|
+| `emotion` | Basic emotion in the voice | `happy`, `angry`, `sad`, `neutral` | 4 |
+| `strength` | Arousal: energy in the voice | `strong`, `weak`, `neutral` | 3 |
+| `positivity` | Valence: sentiment of the tone | `positive`, `negative`, `neutral` | 3 |
+| `speaking_rate` | How fast the speaker talks, compared to speakers in general, not to their own pace | `fast`, `slow`, `normal` | 3 |
+| `hesitation` | Signs of hesitation | `yes`, `no` | 2 |
+| `engagement` | Involved or detached tone | `engaged`, `withdrawn`, `neutral` | 3 |
+| `gender` | Sex of the speaker, estimated from the voice | `female`, `male` | 2 |
+| `age` | Age range of the speaker, estimated from the voice | `18 - 22`, `23 - 30`, `31 - 45`, `46 - 65` | 4 |
+| **Total** | | | **24** |
+
+Plus `intensity`: how intense the emotion is, as one score between 0 and 1. It is not a score for any one emotion, even when `emotion` is `angry`. It has no labels and is not counted in the 24.
+Utterances of 1 second or less return only `diarization`, `asr` and `language`.
+`gender` and `age` are given per speaker: every utterance of a speaker longer than 1 second gets the same values, averaged over the file.
+The other tasks have open-ended values, not fixed labels: `diarization` (a speaker ID such as `SPEAKER_00`), `asr` (the transcript) and `language`. With `embeddings=True`, `features` holds the behavioral embedding.
+All results of one utterance share its `id`, `startTime` and `endTime`. To split results by speaker, use the `diarization` label of each utterance. Speaker IDs are generic: the API does not say who is the agent and who is the customer.
+
+`neutral` means something different in each task, so always read a label together with its task: `emotion: neutral` means no clear emotion, `strength: neutral` normal energy, `positivity: neutral` neither positive nor negative, and `engagement: neutral` neither engaged nor withdrawn.
+
+`finalLabel` gives one answer per task. For behavioral tasks it is the label with the highest probability.
+When you need a score instead of a label, use the probabilities in `prediction`. They are strings, so convert them with `float()`.
+For each task in the table they add up to 1, so each label's probability is a score from 0 to 1 that you can track over time, average over a call, or compare against your own threshold.
+For example, the `angry` probability of `emotion` is a score for anger. `intensity` is not: it does not say which emotion is intense.
+
+`positivity` is valence and `strength` is arousal, the two dimensions often used in emotion research. The API gives them as probabilities from 0 to 1. To put them on the usual scale from -1 to 1, subtract the probabilities of the two opposite labels:
+
+```python
+for item in result.results:
+    if item.task in ("positivity", "strength"):
+        scores = {p.label: float(p.posterior) for p in item.prediction}
+        if item.task == "positivity":
+            print(item.st, "valence", scores["positive"] - scores["negative"])
+        else:
+            print(item.st, "arousal", scores["strong"] - scores["weak"])
+```
+
+All probabilities are model estimates: use them to compare utterances and follow trends, not as exact measurements.
+
+See [Definition of behaviors](https://behavioralsignals.readme.io/docs/definition-of-behaviors) for what each signal means.
 
 ## Deepfake Detection
 
@@ -383,8 +429,8 @@ The server exposes four tools:
 | Tool | What it does |
 |---|---|
 | `analyze_behavior` | Uploads an audio file or S3 presigned URL for behavioral analysis and returns the results |
-| `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection and returns the results |
-| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks |
+| `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection (video is experimental) and returns the results |
+| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label |
 | `list_processes` | Lists processes, newest first, including the failure reason when available |
 
 Notes:

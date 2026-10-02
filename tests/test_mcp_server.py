@@ -111,11 +111,23 @@ async def test_formats_labelled_rows_and_drops_the_rest(api):
     assert not is_error
     assert text == (
         "pid 7 completed. Rows 1-3 of 3. Tasks: asr, emotion, intensity\n"
-        "start\tend\ttask\tlabel\tconfidence\n"
+        "start\tend\ttask\tlabel\tprobabilities\n"
         "0.5\t1.5\tasr\tHello there.\t\n"
-        "0.5\t1.5\temotion\tsad\t0.706\n"
+        "0.5\t1.5\temotion\tsad\tsad=0.71\n"
         "0.5\t1.5\tintensity\t0.62\t"
     )
+
+
+async def test_rows_show_the_probability_of_every_label(api):
+    prediction = [
+        ModelPredictions(label="sad", posterior="0.5"),
+        ModelPredictions(label="neutral", posterior="0.4"),
+    ]
+    api.responses["wait_for_result"] = ResultResponse(
+        pid=7, results=[ResultItem(task="emotion", finalLabel="neutral", prediction=prediction)]
+    )
+    _, text = await call("get_result", pid=7, analysis="behavioral")
+    assert text.endswith("\temotion\tneutral\tsad=0.50, neutral=0.40")
 
 
 async def test_tabs_and_newlines_in_a_cell_become_spaces(api):
@@ -134,9 +146,9 @@ async def test_video_rows_have_a_track_column(api):
     )
     _, text = await call("get_result", pid=7, analysis="deepfake_video")
     assert text.splitlines()[1:] == [
-        "track\tstart\tend\ttask\tlabel\tconfidence",
-        "audio\t0.5\t1.5\tdeepfake\tbonafide\t0.9",
-        "video\t0.5\t1.5\tvisual_deepfake\tspoofed\t0.8",
+        "track\tstart\tend\ttask\tlabel\tprobabilities",
+        "audio\t0.5\t1.5\tdeepfake\tbonafide\tbonafide=0.90",
+        "video\t0.5\t1.5\tvisual_deepfake\tspoofed\tspoofed=0.80",
     ]
 
 

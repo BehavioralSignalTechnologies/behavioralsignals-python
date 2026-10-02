@@ -36,7 +36,7 @@ WaitSeconds = Annotated[float, Field(ge=0, le=50)]
 
 DEFAULT_WAIT = 45
 DEFAULT_LIMIT = 300
-RESULT_COLUMNS = ["start", "end", "task", "label", "confidence"]
+RESULT_COLUMNS = ["start", "end", "task", "label", "probabilities"]
 PROCESS_COLUMNS = ["pid", "name", "status", "duration", "created", "reason"]
 READ_ONLY = ToolAnnotations(read_only_hint=True)
 
@@ -71,7 +71,7 @@ def detect_deepfake(
     generator_detection: bool = False,
     wait_seconds: WaitSeconds = DEFAULT_WAIT,
 ) -> str:
-    """Detects whether speech (media="audio") or a video (media="video") is a deepfake.
+    """Detects whether speech (media="audio") or a video (media="video", experimental) is a deepfake.
 
     `source` is an absolute path to a local file, or an S3 presigned URL. With
     generator_detection=True, the result also names the likely generator (experimental). Each
@@ -100,6 +100,9 @@ def get_result(
     `analysis` is the kind of job: "behavioral" (analyze_behavior), "deepfake_audio" or
     "deepfake_video" (detect_deepfake). Results come as tab-separated rows, `limit` rows from
     `offset`. `tasks` keeps only those tasks, e.g. ["emotion"]; the header lists the task names.
+    Each row has the final label and the probability of every label of the task. Use the
+    probabilities as scores. positivity is valence and strength is arousal; for a scale from -1
+    to 1, use P(positive) - P(negative) and P(strong) - P(weak).
     """
     with _tool_errors(), _api(analysis) as api:
         return _result_text(api, analysis, pid, wait_seconds, tasks, offset, limit)
@@ -238,8 +241,15 @@ def _result_row(item: ResultItem) -> list[str] | None:
     label = item.finalLabel or (top.score if top else None)
     if not label:
         return None
-    confidence = top.posterior if top else None
-    return [_cell(value) for value in (item.startTime, item.endTime, item.task, label, confidence)]
+    values = (item.startTime, item.endTime, item.task, label, _probabilities(item))
+    return [_cell(value) for value in values]
+
+
+def _probabilities(item: ResultItem) -> str:
+    """Returns every label of the item with its probability, e.g. "sad=0.70, neutral=0.30"."""
+    return ", ".join(
+        f"{p.label}={float(p.posterior):.2f}" for p in item.prediction or [] if p.posterior
+    )
 
 
 def _format_result(
