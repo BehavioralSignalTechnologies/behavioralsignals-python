@@ -25,7 +25,7 @@
 
 Official Python SDK for the [Behavioral Signals API](https://behavioralsignals.readme.io/).
 
-Analyze human behavior and detect deepfake speech using batch and real-time audio APIs. Experimental video deepfake detection is also available in batch mode.
+Estimate behavioral signals from speech and detect deepfake speech using batch and real-time audio APIs. Experimental video deepfake detection is also available in batch mode.
 
 [Python SDK Documentation](https://behavioralsignals.readme.io/docs/behavioral-signals-python-sdk) ·
 [Examples](examples/) ·
@@ -34,7 +34,7 @@ Analyze human behavior and detect deepfake speech using batch and real-time audi
 
 ## Features
 
-- **Behavioral Analysis** — analyze human behavior from speech in batch and real-time streaming modes
+- **Behavioral Analysis** — estimate behavioral signals from speech in batch and real-time streaming modes
 - **Deepfake Detection** — detect synthetic or manipulated speech in batch and real-time streaming modes
 - **Video Deepfake Detection (Experimental, Batch Only)** — analyze both the video frames and audio track of supported video files
 - **Core Speech Attributes (Batch Only)** — automatic speech recognition (ASR), speaker diarization, and language identification
@@ -125,7 +125,7 @@ process = client.behavioral.upload_audio(
 ### Behavioral outputs
 
 The Behavioral API returns **24 signals** across 8 dimensions: 18 behavioral signals and 6 speaker signals. Each label is its own signal with its own probability.
-All eight dimensions are scored together on every utterance longer than 1 second, so one utterance can be *sad + weak + negative + slow + hesitating + withdrawn*, from a female speaker aged 31 - 45. That gives 4 × 3 × 3 × 3 × 2 × 3 × 2 × 4 = **5,184 possible profiles** per utterance.
+All eight dimensions are scored together on every utterance longer than 1 second, so one utterance can be *sad + weak + negative + slow + hesitating + withdrawn*, with a voice estimated as female and aged 31 - 45. That gives 4 × 3 × 3 × 3 × 2 × 3 × 2 × 4 = **5,184 possible profiles** per utterance.
 
 | Task | What it measures | Labels | # |
 |---|---|---|---|
@@ -135,8 +135,8 @@ All eight dimensions are scored together on every utterance longer than 1 second
 | `speaking_rate` | How fast the speaker talks, compared to speakers in general, not to their own pace | `fast`, `slow`, `normal` | 3 |
 | `hesitation` | Signs of hesitation | `yes`, `no` | 2 |
 | `engagement` | Involved or detached tone | `engaged`, `withdrawn`, `neutral` | 3 |
-| `gender` | Sex of the speaker | `female`, `male` | 2 |
-| `age` | Age range of the speaker | `18 - 22`, `23 - 30`, `31 - 45`, `46 - 65` | 4 |
+| `gender` | Sex of the speaker, estimated from the voice | `female`, `male` | 2 |
+| `age` | Age range of the speaker, estimated from the voice | `18 - 22`, `23 - 30`, `31 - 45`, `46 - 65` | 4 |
 | **Total** | | | **24** |
 
 Plus `intensity`: how intense the emotion is, as one score between 0 and 1. It is not a score for any one emotion, even when `emotion` is `angry`. It has no labels and is not counted in the 24.
@@ -429,7 +429,7 @@ The server exposes four tools:
 | Tool | What it does |
 |---|---|
 | `analyze_behavior` | Uploads an audio file or S3 presigned URL for behavioral analysis and returns the results |
-| `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection and returns the results |
+| `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection (video is experimental) and returns the results |
 | `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label |
 | `list_processes` | Lists processes, newest first, including the failure reason when available |
 

@@ -71,7 +71,7 @@ def detect_deepfake(
     generator_detection: bool = False,
     wait_seconds: WaitSeconds = DEFAULT_WAIT,
 ) -> str:
-    """Detects whether speech (media="audio") or a video (media="video") is a deepfake.
+    """Detects whether speech (media="audio") or a video (media="video", experimental) is a deepfake.
 
     `source` is an absolute path to a local file, or an S3 presigned URL. With
     generator_detection=True, the result also names the likely generator (experimental). Each
