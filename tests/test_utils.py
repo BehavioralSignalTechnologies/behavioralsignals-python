@@ -59,6 +59,12 @@ def test_print_results_prints_one_line_per_result(capsys):
     )
 
 
+def test_print_results_shows_the_probability_of_the_final_label(capsys):
+    prediction = [{"label": "sad", "posterior": "0.5"}, {"label": "neutral", "posterior": "0.4"}]
+    print_results([_item("emotion", prediction, "neutral")])
+    assert capsys.readouterr().out == "0.487 3.001 emotion neutral (40.0%)\n"
+
+
 def test_print_results_accepts_none(capsys):
     print_results(None)
     assert capsys.readouterr().out == ""

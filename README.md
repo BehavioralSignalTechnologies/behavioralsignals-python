@@ -96,7 +96,7 @@ print_results(result.results)
 
 `upload_audio()` returns a process with a unique process ID (`pid`). `wait_for_result()` polls until processing completes and returns the analysis result.
 
-`print_results()` prints one line per result: the start and end time in seconds, the task, and the top label with its probability.
+`print_results()` prints one line per result: the start and end time in seconds, the task, and the final label with its probability.
 Continuous tasks such as `intensity` have no label, only a score, and `asr` and `diarization` have a label without a probability.
 For a 10-second clip of one speaker, the output starts like this:
 
@@ -140,6 +140,26 @@ All eight dimensions are scored together on every utterance longer than 1 second
 | `intensity` | Intensity of the emotion | none: a score between 0 and 1 |
 
 `neutral` means something different in each task, so always read a label together with its task.
+
+`finalLabel` gives one answer per task. It is picked with tuned thresholds, so it is not always the label with the highest probability.
+When you need a score instead of a label, use the probabilities in `prediction`. They are strings, so convert them with `float()`.
+For each task in the table they add up to 1, so each label's probability is a score from 0 to 1 that you can track over time, average over a call, or compare against your own threshold.
+
+For a scale from -1 to 1, subtract the probabilities of two opposite labels: `positivity` gives valence and `strength` gives arousal.
+
+```python
+for item in result.results:
+    if item.task in ("positivity", "strength"):
+        scores = {p.label: float(p.posterior) for p in item.prediction}
+        if item.task == "positivity":
+            print(item.st, "valence", scores["positive"] - scores["negative"])
+        else:
+            print(item.st, "arousal", scores["strong"] - scores["weak"])
+```
+
+The API does not predict valence or arousal itself; they are derived from the probabilities.
+All probabilities are model estimates: use them to compare utterances and follow trends, not as exact measurements.
+
 See [Definition of behaviors](https://behavioralsignals.readme.io/docs/definition-of-behaviors) for what each signal means.
 
 ## Deepfake Detection
@@ -404,7 +424,7 @@ The server exposes four tools:
 |---|---|
 | `analyze_behavior` | Uploads an audio file or S3 presigned URL for behavioral analysis and returns the results |
 | `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection and returns the results |
-| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks |
+| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label |
 | `list_processes` | Lists processes, newest first, including the failure reason when available |
 
 Notes:

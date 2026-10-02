@@ -215,7 +215,9 @@ class _SerializableModel(BaseModel):
 class ModelPredictions(_SerializableModel):
     label: str | None = Field(None, description="The name of the class", examples=["happy"])
     posterior: str | None = Field(
-        None, description="The probability of this class being present", examples=["0.754"]
+        None,
+        description="The probability of this class, as a string. The posteriors of one result add up to 1; use float(posterior) as a score when finalLabel is not enough",
+        examples=["0.754"],
     )
     score: str | None = Field(
         None,
@@ -243,7 +245,9 @@ class ResultItem(_SerializableModel):
     )
     prediction: list[ModelPredictions] | None = None
     finalLabel: str | None = Field(
-        None, description="The dominant value of the behavioral attribute", examples=["happy"]
+        None,
+        description="The label the API picks for this task, using tuned thresholds: it may not be the label with the highest posterior",
+        examples=["happy"],
     )
     level: str | None = Field(
         None,
