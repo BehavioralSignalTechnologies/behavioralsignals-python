@@ -122,6 +122,26 @@ process = client.behavioral.upload_audio(
 )
 ```
 
+### Behavioral outputs
+
+The Behavioral API returns **24 signals** across 8 dimensions: 18 behavioral signals and 6 speaker signals. Each label is its own signal with its own probability.
+All eight dimensions are scored together on every utterance longer than 1 second, so one utterance can be *sad + weak + negative + slow + hesitating + withdrawn*, from a female speaker aged 31 - 45.
+
+| Task | What it measures | Labels |
+|---|---|---|
+| `emotion` | Basic emotion in the voice | `happy`, `angry`, `sad`, `neutral` |
+| `strength` | Arousal: energy in the voice | `strong`, `weak`, `neutral` |
+| `positivity` | Sentiment of the tone | `positive`, `negative`, `neutral` |
+| `speaking_rate` | How fast the speaker talks | `fast`, `slow`, `normal` |
+| `hesitation` | Signs of hesitation | `yes`, `no` |
+| `engagement` | Involved or detached tone | `engaged`, `withdrawn`, `neutral` |
+| `gender` | Sex of the speaker | `female`, `male` |
+| `age` | Age range of the speaker | `18 - 22`, `23 - 30`, `31 - 45`, `46 - 65` |
+| `intensity` | Intensity of the emotion | none: a score between 0 and 1 |
+
+`neutral` means something different in each task, so always read a label together with its task.
+See [Definition of behaviors](https://behavioralsignals.readme.io/docs/definition-of-behaviors) for what each signal means.
+
 ## Deepfake Detection
 
 ### Audio
