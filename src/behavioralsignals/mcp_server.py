@@ -101,8 +101,8 @@ def get_result(
     "deepfake_video" (detect_deepfake). Results come as tab-separated rows, `limit` rows from
     `offset`. `tasks` keeps only those tasks, e.g. ["emotion"]; the header lists the task names.
     Each row has the final label and the probability of every label of the task. Use the
-    probabilities as scores, e.g. valence = P(positive) - P(negative) from positivity, and
-    arousal = P(strong) - P(weak) from strength.
+    probabilities as scores. positivity is valence and strength is arousal; for a scale from -1
+    to 1, use P(positive) - P(negative) and P(strong) - P(weak).
     """
     with _tool_errors(), _api(analysis) as api:
         return _result_text(api, analysis, pid, wait_seconds, tasks, offset, limit)

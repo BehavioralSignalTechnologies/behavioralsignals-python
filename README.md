@@ -125,27 +125,31 @@ process = client.behavioral.upload_audio(
 ### Behavioral outputs
 
 The Behavioral API returns **24 signals** across 8 dimensions: 18 behavioral signals and 6 speaker signals. Each label is its own signal with its own probability.
-All eight dimensions are scored together on every utterance longer than 1 second, so one utterance can be *sad + weak + negative + slow + hesitating + withdrawn*, from a female speaker aged 31 - 45.
+All eight dimensions are scored together on every utterance longer than 1 second, so one utterance can be *sad + weak + negative + slow + hesitating + withdrawn*, from a female speaker aged 31 - 45. That gives 4 × 3 × 3 × 3 × 2 × 3 × 2 × 4 = **5,184 possible profiles** per utterance.
 
-| Task | What it measures | Labels |
-|---|---|---|
-| `emotion` | Basic emotion in the voice | `happy`, `angry`, `sad`, `neutral` |
-| `strength` | Arousal: energy in the voice | `strong`, `weak`, `neutral` |
-| `positivity` | Sentiment of the tone | `positive`, `negative`, `neutral` |
-| `speaking_rate` | How fast the speaker talks | `fast`, `slow`, `normal` |
-| `hesitation` | Signs of hesitation | `yes`, `no` |
-| `engagement` | Involved or detached tone | `engaged`, `withdrawn`, `neutral` |
-| `gender` | Sex of the speaker | `female`, `male` |
-| `age` | Age range of the speaker | `18 - 22`, `23 - 30`, `31 - 45`, `46 - 65` |
-| `intensity` | Intensity of the emotion | none: a score between 0 and 1 |
+| Task | What it measures | Labels | # |
+|---|---|---|---|
+| `emotion` | Basic emotion in the voice | `happy`, `angry`, `sad`, `neutral` | 4 |
+| `strength` | Arousal: energy in the voice | `strong`, `weak`, `neutral` | 3 |
+| `positivity` | Valence: sentiment of the tone | `positive`, `negative`, `neutral` | 3 |
+| `speaking_rate` | How fast the speaker talks, compared to speakers in general, not to their own pace | `fast`, `slow`, `normal` | 3 |
+| `hesitation` | Signs of hesitation | `yes`, `no` | 2 |
+| `engagement` | Involved or detached tone | `engaged`, `withdrawn`, `neutral` | 3 |
+| `gender` | Sex of the speaker | `female`, `male` | 2 |
+| `age` | Age range of the speaker | `18 - 22`, `23 - 30`, `31 - 45`, `46 - 65` | 4 |
+| **Total** | | | **24** |
 
-`neutral` means something different in each task, so always read a label together with its task.
+Plus `intensity`: how intense the emotion is, whichever emotion it is, as a score between 0 and 1. It has no labels and is not counted in the 24.
+Utterances of 1 second or less return only `diarization`, `asr`, `gender` and `language`.
+
+`neutral` means something different in each task, so always read a label together with its task: `emotion: neutral` means no clear emotion, `strength: neutral` normal energy, `positivity: neutral` neither positive nor negative, and `engagement: neutral` neither engaged nor withdrawn.
 
 `finalLabel` gives one answer per task. It is picked with tuned thresholds, so it is not always the label with the highest probability.
 When you need a score instead of a label, use the probabilities in `prediction`. They are strings, so convert them with `float()`.
 For each task in the table they add up to 1, so each label's probability is a score from 0 to 1 that you can track over time, average over a call, or compare against your own threshold.
+For example, the `angry` probability of `emotion` is a score for anger. `intensity` is not: it does not say which emotion is intense.
 
-For a scale from -1 to 1, subtract the probabilities of two opposite labels: `positivity` gives valence and `strength` gives arousal.
+`positivity` is valence and `strength` is arousal, the two dimensions often used in emotion research. The API gives them as probabilities from 0 to 1. To put them on the usual scale from -1 to 1, subtract the probabilities of the two opposite labels:
 
 ```python
 for item in result.results:
@@ -157,7 +161,6 @@ for item in result.results:
             print(item.st, "arousal", scores["strong"] - scores["weak"])
 ```
 
-The API does not predict valence or arousal itself; they are derived from the probabilities.
 All probabilities are model estimates: use them to compare utterances and follow trends, not as exact measurements.
 
 See [Definition of behaviors](https://behavioralsignals.readme.io/docs/definition-of-behaviors) for what each signal means.

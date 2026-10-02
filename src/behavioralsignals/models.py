@@ -239,7 +239,7 @@ class ResultItem(_SerializableModel):
     )
     task: str | None = Field(
         None,
-        description="The behavioral attribute. Can be one of diarization, deepfake, visual_deepfake, generator, asr, gender, age, language, features, emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. "
+        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaker: gender, age. Other: diarization, asr, language, features. Deepfakes API: deepfake, visual_deepfake, generator. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         examples=["emotion"],
     )
