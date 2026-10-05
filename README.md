@@ -140,8 +140,8 @@ All eight dimensions are scored together on every utterance longer than 1 second
 | **Total** | | | **24** |
 
 Plus `intensity`: how intense the emotion is, as one score between 0 and 1. It is not a score for any one emotion, even when `emotion` is `angry`. It has no labels and is not counted in the 24.
-Utterances of 1 second or less return only `diarization`, `asr` and `language`.
-`gender` and `age` are given per speaker: every utterance of a speaker longer than 1 second gets the same values, averaged over the file.
+In batch results, utterances of 1 second or less return only `diarization`, `asr` and `language`. When streaming, every segment gets all 24 signals and `intensity`, however short it is.
+In batch results, `gender` and `age` are given per speaker: every utterance of a speaker longer than 1 second gets the same values, averaged over the file. When streaming, `gender` and `age` are estimated on each segment.
 The other tasks have open-ended values, not fixed labels: `diarization` (a speaker ID such as `SPEAKER_00`), `asr` (the transcript) and `language`. With `embeddings=True`, `features` holds the behavioral embedding.
 All results of one utterance share its `id`, `startTime` and `endTime`. To split results by speaker, use the `diarization` label of each utterance. Speaker IDs are generic: the API does not say who is the agent and who is the customer.
 
