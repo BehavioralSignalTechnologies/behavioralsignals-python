@@ -10,10 +10,10 @@
 | src/behavioralsignals/client.py        |       21 |        0 |        4 |        0 |    100% |           |
 | src/behavioralsignals/configuration.py |       18 |        1 |        2 |        1 |     90% |        24 |
 | src/behavioralsignals/deepfakes.py     |       87 |        4 |       12 |        4 |     92% |64, 114, 248, 298 |
-| src/behavioralsignals/mcp\_server.py   |      144 |        4 |       22 |        2 |     96% |21-22, 135-\>146, 151, 290 |
+| src/behavioralsignals/mcp\_server.py   |      146 |        4 |       22 |        2 |     96% |21-22, 138-\>149, 154, 300 |
 | src/behavioralsignals/models.py        |      157 |       14 |        8 |        3 |     90% |69, 76-79, 97-100, 146, 150, 200, 211-212 |
-| src/behavioralsignals/utils.py         |       18 |        0 |        4 |        0 |    100% |           |
-| **TOTAL**                              |  **588** |   **30** |   **82** |   **13** | **93%** |           |
+| src/behavioralsignals/utils.py         |       19 |        0 |        4 |        0 |    100% |           |
+| **TOTAL**                              |  **591** |   **30** |   **82** |   **13** | **93%** |           |
 
 
 ## Setup coverage badge
