@@ -216,7 +216,7 @@ class ModelPredictions(_SerializableModel):
     label: str | None = Field(None, description="The name of the class", examples=["happy"])
     posterior: str | None = Field(
         None,
-        description="The probability of this class, as a string. The posteriors of one result add up to 1; use float(posterior) as a score when finalLabel is not enough",
+        description="The probability of this class, as a string. The posteriors of one result add up to about 1, except for language, which lists only the top 3 languages. Use float(posterior) as a score when finalLabel is not enough",
         examples=["0.754"],
     )
     score: str | None = Field(
