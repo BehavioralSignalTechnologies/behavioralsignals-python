@@ -27,7 +27,7 @@ def make_audio_stream(file_path: str, chunk_size: float = 0.25) -> tuple[Iterato
 
 
 def print_results(items: Iterable[ResultItem] | None) -> None:
-    """Print one line per result: start time, end time, task, top label and its probability.
+    """Print one line per result: start time, end time, task, final label and its probability.
 
     Continuous tasks (e.g. intensity) have no label, so their score is printed instead.
     Rows without a label or score (e.g. the features row, which carries embeddings) are skipped.
@@ -40,5 +40,6 @@ def print_results(items: Iterable[ResultItem] | None) -> None:
         label = item.finalLabel or (top.score if top else None)
         if not label:
             continue
-        confidence = f" ({float(top.posterior):.1%})" if top and top.posterior else ""
+        posterior = next((p.posterior for p in item.prediction or [] if p.label == label), None)
+        confidence = f" ({float(posterior):.1%})" if posterior else ""
         print(f"{item.st} {item.et} {item.task} {label.strip()}{confidence}")
