@@ -50,6 +50,12 @@ python focus_results.py calls/ --outputs negative_tone negative_words
 ```
 With either of them, it also saves the results with their rows added to `call_results_focus.json`.
 
+To see the results in your browser instead, run the focus viewer (from the repository root):
+```bash
+uv run --extra words --with streamlit streamlit run examples/batch/focus_app.py
+```
+Enter an audio file or folder, pick outputs and move the thresholds. Audio with saved results is not uploaded again; the rest is uploaded when you click the button. Subfolders (for example two sets of calls you want to compare) are shown side by side. It has three tabs: an overview with flags per group and per call, threshold plots (how the scores are spread and how many utterances and calls each threshold flags), and a player where you click an utterance to hear it and see every API output for it.
+
 ## Video deepfake detection
 
 The `video_deepfake_polling.py` script submits a video file to the Deepfakes API for video deepfake detection and waits for the results with `wait_for_video_result`.
