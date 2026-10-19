@@ -43,6 +43,7 @@ dev = [
     "types-protobuf>=7.35.1",
 ]
 mcp = ["mcp>=2.2.0,<3"]
+words = ["transformers>=4.40", "torch>=2.2"]
 
 [project.scripts]
 behavioralsignals-mcp = "behavioralsignals.mcp_server:main"

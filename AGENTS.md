@@ -11,6 +11,8 @@ pull request steps are in [CONTRIBUTING.md](CONTRIBUTING.md).
   errors, the wait loop behind `wait_for_result`, and the gRPC channel.
 - `src/behavioralsignals/models.py`: pydantic models of requests and responses.
   `configuration.py`: API URLs and timeouts.
+- `src/behavioralsignals/focus.py`: `focus()`, which scores results you already have on chosen
+  outputs from their probabilities. No API calls.
 - `src/behavioralsignals/mcp_server.py`: the MCP server (`behavioralsignals-mcp`).
 - `src/behavioralsignals/generated/`: gRPC code generated from `protos/api.proto`.
 - `examples/`: batch and streaming scripts. `tests/`: pytest tests.

@@ -166,6 +166,37 @@ for item in result.results:
 
 All probabilities are model estimates: use them to compare utterances and follow trends, not as exact measurements.
 
+### Focus on the outputs you care about
+
+`finalLabel` keeps only the top label, so an utterance that is 55% `neutral` and 40% `angry` reads as `neutral`.
+`focus()` scores each utterance on the outputs you pick, from their probabilities, with no extra API call:
+
+```python
+from behavioralsignals import focus
+
+view = focus(result.results, ["angry", "hesitation"])
+print(view.summary())
+```
+
+- **Outputs:** `angry`, `happy`, `sad`, `negative`, `positive`, `strong`, `weak`, `engaged`, `withdrawn`, `hesitation`, `fast`, `slow`, plus the two computed outputs below.
+- **Results:** each utterance in `view.utterances` has its `scores` and the outputs `detected` (at or above the threshold), `hidden_by_neutral` (detected while the API's label was `neutral`) and `above_baseline` (well above the speaker's own average). `view.events` groups detected utterances into episodes.
+- **Thresholds:** 0.30 by default and 0.35 for `hesitation`. Override one with `thresholds={"angry": 0.4}`. They are starting points: tune them with your own labeled audio.
+
+To do all of this in one command from audio files, see `focus_results.py` in the [batch examples](examples/batch/).
+
+#### Computed outputs
+
+These are computed by `focus()` rather than returned by the API. `view.result_rows()` returns them as rows in the API's result format, marked `"source": "focus"`, with `finalLabel` `negative` at or above the threshold and `neutral` below it.
+
+- `negative_tone`: the higher of the `negative` probability and `angry` + `sad`. Threshold 0.20. Detected utterances also get a `tone`: `heated` (strong voice) or `resigned` (weak voice).
+- `negative_words`: the negative probability of the utterance's transcript, from a text model. Threshold 0.45. It catches negative content said in a calm voice, and covers utterances of 1 second or less, which batch returns with a transcript only. It needs the optional `words` extra; the model (about 500 MB) downloads on first use and runs locally:
+
+  ```bash
+  pip install "behavioralsignals[words]"
+  ```
+
+  It uses [twitter-roberta-base-sentiment-latest](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest) by Cardiff NLP, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), unmodified. It was trained on social-media posts, and it depends on the transcript being right.
+
 See [Definition of behaviors](https://behavioralsignals.readme.io/docs/definition-of-behaviors) for what each signal means.
 
 ## Deepfake Detection
@@ -302,6 +333,8 @@ See the [streaming examples](examples/streaming/) and [streaming documentation](
 | `get_video_result(pid)` | Deepfakes only: returns the results of a finished video process |
 | `get_video_process(pid)` | Deepfakes only: returns a video process and its status |
 | `list_video_processes(...)` | Deepfakes only: lists video processes |
+
+`focus(results, outputs, context="general", thresholds=None)` scores results you already have on chosen outputs; see [Focus on the outputs you care about](#focus-on-the-outputs-you-care-about).
 
 `behavioralsignals.utils` also has two helpers: `make_audio_stream(file_path, chunk_size=0.25)` turns an audio file into chunks for `stream_audio()`, and `print_results(items)` prints result rows as shown in [Analyze audio](#analyze-audio).
 

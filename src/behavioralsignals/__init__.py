@@ -1,6 +1,7 @@
 from importlib.metadata import PackageNotFoundError, version
 
 from .base import BehavioralSignalsError
+from .focus import focus
 from .client import Client
 from .models import StreamingOptions, VideoResultResponse
 from .deepfakes import Deepfakes
@@ -19,4 +20,5 @@ __all__ = [
     "Deepfakes",
     "StreamingOptions",
     "VideoResultResponse",
+    "focus",
 ]

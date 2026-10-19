@@ -34,6 +34,22 @@ With the `--api` argument you can specify which API to use (either `behavioral` 
 
 The results are saved to `audio_results.json` file once they are ready.
 
+## Find the moments that stand out, in one command
+
+The `focus_results.py` script takes audio files or a folder and the outputs you care about, uploads the audio, waits for the results and prints the moments where those outputs reach their threshold, including those the API labeled `neutral`:
+```bash
+python focus_results.py call.wav --outputs angry hesitation
+```
+It saves the API results to `call_results.json` and the flagged moments to `call_focus.csv`. Give it several files or a folder to do many calls at once (`python focus_results.py calls/ --outputs angry`); it also saves `focus_summary.csv` (one row per call) and `focus_all.csv` (every flagged moment) next to them, and prints one line per call (add `--details` to print every flagged moment too). To run again without uploading again, give it the saved results, with the same or other outputs:
+```bash
+python focus_results.py call_results.json --outputs negative hesitation
+```
+The SDK also computes two outputs of its own: `negative_tone` (a negative voice, from the emotion and positivity probabilities) and `negative_words` (negative content in the transcript, from a text model). See the [main README](../../README.md#computed-outputs). `negative_words` needs the `words` extra first (`pip install "behavioralsignals[words]"`):
+```bash
+python focus_results.py calls/ --outputs negative_tone negative_words
+```
+With either of them, it also saves the results with their rows added to `call_results_focus.json`.
+
 ## Video deepfake detection
 
 The `video_deepfake_polling.py` script submits a video file to the Deepfakes API for video deepfake detection and waits for the results with `wait_for_video_result`.
