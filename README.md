@@ -186,7 +186,7 @@ To do all of this in one command from audio files, see `focus_results.py` in the
 
 #### Computed outputs
 
-These are computed by `focus()` rather than returned by the API. `view.result_rows()` returns them as rows in the API's result format, marked `"source": "focus"`, with `finalLabel` `negative` at or above the threshold and `neutral` below it.
+These are computed by `focus()` rather than returned by the API. `view.result_rows()` returns them as rows in the API's result format, marked `"source": "focus"`, with `finalLabel` set to the output's label (`negative` or `positive`) at or above the threshold and `neutral` below it.
 
 - `negative_tone`: the higher of the `negative` probability and `angry` + `sad`. Threshold 0.20. Detected utterances also get a `tone`: `heated` (strong voice) or `resigned` (weak voice).
 - `negative_words`: the negative probability of the utterance's transcript, from a text model. Threshold 0.45. It catches negative content said in a calm voice, and covers utterances of 1 second or less, which batch returns with a transcript only. It needs the optional `words` extra; the model (about 500 MB) downloads on first use and runs locally:
@@ -196,6 +196,7 @@ These are computed by `focus()` rather than returned by the API. `view.result_ro
   ```
 
   It uses [twitter-roberta-base-sentiment-latest](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest) by Cardiff NLP, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/), unmodified. It was trained on social-media posts, and it depends on the transcript being right.
+- `positive_words`: the positive probability of the transcript, from the same text model and extra. Threshold 0.45.
 
 See [Definition of behaviors](https://behavioralsignals.readme.io/docs/definition-of-behaviors) for what each signal means.
 

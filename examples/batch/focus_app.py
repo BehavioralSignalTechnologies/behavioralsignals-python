@@ -154,7 +154,8 @@ limits = {
 }
 st.sidebar.caption(
     "negative_tone = max(P(negative), P(angry) + P(sad)); heated if strong ≥ weak, else resigned. "
-    "negative_words = P(negative) of the transcript, from a local text model."
+    "negative_words / positive_words = P(negative) / P(positive) of the transcript, from a local "
+    "text model."
 )
 st.sidebar.caption(
     "Scores are model estimates of how the speech sounds or reads, not decisions about the speaker."

@@ -4,7 +4,7 @@
 `neutral`. `focus()` scores every utterance on the outputs you pick (e.g. angry, hesitation) from
 their probabilities, flags the ones above a threshold or above the speaker's own average, groups
 them into episodes, and summarizes them in plain words. It works on results you already have and
-never calls the API (negative_words downloads a text model on first use). Scores are model
+never calls the API (negative_words and positive_words download a text model on first use). Scores are model
 estimates: use them to find moments to review, not as decisions.
 """
 
@@ -36,11 +36,15 @@ OUTPUTS: dict[str, tuple[str, str]] = {
     "negative_tone": ("positivity", "negative"),
     # P(negative) of the utterance's transcript, from a text model. Needs the words extra.
     "negative_words": ("positivity", "negative"),
+    # P(positive) of the utterance's transcript, from the same text model.
+    "positive_words": ("positivity", "positive"),
 }
 # Outputs computed by this module rather than returned by the API.
-DERIVED = ("negative_tone", "negative_words")
+DERIVED = ("negative_tone", "negative_words", "positive_words")
+# Outputs read from the transcript -> the text model's label.
+WORDS = {"negative_words": "negative", "positive_words": "positive"}
 
-# Text model for negative_words: twitter-roberta-base-sentiment-latest by Cardiff NLP,
+# Text model for negative_words and positive_words: twitter-roberta-base-sentiment-latest by Cardiff NLP,
 # huggingface.co/cardiffnlp/twitter-roberta-base-sentiment-latest, licensed CC BY 4.0, unmodified.
 WORDS_MODEL = "cardiffnlp/twitter-roberta-base-sentiment-latest"
 _ALIASES = {"anger": "angry", "happiness": "happy", "sadness": "sad", "hesitant": "hesitation"}
@@ -75,27 +79,42 @@ class Context(BaseModel):
 
 # Starting points, to be tuned with labeled audio from each setting. Hesitation is a yes/no task
 # whose label already flips at 0.5, so it gets a stricter bar than the multi-class outputs.
-# negative_words reads text, which noise does not change, so it keeps one value.
+# The words outputs read text, which noise does not change, so they keep one value.
 CONTEXTS: dict[str, Context] = {
     "general": Context(
         threshold=0.3,
         baseline_margin=0.15,
         max_gap=2.0,
-        per_output={"hesitation": 0.35, "negative_tone": 0.2, "negative_words": 0.45},
+        per_output={
+            "hesitation": 0.35,
+            "negative_tone": 0.2,
+            "negative_words": 0.45,
+            "positive_words": 0.45,
+        },
     ),
     # Cabin noise makes the model less sure, so probabilities run lower.
     "car": Context(
         threshold=0.25,
         baseline_margin=0.15,
         max_gap=2.0,
-        per_output={"hesitation": 0.3, "negative_tone": 0.15, "negative_words": 0.45},
+        per_output={
+            "hesitation": 0.3,
+            "negative_tone": 0.15,
+            "negative_words": 0.45,
+            "positive_words": 0.45,
+        },
     ),
     # Speakers tend to stay restrained, so smaller changes from their own average matter.
     "legal": Context(
         threshold=0.3,
         baseline_margin=0.1,
         max_gap=3.0,
-        per_output={"hesitation": 0.35, "negative_tone": 0.2, "negative_words": 0.45},
+        per_output={
+            "hesitation": 0.35,
+            "negative_tone": 0.2,
+            "negative_words": 0.45,
+            "positive_words": 0.45,
+        },
     ),
 }
 
@@ -137,10 +156,11 @@ class FocusResult(BaseModel):
     events: list[FocusEvent]
 
     def result_rows(self) -> list[dict]:
-        """negative_tone and negative_words as rows in the API's result format, marked with
-        "source": "focus".
+        """negative_tone, negative_words and positive_words as rows in the API's result format,
+        marked with "source": "focus".
 
-        finalLabel is "negative" when the output reaches its threshold, otherwise "neutral".
+        finalLabel is the output's label ("negative" or "positive") when it reaches its threshold,
+        otherwise "neutral".
         Negative negative_tone rows also carry "tone": "heated" or "resigned".
         """
         rows = []
@@ -149,13 +169,14 @@ class FocusResult(BaseModel):
                 score = u.scores.get(output)
                 if score is None:
                     continue
+                label = OUTPUTS[output][1]
                 row = {
                     "id": u.id,
                     "startTime": f"{u.start:.3f}",
                     "endTime": f"{u.end:.3f}",
                     "task": output,
-                    "prediction": [{"label": "negative", "posterior": f"{score:.4f}"}],
-                    "finalLabel": "negative" if output in u.detected else "neutral",
+                    "prediction": [{"label": label, "posterior": f"{score:.4f}"}],
+                    "finalLabel": label if output in u.detected else "neutral",
                     "level": "utterance",
                     "source": "focus",
                     "threshold": self.thresholds[output],
@@ -170,7 +191,7 @@ class FocusResult(BaseModel):
         lines = []
         for output in self.outputs:
             task = OUTPUTS[output][0]
-            source = {"negative_tone": "voice", "negative_words": "words"}.get(output, task)
+            source = "voice" if output == "negative_tone" else "words" if output in WORDS else task
             scored = [u for u in self.utterances if output in u.scores]
             detected = [u for u in scored if output in u.detected]
             hidden = [u for u in detected if output in u.hidden_by_neutral]
@@ -256,7 +277,8 @@ def _score(items: list[ResultItem], chosen: list[str]) -> list[FocusedUtterance]
 
     wanted = {OUTPUTS[o][0] for o in chosen}
     wanted |= {"emotion"} if "negative_tone" in chosen else set()
-    wanted |= {"asr"} if "negative_words" in chosen else set()
+    words = [o for o in chosen if o in WORDS]
+    wanted |= {"asr"} if words else set()
     utterances = []
     for uid, rows in by_id.items():
         tasks = {r.task: r for r in rows}
@@ -264,7 +286,7 @@ def _score(items: list[ResultItem], chosen: list[str]) -> list[FocusedUtterance]
             continue  # e.g. utterances of 1 second or less, which have no behavioral tasks
         scores, labels, tone = {}, {}, None
         for output in chosen:
-            if output == "negative_words":
+            if output in WORDS:
                 continue  # scored below, for all utterances at once
             task, label = OUTPUTS[output]
             row = tasks.get(task)
@@ -300,12 +322,13 @@ def _score(items: list[ResultItem], chosen: list[str]) -> list[FocusedUtterance]
                 tone=tone,
             )
         )
-        if "negative_words" in chosen and tasks.get("positivity") is not None:
+        if words and tasks.get("positivity") is not None:
             utterances[-1].labels["positivity"] = (tasks["positivity"].finalLabel or "").strip()
-    if "negative_words" in chosen:
+    if words:
         with_text = [u for u in utterances if u.text]
-        for u, words in zip(with_text, _words_scores([u.text or "" for u in with_text])):
-            u.scores["negative_words"] = words.get("negative", 0.0)
+        for u, probs in zip(with_text, _words_scores([u.text or "" for u in with_text])):
+            for output in words:
+                u.scores[output] = probs.get(WORDS[output], 0.0)
     return sorted(utterances, key=lambda u: u.start)
 
 
@@ -315,7 +338,8 @@ def _words_model():
         transformers = importlib.import_module("transformers")
     except ImportError as e:
         raise ImportError(
-            'negative_words needs the words extra: pip install "behavioralsignals[words]"'
+            "negative_words and positive_words need the words extra: "
+            'pip install "behavioralsignals[words]"'
         ) from e
     return transformers.pipeline("sentiment-analysis", model=WORDS_MODEL, top_k=None)
 

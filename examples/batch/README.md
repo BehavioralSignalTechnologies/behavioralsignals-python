@@ -44,7 +44,7 @@ It saves the API results to `call_results.json` and the flagged moments to `call
 ```bash
 python focus_results.py call_results.json --outputs negative hesitation
 ```
-The SDK also computes two outputs of its own: `negative_tone` (a negative voice, from the emotion and positivity probabilities) and `negative_words` (negative content in the transcript, from a text model). See the [main README](../../README.md#computed-outputs). `negative_words` needs the `words` extra first (`pip install "behavioralsignals[words]"`):
+The SDK also computes outputs of its own: `negative_tone` (a negative voice, from the emotion and positivity probabilities), and `negative_words` and `positive_words` (negative or positive content in the transcript, from a text model). See the [main README](../../README.md#computed-outputs). The words outputs need the `words` extra first (`pip install "behavioralsignals[words]"`):
 ```bash
 python focus_results.py calls/ --outputs negative_tone negative_words
 ```

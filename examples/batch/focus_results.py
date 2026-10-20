@@ -4,7 +4,7 @@ Give it audio files or a folder and the outputs you care about: it uploads them 
 results, saves them, and prints the moments where those outputs reach their threshold, including
 those the API labeled neutral. For each call it saves, next to the input:
   <name>_results.json        the API results, untouched
-  <name>_results_focus.json  with negative_tone or negative_words: the results plus their rows,
+  <name>_results_focus.json  with negative_tone or the words outputs: the results plus their rows,
                              marked "source": "focus"
   <name>_focus.csv           the flagged moments, one per row, to open in a spreadsheet
 With more than one call it also saves, in the folder of the first input:
@@ -31,7 +31,7 @@ from behavioralsignals import Client, BehavioralSignalsError, focus
 from behavioralsignals.focus import DERIVED, OUTPUTS, CONTEXTS
 
 
-# Keep the text model (negative_words) quiet while it loads (it is imported on first use).
+# Keep the text model (negative_words, positive_words) quiet while it loads (it is imported on first use).
 for name, value in {
     "TRANSFORMERS_VERBOSITY": "error",
     "HF_HUB_VERBOSITY": "error",

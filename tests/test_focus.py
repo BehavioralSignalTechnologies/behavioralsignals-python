@@ -270,6 +270,35 @@ def test_negative_words_reads_the_transcript_including_short_replies(monkeypatch
     assert out.summary().startswith("negative_words (words, probability >= 0.45): 2 of 2")
 
 
+def test_positive_words_scores_the_same_transcript_alongside_negative_words(monkeypatch):
+    def model(texts):
+        return [
+            [
+                {"label": "positive", "score": 0.9},
+                {"label": "neutral", "score": 0.08},
+                {"label": "negative", "score": 0.02},
+            ]
+            for _ in texts
+        ]
+
+    monkeypatch.setattr(FOCUS_MODULE, "_words_model", lambda: model)
+    results = _results(_utterance("0", 0, 4, text="This is so much better!"))
+
+    out = focus(results, ["positive_words", "negative_words"])
+
+    (u,) = out.utterances
+    assert u.scores == {"positive_words": pytest.approx(0.9), "negative_words": pytest.approx(0.02)}
+    assert u.detected == ["positive_words"]
+    assert out.thresholds == {"positive_words": 0.45, "negative_words": 0.45}
+    assert [
+        (r["task"], r["finalLabel"], r["prediction"][0]["label"]) for r in out.result_rows()
+    ] == [
+        ("negative_words", "neutral", "negative"),
+        ("positive_words", "positive", "positive"),
+    ]
+    assert out.summary().startswith("positive_words (words, probability >= 0.45): 1 of 1")
+
+
 def test_negative_words_without_the_extra_says_how_to_install(monkeypatch):
     def missing(name):
         raise ImportError(name)
