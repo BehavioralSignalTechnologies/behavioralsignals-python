@@ -317,3 +317,33 @@ def test_every_context_has_sane_values():
         assert all(o in OUTPUTS and 0 < t < 1 for o, t in preset.per_output.items())
         assert 0 < preset.baseline_margin < 1
         assert preset.max_gap >= 0
+
+
+def _as_segment(rows):
+    return [{**r, "level": "segment"} for r in rows]
+
+
+def test_streaming_segments_with_the_same_id_do_not_mix_with_utterances():
+    segment = _as_segment(_utterance("1", 0.0, 2.0, angry=0.9))
+    utterance = _utterance("1", 0.0, 8.0, angry=0.05)
+
+    view = focus(segment + utterance, ["angry"])
+
+    assert [(u.id, u.level, u.start, u.end) for u in view.utterances] == [
+        ("1", "utterance", 0.0, 8.0)
+    ]
+    assert view.utterances[0].scores["angry"] == pytest.approx(0.05)
+
+
+def test_segment_only_results_are_scored_and_keep_their_level():
+    rows = _as_segment(_utterance("3", 0.0, 2.0, angry=0.9)) + _as_segment(
+        _utterance("4", 2.0, 4.0, angry=0.1)
+    )
+
+    view = focus(rows, ["angry", "negative_tone"])
+
+    assert [(u.id, u.level, "angry" in u.detected) for u in view.utterances] == [
+        ("3", "segment", True),
+        ("4", "segment", False),
+    ]
+    assert {r["level"] for r in view.result_rows()} == {"segment"}

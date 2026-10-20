@@ -121,6 +121,7 @@ CONTEXTS: dict[str, Context] = {
 
 class FocusedUtterance(BaseModel):
     id: str
+    level: str | None = Field(None, description="'utterance' or 'segment', as in the results")
     speaker: str | None = None
     start: float
     end: float
@@ -177,7 +178,7 @@ class FocusResult(BaseModel):
                     "task": output,
                     "prediction": [{"label": label, "posterior": f"{score:.4f}"}],
                     "finalLabel": label if output in u.detected else "neutral",
-                    "level": "utterance",
+                    "level": u.level or "utterance",
                     "source": "focus",
                     "threshold": self.thresholds[output],
                 }
@@ -270,17 +271,21 @@ def _items(results: ResultResponse | Iterable[ResultItem | dict]) -> list[Result
 
 
 def _score(items: list[ResultItem], chosen: list[str]) -> list[FocusedUtterance]:
-    by_id: dict[str, list[ResultItem]] = defaultdict(list)
-    for item in items:
-        if item.id is not None and item.st is not None and item.et is not None:
-            by_id[item.id].append(item)
+    timed = [i for i in items if i.id is not None and i.st is not None and i.et is not None]
+    # Streaming can return segments and utterances together, and their ids can repeat. Score one
+    # level, utterances when there are any, so the same audio is not counted twice.
+    level = "utterance" if any(i.level == "utterance" for i in timed) else None
+    by_id: dict[tuple[str | None, str], list[ResultItem]] = defaultdict(list)
+    for item in timed:
+        if level is None or item.level in (level, None):
+            by_id[(item.level or level, item.id or "")].append(item)
 
     wanted = {OUTPUTS[o][0] for o in chosen}
     wanted |= {"emotion"} if "negative_tone" in chosen else set()
     words = [o for o in chosen if o in WORDS]
     wanted |= {"asr"} if words else set()
     utterances = []
-    for uid, rows in by_id.items():
+    for (row_level, uid), rows in by_id.items():
         tasks = {r.task: r for r in rows}
         if not wanted & tasks.keys():
             continue  # e.g. utterances of 1 second or less, which have no behavioral tasks
@@ -310,6 +315,7 @@ def _score(items: list[ResultItem], chosen: list[str]) -> list[FocusedUtterance]
         utterances.append(
             FocusedUtterance(
                 id=uid,
+                level=row_level,
                 speaker=speaker.finalLabel if speaker else None,
                 start=rows[0].st or 0.0,
                 end=rows[0].et or 0.0,
