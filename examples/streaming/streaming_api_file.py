@@ -30,6 +30,19 @@ def parse_args():
         help="Level of response granularity",
     )
 
+    parser.add_argument(
+        "--focus",
+        type=str,
+        help="Comma-separated labels to focus on, e.g. angry,low_confidence (behavioral only)",
+    )
+    parser.add_argument(
+        "--sensitivity",
+        type=str,
+        default="default",
+        choices=["low", "default", "high"],
+        help="Focus sensitivity",
+    )
+
     return parser.parse_args()
 
 
@@ -44,7 +57,11 @@ if __name__ == "__main__":
     # Step 2. Read the audio file, and wrap it inside an iterator of chunks
     audio_stream, sample_rate = make_audio_stream(file_path, chunk_size=0.25)
     options = StreamingOptions(
-        sample_rate=sample_rate, encoding="LINEAR_PCM", level=args.response_level
+        sample_rate=sample_rate,
+        encoding="LINEAR_PCM",
+        level=args.response_level,
+        focus=args.focus.split(",") if args.focus and args.api == "behavioral" else None,
+        sensitivity=args.sensitivity,
     )
 
     if args.api == "behavioral":
