@@ -23,6 +23,7 @@ uv run pytest
 uv run ruff check
 uv run ruff format
 uv run mypy src
+uv run mypy examples --ignore-missing-imports --check-untyped-defs --disable-error-code=var-annotated
 ```
 
 CI runs `ruff check`, `ruff format --check`, `mypy src` and `pytest` on Python 3.10 to 3.13. It

@@ -88,6 +88,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv build --wheel
       - run: uv venv .smoke
+      # The default install must work without the mcp extra.
+      - run: uv pip install --python .smoke "$(echo dist/*.whl)"
+      - run: .smoke/bin/python -c "from behavioralsignals import Client; from behavioralsignals.generated import api_pb2, api_pb2_grpc"
       - run: uv pip install --python .smoke "$(echo dist/*.whl)[mcp]" pytest
       - run: uv pip list --python .smoke
       - run: .smoke/bin/python tests/smoke_installed.py "$(uv version --short)"

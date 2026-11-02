@@ -52,6 +52,7 @@ versions we use. Before you open a pull request, run:
 ruff check
 ruff format
 mypy src
+mypy examples --ignore-missing-imports --check-untyped-defs --disable-error-code=var-annotated
 ```
 
 ## Tests

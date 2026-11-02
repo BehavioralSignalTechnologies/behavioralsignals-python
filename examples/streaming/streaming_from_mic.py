@@ -10,6 +10,7 @@ from rich.table import Table
 from rich.console import Console
 
 from behavioralsignals import Client, StreamingOptions
+from behavioralsignals.models import StreamingResultResponse
 
 
 SAMPLE_RATE = 16000  # Sample rate in Hz
@@ -18,7 +19,7 @@ CHUNK_DURATION_SEC = 0.25  # Duration of each chunk in seconds
 CHUNK_SIZE = int(SAMPLE_RATE * CHUNK_DURATION_SEC)
 
 
-def make_table(resp):
+def make_table(resp: StreamingResultResponse):
     table = Table(title=f"cid={resp.cid}  pid={resp.pid}  msg={resp.message_id}")
     table.add_column("Task", no_wrap=True)
     table.add_column("Label")
@@ -29,9 +30,9 @@ def make_table(resp):
         st, et = resp.results[0].st, resp.results[0].et
         table.add_row("Timestamps", f"{st} → {et} (s)", "")
 
-    for res in resp.results:
+    for res in resp.results or []:
         scores = []
-        for p in res.prediction:
+        for p in res.prediction or []:
             try:
                 score = float(p.posterior or 0.0)
             except ValueError:
