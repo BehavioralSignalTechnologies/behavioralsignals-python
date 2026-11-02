@@ -56,7 +56,7 @@ class StreamingOptions(BaseModel):
         config = pb.AudioConfig(sample_rate_hertz=self.sample_rate, encoding=encoding)
         if level is not None:
             config.level = level
-        if self.focus:
+        if self.focus is not None:
             config.focus.labels.extend(self.focus)
             config.focus.sensitivity = self.sensitivity
         return config

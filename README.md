@@ -449,7 +449,7 @@ The server exposes four tools:
 |---|---|
 | `analyze_behavior` | Uploads an audio file or S3 presigned URL for behavioral analysis and returns the results |
 | `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection (video is experimental) and returns the results |
-| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label |
+| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label. Behavioral results can also include [Focus](#focus) rows, with `focus` and `sensitivity` |
 | `list_processes` | Lists processes, newest first, including the failure reason when available |
 
 Notes:

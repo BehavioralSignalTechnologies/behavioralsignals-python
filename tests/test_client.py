@@ -311,6 +311,12 @@ def test_wait_for_result_sends_focus(monkeypatch):
     assert calls[-1].params == {"focus": "angry", "sensitivity": "high"}
 
 
+def test_get_result_sends_an_empty_focus_list_for_the_api_to_reject(monkeypatch):
+    calls = fake_requests(monkeypatch, FakeResponse(body={"pid": 7}))
+    Client(cid="1", api_key="k").behavioral.get_result(pid=7, focus=[])
+    assert calls[-1].params == {"focus": "", "sensitivity": "default"}
+
+
 def test_get_video_result_parses_both_result_lists(monkeypatch):
     body = {
         "pid": 7,

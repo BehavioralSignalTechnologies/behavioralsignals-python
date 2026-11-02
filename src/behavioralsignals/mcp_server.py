@@ -7,7 +7,7 @@ over stdio, so it must never print to stdout.
 import os
 import json
 import time
-from typing import Literal, Annotated
+from typing import Any, Literal, Annotated
 from contextlib import contextmanager
 from urllib.parse import unquote, urlparse
 
@@ -94,6 +94,8 @@ def get_result(
     offset: Annotated[int, Field(ge=0)] = 0,
     limit: Annotated[int, Field(ge=1, le=1000)] = DEFAULT_LIMIT,
     wait_seconds: WaitSeconds = DEFAULT_WAIT,
+    focus: list[str] | None = None,
+    sensitivity: Literal["low", "default", "high"] = "default",
 ) -> str:
     """Returns the results of a job, waiting up to wait_seconds if it is still processing.
 
@@ -103,9 +105,17 @@ def get_result(
     Each row has the final label and the probability of every label of the task. Use the
     probabilities as scores. positivity is valence and strength is arousal; for a scale from -1
     to 1, use P(positive) - P(negative) and P(strong) - P(weak).
+
+    `focus` (behavioral only) adds "focus" rows where a label is likely but is not the final
+    label, e.g. ["angry", "low_confidence"]. Labels: angry, happy, negative, positive, slow, fast,
+    high_stress, low_confidence. `sensitivity` "high" flags more rows, "low" fewer.
     """
+    if focus is not None and analysis != "behavioral":
+        raise ToolError("focus is only available for behavioral results.")
     with _tool_errors(), _api(analysis) as api:
-        return _result_text(api, analysis, pid, wait_seconds, tasks, offset, limit)
+        return _result_text(
+            api, analysis, pid, wait_seconds, tasks, offset, limit, focus, sensitivity
+        )
 
 
 @server.tool(annotations=READ_ONLY, structured_output=False)
@@ -207,18 +217,24 @@ def _result_text(
     tasks: list[str] | None,
     offset: int,
     limit: int,
+    focus: list[str] | None = None,
+    sensitivity: str = "default",
 ) -> str:
     """Waits up to wait_seconds for the result and formats one page of it."""
     wait = api.wait_for_video_result if analysis == "deepfake_video" else api.wait_for_result  # type: ignore[union-attr]
+    focus_args: dict[str, Any] = (
+        {} if focus is None else {"focus": focus, "sensitivity": sensitivity}
+    )
     try:
-        result = wait(pid=pid, timeout=wait_seconds)
+        result = wait(pid=pid, timeout=wait_seconds, **focus_args)
     except TimeoutError:
-        retry = _call("get_result", pid=pid, analysis=analysis)
+        retry = _call("get_result", pid=pid, analysis=analysis, **focus_args)
         return f"pid {pid} is still processing. Call {retry} to wait again."
     except RuntimeError as error:
         # The job failed. Keep the reason's first line; a long ffmpeg log can follow it.
         raise ToolError(str(error).splitlines()[0]) from error
-    return _format_result(pid, analysis, _result_rows(result, analysis), tasks, offset, limit)
+    rows = _result_rows(result, analysis)
+    return _format_result(pid, analysis, rows, tasks, offset, limit, focus_args)
 
 
 def _result_rows(result, analysis: str) -> list[list[str]]:
@@ -259,6 +275,7 @@ def _format_result(
     tasks: list[str] | None,
     offset: int,
     limit: int,
+    focus_args: dict[str, Any],
 ) -> str:
     """Formats the rows of the tasks, `limit` rows from `offset`, as a tab-separated table."""
     columns = (["track"] if analysis == "deepfake_video" else []) + RESULT_COLUMNS
@@ -280,7 +297,9 @@ def _format_result(
         *(_tsv(row) for row in page),
     ]
     if end < total:
-        more = _call("get_result", pid=pid, analysis=analysis, tasks=tasks, offset=end)
+        more = _call(
+            "get_result", pid=pid, analysis=analysis, tasks=tasks, offset=end, **focus_args
+        )
         lines.append(f"More rows: {more}")
     return "\n".join(lines)
 

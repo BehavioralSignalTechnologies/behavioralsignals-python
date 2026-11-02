@@ -162,7 +162,9 @@ class Behavioral(BaseClient):
         Returns:
             ResultResponse: The result response containing the results of the specified process.
         """
-        params = {"focus": ",".join(focus), "sensitivity": sensitivity} if focus else None
+        params = (
+            {"focus": ",".join(focus), "sensitivity": sensitivity} if focus is not None else None
+        )
         data = self._send_request(
             path=f"clients/{self.config.cid}/processes/{pid}/results",
             method="GET",
