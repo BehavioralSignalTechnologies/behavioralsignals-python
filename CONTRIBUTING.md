@@ -66,6 +66,9 @@ To see which lines the tests miss, run `pytest --cov`. It fails if coverage is b
 
 CI runs ruff and mypy, and runs the tests on Python 3.10 to 3.13, for every pull request. It also
 runs the tests with the lowest versions allowed in `pyproject.toml`, and checks coverage.
+It type-checks the examples, and installs the built wheel with the newest versions allowed to check
+it as users get it (`tests/smoke_installed.py` and the tests). `tests/test_examples.py` runs the
+examples and the README snippets against a fake API.
 
 ## Regenerate the gRPC code
 
