@@ -291,7 +291,8 @@ Labels: `angry`, `happy`, `negative`, `positive`, `slow`, `fast`, `high_stress`,
 
 ```python
 # Batch
-result = client.behavioral.wait_for_result(pid, focus=["angry", "low_confidence"], sensitivity="high")
+process = client.behavioral.upload_audio(file_path="audio.wav")
+result = client.behavioral.wait_for_result(pid=process.pid, focus=["angry", "low_confidence"], sensitivity="high")
 
 # Streaming
 options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM", focus=["angry", "low_confidence"])
