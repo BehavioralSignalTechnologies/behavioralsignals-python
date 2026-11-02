@@ -20,6 +20,8 @@ jobs:
       - run: uv run ruff check
       - run: uv run ruff format --check
       - run: uv run mypy src
+      # Check that the examples use the current SDK API. Their extra packages are not installed.
+      - run: uv run mypy examples --ignore-missing-imports --check-untyped-defs --disable-error-code=var-annotated
 
   test:
     runs-on: ubuntu-latest
@@ -72,3 +74,24 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       - run: uv build
       - run: uvx twine check --strict dist/*
+
+  # Install the built wheel as users do: without uv.lock, so with the newest versions allowed.
+  smoke:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv build --wheel
+      - run: uv venv .smoke
+      # The default install must work without the mcp extra.
+      - run: uv pip install --python .smoke "$(echo dist/*.whl)"
+      - run: .smoke/bin/python -c "from behavioralsignals import Client; from behavioralsignals.generated import api_pb2, api_pb2_grpc"
+      - run: uv pip install --python .smoke "$(echo dist/*.whl)[mcp]" pytest
+      - run: uv pip list --python .smoke
+      - run: .smoke/bin/python tests/smoke_installed.py "$(uv version --short)"
+      - run: .smoke/bin/python -m pytest tests
