@@ -147,7 +147,10 @@ class Behavioral(BaseClient):
         return ProcessItem(**data)
 
     def get_result(
-        self, pid: int, focus: list[str] | None = None, sensitivity: str = "default"
+        self,
+        pid: int,
+        focus: list[str] | None = None,
+        sensitivity: Literal["low", "default", "high"] = "default",
     ) -> ResultResponse:
         """Retrieves the result of a completed process by its ID.
 
@@ -172,7 +175,7 @@ class Behavioral(BaseClient):
         pid: int,
         timeout: float | None = None,
         focus: list[str] | None = None,
-        sensitivity: str = "default",
+        sensitivity: Literal["low", "default", "high"] = "default",
     ) -> ResultResponse:
         """Waits for a process to finish and returns its result.
 

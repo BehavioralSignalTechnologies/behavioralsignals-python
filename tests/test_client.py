@@ -304,6 +304,13 @@ def test_get_result_sends_focus_only_when_asked(monkeypatch):
     ]
 
 
+def test_wait_for_result_sends_focus(monkeypatch):
+    calls = fake_requests(monkeypatch, FakeResponse(body={"pid": 7, "status": 2}))
+    behavioral = Client(cid="1", api_key="k").behavioral
+    behavioral.wait_for_result(pid=7, focus=["angry"], sensitivity="high")
+    assert calls[-1].params == {"focus": "angry", "sensitivity": "high"}
+
+
 def test_get_video_result_parses_both_result_lists(monkeypatch):
     body = {
         "pid": 7,

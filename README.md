@@ -299,6 +299,8 @@ options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM", focus
 
 Each flag is a result with `task="focus"` and `finalLabel="suspected_<label>"`, with the same time span as the utterance or segment it belongs to.
 
+A stream's focus results are saved with its results: `get_result` returns them, and replaces them if you pass `focus`.
+
 ## Available Methods
 
 `client.behavioral` and `client.deepfakes` expose the same methods for audio. Video methods are available only on `client.deepfakes`.

@@ -250,14 +250,14 @@ class ResultItem(_SerializableModel):
     )
     task: str | None = Field(
         None,
-        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaker: gender, age. Other: diarization, asr, language, features. Deepfakes API: deepfake, visual_deepfake, generator. "
+        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaker: gender, age. Other: diarization, asr, language, features, focus. Deepfakes API: deepfake, visual_deepfake, generator. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         examples=["emotion"],
     )
     prediction: list[ModelPredictions] | None = None
     finalLabel: str | None = Field(
         None,
-        description="The label the API picks for this task. For behavioral tasks it is the label with the highest posterior.",
+        description="The label the API picks for this task. For behavioral tasks it is the label with the highest posterior. For focus it is suspected_<label>.",
         examples=["happy"],
     )
     level: str | None = Field(
