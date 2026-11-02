@@ -20,18 +20,28 @@ segment: Level
 utterance: Level
 
 class AudioConfig(_message.Message):
-    __slots__ = ("encoding", "sample_rate_hertz", "level", "logits", "feature_embedding")
+    __slots__ = ("encoding", "sample_rate_hertz", "level", "logits", "feature_embedding", "focus")
     ENCODING_FIELD_NUMBER: _ClassVar[int]
     SAMPLE_RATE_HERTZ_FIELD_NUMBER: _ClassVar[int]
     LEVEL_FIELD_NUMBER: _ClassVar[int]
     LOGITS_FIELD_NUMBER: _ClassVar[int]
     FEATURE_EMBEDDING_FIELD_NUMBER: _ClassVar[int]
+    FOCUS_FIELD_NUMBER: _ClassVar[int]
     encoding: AudioEncoding
     sample_rate_hertz: int
     level: Level
     logits: bool
     feature_embedding: bool
-    def __init__(self, encoding: _Optional[_Union[AudioEncoding, str]] = ..., sample_rate_hertz: _Optional[int] = ..., level: _Optional[_Union[Level, str]] = ..., logits: bool = ..., feature_embedding: bool = ...) -> None: ...
+    focus: FocusConfig
+    def __init__(self, encoding: _Optional[_Union[AudioEncoding, str]] = ..., sample_rate_hertz: _Optional[int] = ..., level: _Optional[_Union[Level, str]] = ..., logits: bool = ..., feature_embedding: bool = ..., focus: _Optional[_Union[FocusConfig, _Mapping]] = ...) -> None: ...
+
+class FocusConfig(_message.Message):
+    __slots__ = ("labels", "sensitivity")
+    LABELS_FIELD_NUMBER: _ClassVar[int]
+    SENSITIVITY_FIELD_NUMBER: _ClassVar[int]
+    labels: _containers.RepeatedScalarFieldContainer[str]
+    sensitivity: str
+    def __init__(self, labels: _Optional[_Iterable[str]] = ..., sensitivity: _Optional[str] = ...) -> None: ...
 
 class AudioStream(_message.Message):
     __slots__ = ("cid", "x_auth_token", "config", "audio_content")

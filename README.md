@@ -283,6 +283,25 @@ for result in client.deepfakes.stream_audio(
 
 See the [streaming examples](examples/streaming/) and [streaming documentation](https://behavioralsignals.readme.io/docs/streaming-using-python-sdk) for more.
 
+## Focus
+
+Focus flags behaviors that are likely but not the predicted label, for example anger in an utterance labeled neutral. It is available in the Behavioral API, for batch and streaming.
+
+Labels: `angry`, `happy`, `negative`, `positive`, `slow`, `fast`, `high_stress`, `low_confidence`. Sensitivity: `low`, `default` or `high` (flags more).
+
+```python
+# Batch
+process = client.behavioral.upload_audio(file_path="audio.wav")
+result = client.behavioral.wait_for_result(pid=process.pid, focus=["angry", "low_confidence"], sensitivity="high")
+
+# Streaming
+options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM", focus=["angry", "low_confidence"])
+```
+
+Each flag is a result with `task="focus"` and `finalLabel="suspected_<label>"`, with the same time span as the utterance or segment it belongs to.
+
+A stream's focus results are saved with its results: `get_result` returns them, and replaces them if you pass `focus`.
+
 ## Available Methods
 
 `client.behavioral` and `client.deepfakes` expose the same methods for audio. Video methods are available only on `client.deepfakes`.
@@ -291,8 +310,8 @@ See the [streaming examples](examples/streaming/) and [streaming documentation](
 |---|---|
 | `upload_audio(file_path, ...)` | Uploads an audio file and returns the process, including its `pid` |
 | `upload_s3_presigned_url(url, ...)` | Submits audio using an S3 presigned URL |
-| `wait_for_result(pid, timeout=None)` | Waits for a process to finish and returns its results |
-| `get_result(pid)` | Returns the results of a finished process |
+| `wait_for_result(pid, timeout=None)` | Waits for a process to finish and returns its results. Behavioral also takes `focus` and `sensitivity` (see [Focus](#focus)) |
+| `get_result(pid)` | Returns the results of a finished process. Behavioral also takes `focus` and `sensitivity` |
 | `get_process(pid)` | Returns a process and its current status |
 | `list_processes(...)` | Lists audio processes |
 | `stream_audio(audio_stream, options)` | Streams audio and yields results as they arrive |
@@ -430,7 +449,7 @@ The server exposes four tools:
 |---|---|
 | `analyze_behavior` | Uploads an audio file or S3 presigned URL for behavioral analysis and returns the results |
 | `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection (video is experimental) and returns the results |
-| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label |
+| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label. Behavioral results can also include [Focus](#focus) rows, with `focus` and `sensitivity` |
 | `list_processes` | Lists processes, newest first, including the failure reason when available |
 
 Notes:

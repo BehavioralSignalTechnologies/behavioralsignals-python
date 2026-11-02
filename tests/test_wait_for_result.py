@@ -46,7 +46,7 @@ def make_client(cls, statuses, video=False):
     if video:
         client.get_video_process, client.get_video_result = get_process, lambda pid: result
     else:
-        client.get_process, client.get_result = get_process, lambda pid: result
+        client.get_process, client.get_result = get_process, lambda pid, *focus: result
     return client, calls, result
 
 

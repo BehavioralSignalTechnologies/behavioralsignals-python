@@ -40,6 +40,17 @@ message AudioConfig {
 
     // Whether to return feature embeddings
     optional bool feature_embedding = 5;
+
+    // If specified, also return a "focus" result when a label is likely but not the predicted one
+    optional FocusConfig focus = 6;
+}
+
+message FocusConfig {
+    // One or more of: angry, happy, negative, positive, slow, fast, high_stress, low_confidence
+    repeated string labels = 1;
+
+    // low, default or high (default if empty)
+    string sensitivity = 2;
 }
 
 /*

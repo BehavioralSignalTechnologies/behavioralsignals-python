@@ -36,6 +36,19 @@ def parse_args():
         help="Whether to include embeddings in the output",
     )
 
+    parser.add_argument(
+        "--focus",
+        type=str,
+        help="Comma-separated labels to focus on, e.g. angry,low_confidence (behavioral only)",
+    )
+    parser.add_argument(
+        "--sensitivity",
+        type=str,
+        default="default",
+        choices=["low", "default", "high"],
+        help="Focus sensitivity",
+    )
+
     return parser.parse_args()
 
 
@@ -58,7 +71,11 @@ if __name__ == "__main__":
 
     # Step 3. Wait until processing is complete and get the results
     print("Processing audio...")
-    result = client.wait_for_result(pid=pid)
+    if isinstance(client, Behavioral) and args.focus:
+        focus = args.focus.split(",")
+        result = client.wait_for_result(pid=pid, focus=focus, sensitivity=args.sensitivity)
+    else:
+        result = client.wait_for_result(pid=pid)
     print("Processing complete!")
 
     # Step 4. Save the results to the output file

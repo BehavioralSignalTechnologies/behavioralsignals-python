@@ -86,6 +86,20 @@ def test_streaming_level_all_asks_for_both_levels(monkeypatch):
     assert not channel.sent[0].config.HasField("level")
 
 
+def test_streaming_sends_focus_only_when_asked():
+    assert not StreamingOptions(encoding="LINEAR_PCM").to_pb_config().HasField("focus")
+    config = StreamingOptions(
+        encoding="LINEAR_PCM", focus=["angry", "low_confidence"], sensitivity="high"
+    ).to_pb_config()
+    assert list(config.focus.labels) == ["angry", "low_confidence"]
+    assert config.focus.sensitivity == "high"
+
+
+def test_streaming_sends_an_empty_focus_list_for_the_api_to_reject():
+    config = StreamingOptions(encoding="LINEAR_PCM", focus=[]).to_pb_config()
+    assert config.HasField("focus") and list(config.focus.labels) == []
+
+
 @pytest.mark.parametrize("cls", [Behavioral, Deepfakes])
 def test_stream_audio_parses_the_responses(monkeypatch, cls):
     response = pb.StreamResult(

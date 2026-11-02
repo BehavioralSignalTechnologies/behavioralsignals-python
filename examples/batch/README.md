@@ -34,6 +34,11 @@ With the `--api` argument you can specify which API to use (either `behavioral` 
 
 The results are saved to `audio_results.json` file once they are ready.
 
+For the behavioral API, add `--focus` to also get focus results for the labels you care about (`--sensitivity` is optional):
+```bash
+python batch_api_polling.py --file_path audio.wav --output audio_results.json --focus angry,low_confidence --sensitivity high
+```
+
 ## Video deepfake detection
 
 The `video_deepfake_polling.py` script submits a video file to the Deepfakes API for video deepfake detection and waits for the results with `wait_for_video_result`.

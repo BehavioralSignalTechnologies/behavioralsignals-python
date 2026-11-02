@@ -54,3 +54,8 @@ Use `streaming_api_file.py` to send audio data from a file to the Behavioral Sig
 python streaming_api_file.py --file_path audio.wav --output results.json --api behavioral --response_level all
 ```
 The results will be printed to the console in raw format as they are processed, and will be also saved to a file named `results.json`.
+
+For the behavioral API, add `--focus` to also get focus results for the labels you care about (`--sensitivity` is optional):
+```bash
+python streaming_api_file.py --file_path audio.wav --output results.json --response_level all --focus angry,low_confidence --sensitivity high
+```

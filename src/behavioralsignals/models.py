@@ -35,6 +35,14 @@ class StreamingOptions(BaseModel):
         "Use 'segment' for segment-level results, 'utterance' for utterance-level results. "
         "Use 'all' for both segment and utterance results.",
     )
+    focus: list[str] | None = Field(
+        default=None,
+        description="Behavioral only. Labels to focus on, e.g. ['angry', 'low_confidence']. "
+        "Adds a 'focus' result when a label is likely but not the predicted one.",
+    )
+    sensitivity: Literal["low", "default", "high"] = Field(
+        default="default", description="Focus sensitivity: 'high' flags more, 'low' flags fewer."
+    )
 
     def to_pb_config(self) -> pb.AudioConfig:
         """Convert the level to a protobuf Level enum."""
@@ -48,6 +56,9 @@ class StreamingOptions(BaseModel):
         config = pb.AudioConfig(sample_rate_hertz=self.sample_rate, encoding=encoding)
         if level is not None:
             config.level = level
+        if self.focus is not None:
+            config.focus.labels.extend(self.focus)
+            config.focus.sensitivity = self.sensitivity
         return config
 
 
@@ -239,14 +250,14 @@ class ResultItem(_SerializableModel):
     )
     task: str | None = Field(
         None,
-        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaker: gender, age. Other: diarization, asr, language, features. Deepfakes API: deepfake, visual_deepfake, generator. "
+        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaker: gender, age. Other: diarization, asr, language, features, focus. Deepfakes API: deepfake, visual_deepfake, generator. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         examples=["emotion"],
     )
     prediction: list[ModelPredictions] | None = None
     finalLabel: str | None = Field(
         None,
-        description="The label the API picks for this task. For behavioral tasks it is the label with the highest posterior.",
+        description="The label the API picks for this task. For behavioral tasks it is the label with the highest posterior. For focus it is suspected_<label>.",
         examples=["happy"],
     )
     level: str | None = Field(

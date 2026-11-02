@@ -177,6 +177,41 @@ async def test_tasks_filter_keeps_those_tasks_and_the_more_hint_repeats_it(api):
     assert none == "pid 7 completed. No result rows. Tasks: asr, emotion"
 
 
+async def test_focus_is_sent_shown_and_kept_in_the_hints(api):
+    flag = item("focus", "suspected_angry")
+    flag.prediction = [ModelPredictions(label="angry", posterior="0.6124")]
+    api.responses["wait_for_result"] = ResultResponse(
+        pid=7, results=[item("emotion", "neutral"), flag]
+    )
+    _, text = await call(
+        "get_result", pid=7, analysis="behavioral", focus=["angry"], sensitivity="high", limit=1
+    )
+    _, all_rows = await call("get_result", pid=7, analysis="behavioral", focus=["angry"])
+    api.responses["wait_for_result"] = TimeoutError("still running")
+    _, waiting = await call(
+        "get_result", pid=7, analysis="behavioral", focus=["angry"], wait_seconds=0
+    )
+    assert api.calls[0] == (
+        "wait_for_result",
+        {"pid": 7, "timeout": 45.0, "focus": ["angry"], "sensitivity": "high"},
+    )
+    assert text.endswith(
+        'More rows: get_result(pid=7, analysis="behavioral", offset=1, focus=["angry"], '
+        'sensitivity="high")'
+    )
+    assert all_rows.splitlines()[-1] == "0.5\t1.5\tfocus\tsuspected_angry\tangry=0.61"
+    assert waiting == (
+        'pid 7 is still processing. Call get_result(pid=7, analysis="behavioral", '
+        'focus=["angry"], sensitivity="default") to wait again.'
+    )
+
+
+async def test_focus_on_a_deepfake_result_is_an_error(api):
+    is_error, text = await call("get_result", pid=7, analysis="deepfake_audio", focus=["angry"])
+    assert is_error and "only available for behavioral results" in text
+    assert api.calls == []
+
+
 async def test_still_processing_returns_the_pid_to_check_later(api):
     api.responses["wait_for_video_result"] = TimeoutError("still running")
     is_error, text = await call("get_result", pid=9, analysis="deepfake_video", wait_seconds=0)

@@ -293,6 +293,30 @@ def test_get_result_parses_the_response(monkeypatch, api, path):
     ]
 
 
+def test_get_result_sends_focus_only_when_asked(monkeypatch):
+    calls = fake_requests(monkeypatch, FakeResponse(body={"pid": 7}))
+    behavioral = Client(cid="1", api_key="k").behavioral
+    behavioral.get_result(pid=7)
+    behavioral.get_result(pid=7, focus=["angry", "low_confidence"], sensitivity="high")
+    assert [call.params for call in calls[-2:]] == [
+        None,
+        {"focus": "angry,low_confidence", "sensitivity": "high"},
+    ]
+
+
+def test_wait_for_result_sends_focus(monkeypatch):
+    calls = fake_requests(monkeypatch, FakeResponse(body={"pid": 7, "status": 2}))
+    behavioral = Client(cid="1", api_key="k").behavioral
+    behavioral.wait_for_result(pid=7, focus=["angry"], sensitivity="high")
+    assert calls[-1].params == {"focus": "angry", "sensitivity": "high"}
+
+
+def test_get_result_sends_an_empty_focus_list_for_the_api_to_reject(monkeypatch):
+    calls = fake_requests(monkeypatch, FakeResponse(body={"pid": 7}))
+    Client(cid="1", api_key="k").behavioral.get_result(pid=7, focus=[])
+    assert calls[-1].params == {"focus": "", "sensitivity": "default"}
+
+
 def test_get_video_result_parses_both_result_lists(monkeypatch):
     body = {
         "pid": 7,
