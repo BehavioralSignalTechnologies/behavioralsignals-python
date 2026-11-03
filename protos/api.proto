@@ -46,7 +46,7 @@ message AudioConfig {
 }
 
 message FocusConfig {
-    // One or more of: angry, happy, negative, positive, slow, fast, high_stress, low_confidence
+    // One or more of: angry, happy, negative, positive, slow, fast, high_stress, low_confidence, negative_tone
     repeated string labels = 1;
 
     // low, default or high (default if empty)

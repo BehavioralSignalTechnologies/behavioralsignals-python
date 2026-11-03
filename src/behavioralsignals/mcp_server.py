@@ -108,7 +108,7 @@ def get_result(
 
     `focus` (behavioral only) adds "focus" rows where a label is likely but is not the final
     label, e.g. ["angry", "low_confidence"]. Labels: angry, happy, negative, positive, slow, fast,
-    high_stress, low_confidence. `sensitivity` "high" flags more rows, "low" fewer.
+    high_stress, low_confidence, negative_tone. `sensitivity` "high" flags more rows, "low" fewer.
     """
     if focus is not None and analysis != "behavioral":
         raise ToolError("focus is only available for behavioral results.")
