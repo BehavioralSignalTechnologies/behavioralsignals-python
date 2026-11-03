@@ -240,6 +240,17 @@ class ModelPredictions(_SerializableModel):
     )
 
 
+class ModelOutput(_SerializableModel):
+    """One output of a grouped task, e.g. the `en` model of `accent` or the `snr` score of `signal_quality`."""
+
+    prediction: list[ModelPredictions] | None = None
+    finalLabel: str | None = Field(
+        None,
+        description="The label the API picks for this output. Empty for scores.",
+        examples=["United States"],
+    )
+
+
 class ResultItem(_SerializableModel):
     id: str | None = Field(None, description="The id of the segment/utterance", examples=["1"])
     startTime: str | None = Field(
@@ -250,7 +261,7 @@ class ResultItem(_SerializableModel):
     )
     task: str | None = Field(
         None,
-        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaker: gender, age. Other: diarization, asr, language, features, focus. Deepfakes API: deepfake, visual_deepfake, generator. "
+        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaking style: whispering, shouting, breathiness_score, monotony_score, fluency. Speaker: gender, age, accent. Audio: signal_quality. Other: diarization, asr, language, features, focus. Deepfakes API: deepfake, visual_deepfake, generator. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         examples=["emotion"],
     )
@@ -270,6 +281,20 @@ class ResultItem(_SerializableModel):
         description="The embedding as a stringified array: the speaker embedding (192 values) on the diarization row of a speaker's first utterance, or the behavioral embedding (768 values) on the features row.",
         examples=["[11.614513397216797, -15.228992462158203, -4.92175817489624, ...]"],
     )
+    outputs: dict[str, ModelOutput] | None = Field(
+        None,
+        description="Results of a grouped task, keyed by output: accent has one model per language (en, es, de, fr), "
+        "signal_quality the snr, c50 and sdr scores and their overall soft-min, in (0,1) where 1 is clean. "
+        "These tasks have no prediction or finalLabel of their own.",
+    )
+
+    @field_validator("outputs")
+    @classmethod
+    def _empty_outputs_to_none(
+        cls, outputs: dict[str, ModelOutput] | None
+    ) -> dict[str, ModelOutput] | None:
+        # streaming results carry an empty map on every other task
+        return outputs or None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -280,6 +305,23 @@ class ResultItem(_SerializableModel):
     @property
     def et(self) -> float | None:
         return float(self.endTime) if self.endTime else None
+
+    def flatten_outputs(self) -> list["ResultItem"]:
+        """Returns one item per output of a grouped task (task e.g. "accent.en", "signal_quality.snr"),
+        or the item itself if it has no outputs."""
+        if not self.outputs:
+            return [self]
+        return [
+            self.model_copy(
+                update={
+                    "task": f"{self.task}.{name}",
+                    "prediction": output.prediction,
+                    "finalLabel": output.finalLabel,
+                    "outputs": None,
+                }
+            )
+            for name, output in self.outputs.items()
+        ]
 
 
 class ResultResponse(_SerializableModel):

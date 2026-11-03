@@ -166,6 +166,32 @@ for item in result.results:
 
 All probabilities are model estimates: use them to compare utterances and follow trends, not as exact measurements.
 
+### Speaking style, accent and signal quality
+
+These are returned on the same utterances, next to the 24 signals and not counted in them:
+
+| Task | What it measures | Output |
+|---|---|---|
+| `whispering` | Whispered speech | `whispering`, `non-whispering` |
+| `shouting` | Shouted speech | `shouting`, `non-shouting` |
+| `breathiness_score` | How breathy the voice is | score from 0 to 1 |
+| `monotony_score` | How monotone the delivery is (1 = monotone) | score from 0 to 1 |
+| `fluency` | How fluent the speech sounds to a listener | score from 0 to 1 |
+| `accent` | Accent, one model per language: `en`, `es`, `de`, `fr` | labels per language |
+| `signal_quality` | Recording quality: `snr` (background noise), `c50` (reverberation), `sdr` (clipping) and `overall` | scores from 0 to 1, 1 = clean |
+
+`accent` and `signal_quality` group several outputs, so they have no `prediction` or `finalLabel` of their own: their results are in `outputs`, keyed by output. Each accent model only makes sense for speech in its language. `overall` is mostly the worst of the three quality scores.
+
+```python
+for item in result.results:
+    if item.task == "accent":
+        print(item.st, "English accent:", item.outputs["en"].finalLabel)
+    elif item.task == "signal_quality":
+        print(item.st, "quality:", float(item.outputs["overall"].prediction[0].score))
+```
+
+`item.flatten_outputs()` turns a grouped result into one result per output, with tasks such as `accent.en` and `signal_quality.snr`. `print_results()` prints them that way.
+
 See [Definition of behaviors](https://behavioralsignals.readme.io/docs/definition-of-behaviors) for what each signal means.
 
 ## Deepfake Detection

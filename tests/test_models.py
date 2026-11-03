@@ -33,3 +33,45 @@ def test_process_list_still_serializes_its_own_fields():
     dump = response.model_dump()
     assert dump["total_count"] == 1
     assert [process["pid"] for process in dump["processes"]] == [7]
+
+
+def _signal_quality():
+    return ResultItem(
+        id="3",
+        startTime="0.5",
+        endTime="1.5",
+        task="signal_quality",
+        level="utterance",
+        outputs={
+            "snr": {"prediction": [{"score": "0.81"}]},
+            "overall": {"prediction": [{"score": "0.77"}]},
+        },
+    )
+
+
+def test_grouped_task_keeps_its_outputs():
+    item = _signal_quality()
+    assert item.prediction is None
+    assert item.outputs["snr"].prediction[0].score == "0.81"
+    assert item.model_dump()["outputs"] == {
+        "snr": {"prediction": [{"score": "0.81"}]},
+        "overall": {"prediction": [{"score": "0.77"}]},
+    }
+
+
+def test_flatten_outputs_gives_one_item_per_output():
+    rows = _signal_quality().flatten_outputs()
+    assert [(row.task, row.id, row.st, row.prediction[0].score) for row in rows] == [
+        ("signal_quality.snr", "3", 0.5, "0.81"),
+        ("signal_quality.overall", "3", 0.5, "0.77"),
+    ]
+    assert all(row.outputs is None for row in rows)
+
+
+def test_flatten_outputs_keeps_other_items():
+    item = ResultItem(task="emotion", finalLabel="sad")
+    assert item.flatten_outputs() == [item]
+
+
+def test_empty_outputs_are_dropped():
+    assert ResultItem(task="emotion", outputs={}).outputs is None

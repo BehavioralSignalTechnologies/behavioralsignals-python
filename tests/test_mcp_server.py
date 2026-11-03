@@ -390,3 +390,26 @@ async def test_list_processes_uses_the_video_list_for_video(api):
     _, text = await call("list_processes", analysis="deepfake_video")
     assert api.built == ["Deepfakes"] and api.calls[0][0] == "list_video_processes"
     assert text == "No processes found."
+
+
+async def test_grouped_tasks_get_one_row_per_output_and_can_be_filtered(api):
+    accent = ResultItem(
+        startTime="0.5",
+        endTime="1.5",
+        task="accent",
+        outputs={
+            "en": {
+                "prediction": [{"label": "England", "posterior": "0.6"}],
+                "finalLabel": "England",
+            },
+            "fr": {"prediction": [{"label": "Canada", "posterior": "0.7"}], "finalLabel": "Canada"},
+        },
+    )
+    api.responses["wait_for_result"] = ResultResponse(
+        pid=7, results=[item("emotion", "sad", "0.706"), accent]
+    )
+    _, text = await call("get_result", pid=7, analysis="behavioral", tasks=["accent"])
+    assert text.splitlines()[2:] == [
+        "0.5\t1.5\taccent.en\tEngland\tEngland=0.60",
+        "0.5\t1.5\taccent.fr\tCanada\tCanada=0.70",
+    ]

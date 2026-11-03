@@ -123,3 +123,18 @@ def test_stream_audio_parses_the_responses(monkeypatch, cls):
     item = results[0].results[0]
     assert (item.st, item.et, item.task, item.finalLabel) == (0.487, 3.001, "emotion", "sad")
     assert [(p.label, p.posterior) for p in item.prediction] == [("sad", "0.9")]
+
+
+def test_stream_audio_parses_grouped_outputs(monkeypatch):
+    score = pb.GroupedOutput(prediction=[pb.Prediction(score="0.81")])
+    response = pb.StreamResult(
+        pid=7,
+        result=[
+            pb.InferenceResult(id="1", task="signal_quality", outputs={"snr": score}),
+            pb.InferenceResult(id="1", task="emotion", final_label="sad"),
+        ],
+    )
+    fake_channel(monkeypatch, [response])
+    quality, emotion = stream_audio(Behavioral)[0].results
+    assert quality.outputs["snr"].prediction[0].score == "0.81"
+    assert emotion.outputs is None
