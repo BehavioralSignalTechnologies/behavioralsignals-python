@@ -75,3 +75,13 @@ def test_flatten_outputs_keeps_other_items():
 
 def test_empty_outputs_are_dropped():
     assert ResultItem(task="emotion", outputs={}).outputs is None
+
+
+def test_grouped_outputs_come_in_a_fixed_order():
+    item = ResultItem(
+        task="signal_quality",
+        outputs={
+            name: {"prediction": [{"score": "0.5"}]} for name in ("overall", "sdr", "snr", "c50")
+        },
+    )
+    assert list(item.outputs) == ["snr", "c50", "sdr", "overall"]

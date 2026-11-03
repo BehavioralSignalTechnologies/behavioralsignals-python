@@ -5,7 +5,7 @@ from pathlib import Path
 from datetime import date
 from datetime import datetime as datetime_aliased
 
-from pydantic import Field, BaseModel, ConfigDict, computed_field, field_validator
+from pydantic import Field, BaseModel, ConfigDict, ValidationInfo, computed_field, field_validator
 
 from .generated import api_pb2 as pb
 
@@ -251,6 +251,13 @@ class ModelOutput(_SerializableModel):
     )
 
 
+# Order of the outputs of the grouped tasks
+_OUTPUT_ORDER = {
+    "accent": ("en", "es", "de", "fr"),
+    "signal_quality": ("snr", "c50", "sdr", "overall"),
+}
+
+
 class ResultItem(_SerializableModel):
     id: str | None = Field(None, description="The id of the segment/utterance", examples=["1"])
     startTime: str | None = Field(
@@ -290,11 +297,16 @@ class ResultItem(_SerializableModel):
 
     @field_validator("outputs")
     @classmethod
-    def _empty_outputs_to_none(
-        cls, outputs: dict[str, ModelOutput] | None
+    def _order_outputs(
+        cls, outputs: dict[str, ModelOutput] | None, info: ValidationInfo
     ) -> dict[str, ModelOutput] | None:
-        # streaming results carry an empty map on every other task
-        return outputs or None
+        # streaming results carry an empty map on every other task, and the map has no fixed order
+        if not outputs:
+            return None
+        order = _OUTPUT_ORDER.get(info.data.get("task") or "", ())
+        ordered = {name: outputs[name] for name in order if name in outputs}
+        ordered.update({name: output for name, output in outputs.items() if name not in ordered})
+        return ordered
 
     @computed_field  # type: ignore[prop-decorator]
     @property
