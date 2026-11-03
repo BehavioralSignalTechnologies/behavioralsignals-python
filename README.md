@@ -287,7 +287,7 @@ See the [streaming examples](examples/streaming/) and [streaming documentation](
 
 Focus flags behaviors that are likely but not the predicted label, for example anger in an utterance labeled neutral. It is available in the Behavioral API, for batch and streaming.
 
-Labels: `angry`, `happy`, `negative`, `positive`, `slow`, `fast`, `high_stress`, `low_confidence`. Sensitivity: `low`, `default` or `high` (flags more).
+Labels: `angry`, `happy`, `negative`, `positive`, `slow`, `fast`, `high_stress`, `low_confidence`, `negative_tone`. Sensitivity: `low`, `default` or `high` (flags more).
 
 ```python
 # Batch
