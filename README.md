@@ -142,7 +142,7 @@ All ten dimensions are scored together on every utterance longer than 1 second, 
 | **Total** | | | **28** |
 
 Plus four scores between 0 and 1, which have no labels and are not counted in the 28:
-`intensity`, how intense the emotion is (not a score for any one emotion, even when `emotion` is `angry`), `breathiness_score`, how breathy the voice is, `monotony_score`, how monotone the delivery is (1 = monotone), and `fluency`, how fluent the speech sounds to a listener.
+`intensity`, how intense the emotion is (not a score for any one emotion, even when `emotion` is `angry`), `breathiness`, how breathy the voice is, `monotony`, how monotone the delivery is (1 = monotone), and `fluency`, how fluent the speech sounds to a listener.
 Two more tasks group several outputs: `accent`, the accent of the speaker with one model per language (`en`, `es`, `de`, `fr`; each only makes sense for speech in its language), and `signal_quality`, the recording quality as `snr` (background noise), `c50` (reverberation), `sdr` (clipping) and `overall`, scores from 0 to 1 where 1 is clean.
 In batch results, utterances of 1 second or less return only `diarization`, `asr` and `language`. When streaming, every segment gets all the signals and scores, however short it is.
 In batch results, `gender` and `age` are given per speaker: every utterance of a speaker longer than 1 second gets the same values, averaged over the file. When streaming, `gender` and `age` are estimated on each segment.
