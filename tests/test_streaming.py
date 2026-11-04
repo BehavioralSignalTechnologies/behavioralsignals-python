@@ -123,3 +123,44 @@ def test_stream_audio_parses_the_responses(monkeypatch, cls):
     item = results[0].results[0]
     assert (item.st, item.et, item.task, item.finalLabel) == (0.487, 3.001, "emotion", "sad")
     assert [(p.label, p.posterior) for p in item.prediction] == [("sad", "0.9")]
+
+
+def test_stream_audio_parses_grouped_outputs(monkeypatch):
+    score = pb.GroupedOutput(prediction=[pb.Prediction(score="0.81")])
+    response = pb.StreamResult(
+        pid=7,
+        result=[
+            pb.InferenceResult(id="1", task="signal_quality", outputs={"snr": score}),
+            pb.InferenceResult(id="1", task="emotion", final_label="sad"),
+        ],
+    )
+    fake_channel(monkeypatch, [response])
+    quality, emotion = stream_audio(Behavioral)[0].results
+    assert quality.outputs["snr"].prediction[0].score == "0.81"
+    assert emotion.outputs is None
+
+
+def test_stream_audio_drops_the_empty_fields_of_a_score(monkeypatch):
+    response = pb.StreamResult(
+        pid=7,
+        result=[
+            pb.InferenceResult(
+                id="2",
+                start_time="0.00",
+                end_time="2.00",
+                task="intensity",
+                level=pb.Level.Value("segment"),
+                prediction=[pb.Prediction(score="0.3231", posterior="")],
+            )
+        ],
+    )
+    fake_channel(monkeypatch, [response])
+    item = stream_audio(Behavioral)[0].results[0]
+    assert item.model_dump(exclude={"st", "et"}) == {
+        "id": "2",
+        "startTime": "0.00",
+        "endTime": "2.00",
+        "task": "intensity",
+        "prediction": [{"score": "0.3231"}],
+        "level": "segment",
+    }

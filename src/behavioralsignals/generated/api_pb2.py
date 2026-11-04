@@ -24,17 +24,19 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tapi.proto\x12\x16\x62\x65havioral_api.grpc.v1\"\xb7\x02\n\x0b\x41udioConfig\x12\x37\n\x08\x65ncoding\x18\x01 \x01(\x0e\x32%.behavioral_api.grpc.v1.AudioEncoding\x12\x19\n\x11sample_rate_hertz\x18\x02 \x01(\x05\x12\x31\n\x05level\x18\x03 \x01(\x0e\x32\x1d.behavioral_api.grpc.v1.LevelH\x00\x88\x01\x01\x12\x13\n\x06logits\x18\x04 \x01(\x08H\x01\x88\x01\x01\x12\x1e\n\x11\x66\x65\x61ture_embedding\x18\x05 \x01(\x08H\x02\x88\x01\x01\x12\x37\n\x05\x66ocus\x18\x06 \x01(\x0b\x32#.behavioral_api.grpc.v1.FocusConfigH\x03\x88\x01\x01\x42\x08\n\x06_levelB\t\n\x07_logitsB\x14\n\x12_feature_embeddingB\x08\n\x06_focus\"2\n\x0b\x46ocusConfig\x12\x0e\n\x06labels\x18\x01 \x03(\t\x12\x13\n\x0bsensitivity\x18\x02 \x01(\t\"|\n\x0b\x41udioStream\x12\x0b\n\x03\x63id\x18\x01 \x01(\x03\x12\x14\n\x0cx_auth_token\x18\x02 \x01(\t\x12\x33\n\x06\x63onfig\x18\x03 \x01(\x0b\x32#.behavioral_api.grpc.v1.AudioConfig\x12\x15\n\raudio_content\x18\x04 \x01(\x0c\"}\n\nPrediction\x12\r\n\x05label\x18\x01 \x01(\t\x12\x16\n\tposterior\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x12\n\x05logit\x18\x03 \x01(\tH\x01\x88\x01\x01\x12\x12\n\x05score\x18\x04 \x01(\tH\x02\x88\x01\x01\x42\x0c\n\n_posteriorB\x08\n\x06_logitB\x08\n\x06_score\"\x81\x02\n\x0fInferenceResult\x12\n\n\x02id\x18\x01 \x01(\t\x12\x12\n\nstart_time\x18\x02 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x03 \x01(\t\x12\x0c\n\x04task\x18\x04 \x01(\t\x12\x36\n\nprediction\x18\x05 \x03(\x0b\x32\".behavioral_api.grpc.v1.Prediction\x12\x13\n\x0b\x66inal_label\x18\x06 \x01(\t\x12\x16\n\tembedding\x18\x07 \x01(\tH\x00\x88\x01\x01\x12\x31\n\x05level\x18\x08 \x01(\x0e\x32\x1d.behavioral_api.grpc.v1.LevelH\x01\x88\x01\x01\x42\x0c\n\n_embeddingB\x08\n\x06_level\"u\n\x0cStreamResult\x12\x0b\n\x03\x63id\x18\x01 \x01(\x03\x12\x0b\n\x03pid\x18\x02 \x01(\x03\x12\x12\n\nmessage_id\x18\x03 \x01(\x05\x12\x37\n\x06result\x18\x04 \x03(\x0b\x32\'.behavioral_api.grpc.v1.InferenceResult*\x1f\n\rAudioEncoding\x12\x0e\n\nLINEAR_PCM\x10\x00*#\n\x05Level\x12\x0b\n\x07segment\x10\x00\x12\r\n\tutterance\x10\x01\x32\xde\x01\n\x16\x42\x65havioralStreamingApi\x12^\n\x0bStreamAudio\x12#.behavioral_api.grpc.v1.AudioStream\x1a$.behavioral_api.grpc.v1.StreamResult\"\x00(\x01\x30\x01\x12\x64\n\x11\x44\x65\x65pfakeDetection\x12#.behavioral_api.grpc.v1.AudioStream\x1a$.behavioral_api.grpc.v1.StreamResult\"\x00(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tapi.proto\x12\x16\x62\x65havioral_api.grpc.v1\"\xb7\x02\n\x0b\x41udioConfig\x12\x37\n\x08\x65ncoding\x18\x01 \x01(\x0e\x32%.behavioral_api.grpc.v1.AudioEncoding\x12\x19\n\x11sample_rate_hertz\x18\x02 \x01(\x05\x12\x31\n\x05level\x18\x03 \x01(\x0e\x32\x1d.behavioral_api.grpc.v1.LevelH\x00\x88\x01\x01\x12\x13\n\x06logits\x18\x04 \x01(\x08H\x01\x88\x01\x01\x12\x1e\n\x11\x66\x65\x61ture_embedding\x18\x05 \x01(\x08H\x02\x88\x01\x01\x12\x37\n\x05\x66ocus\x18\x06 \x01(\x0b\x32#.behavioral_api.grpc.v1.FocusConfigH\x03\x88\x01\x01\x42\x08\n\x06_levelB\t\n\x07_logitsB\x14\n\x12_feature_embeddingB\x08\n\x06_focus\"2\n\x0b\x46ocusConfig\x12\x0e\n\x06labels\x18\x01 \x03(\t\x12\x13\n\x0bsensitivity\x18\x02 \x01(\t\"|\n\x0b\x41udioStream\x12\x0b\n\x03\x63id\x18\x01 \x01(\x03\x12\x14\n\x0cx_auth_token\x18\x02 \x01(\t\x12\x33\n\x06\x63onfig\x18\x03 \x01(\x0b\x32#.behavioral_api.grpc.v1.AudioConfig\x12\x15\n\raudio_content\x18\x04 \x01(\x0c\"}\n\nPrediction\x12\r\n\x05label\x18\x01 \x01(\t\x12\x16\n\tposterior\x18\x02 \x01(\tH\x00\x88\x01\x01\x12\x12\n\x05logit\x18\x03 \x01(\tH\x01\x88\x01\x01\x12\x12\n\x05score\x18\x04 \x01(\tH\x02\x88\x01\x01\x42\x0c\n\n_posteriorB\x08\n\x06_logitB\x08\n\x06_score\"\x9f\x03\n\x0fInferenceResult\x12\n\n\x02id\x18\x01 \x01(\t\x12\x12\n\nstart_time\x18\x02 \x01(\t\x12\x10\n\x08\x65nd_time\x18\x03 \x01(\t\x12\x0c\n\x04task\x18\x04 \x01(\t\x12\x36\n\nprediction\x18\x05 \x03(\x0b\x32\".behavioral_api.grpc.v1.Prediction\x12\x13\n\x0b\x66inal_label\x18\x06 \x01(\t\x12\x16\n\tembedding\x18\x07 \x01(\tH\x00\x88\x01\x01\x12\x31\n\x05level\x18\x08 \x01(\x0e\x32\x1d.behavioral_api.grpc.v1.LevelH\x01\x88\x01\x01\x12\x45\n\x07outputs\x18\t \x03(\x0b\x32\x34.behavioral_api.grpc.v1.InferenceResult.OutputsEntry\x1aU\n\x0cOutputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32%.behavioral_api.grpc.v1.GroupedOutput:\x02\x38\x01\x42\x0c\n\n_embeddingB\x08\n\x06_level\"\\\n\rGroupedOutput\x12\x36\n\nprediction\x18\x01 \x03(\x0b\x32\".behavioral_api.grpc.v1.Prediction\x12\x13\n\x0b\x66inal_label\x18\x02 \x01(\t\"u\n\x0cStreamResult\x12\x0b\n\x03\x63id\x18\x01 \x01(\x03\x12\x0b\n\x03pid\x18\x02 \x01(\x03\x12\x12\n\nmessage_id\x18\x03 \x01(\x05\x12\x37\n\x06result\x18\x04 \x03(\x0b\x32\'.behavioral_api.grpc.v1.InferenceResult*\x1f\n\rAudioEncoding\x12\x0e\n\nLINEAR_PCM\x10\x00*#\n\x05Level\x12\x0b\n\x07segment\x10\x00\x12\r\n\tutterance\x10\x01\x32\xde\x01\n\x16\x42\x65havioralStreamingApi\x12^\n\x0bStreamAudio\x12#.behavioral_api.grpc.v1.AudioStream\x1a$.behavioral_api.grpc.v1.StreamResult\"\x00(\x01\x30\x01\x12\x64\n\x11\x44\x65\x65pfakeDetection\x12#.behavioral_api.grpc.v1.AudioStream\x1a$.behavioral_api.grpc.v1.StreamResult\"\x00(\x01\x30\x01\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'api_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_AUDIOENCODING']._serialized_start=1035
-  _globals['_AUDIOENCODING']._serialized_end=1066
-  _globals['_LEVEL']._serialized_start=1068
-  _globals['_LEVEL']._serialized_end=1103
+  _globals['_INFERENCERESULT_OUTPUTSENTRY']._loaded_options = None
+  _globals['_INFERENCERESULT_OUTPUTSENTRY']._serialized_options = b'8\001'
+  _globals['_AUDIOENCODING']._serialized_start=1287
+  _globals['_AUDIOENCODING']._serialized_end=1318
+  _globals['_LEVEL']._serialized_start=1320
+  _globals['_LEVEL']._serialized_end=1355
   _globals['_AUDIOCONFIG']._serialized_start=38
   _globals['_AUDIOCONFIG']._serialized_end=349
   _globals['_FOCUSCONFIG']._serialized_start=351
@@ -44,9 +46,13 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PREDICTION']._serialized_start=529
   _globals['_PREDICTION']._serialized_end=654
   _globals['_INFERENCERESULT']._serialized_start=657
-  _globals['_INFERENCERESULT']._serialized_end=914
-  _globals['_STREAMRESULT']._serialized_start=916
-  _globals['_STREAMRESULT']._serialized_end=1033
-  _globals['_BEHAVIORALSTREAMINGAPI']._serialized_start=1106
-  _globals['_BEHAVIORALSTREAMINGAPI']._serialized_end=1328
+  _globals['_INFERENCERESULT']._serialized_end=1072
+  _globals['_INFERENCERESULT_OUTPUTSENTRY']._serialized_start=963
+  _globals['_INFERENCERESULT_OUTPUTSENTRY']._serialized_end=1048
+  _globals['_GROUPEDOUTPUT']._serialized_start=1074
+  _globals['_GROUPEDOUTPUT']._serialized_end=1166
+  _globals['_STREAMRESULT']._serialized_start=1168
+  _globals['_STREAMRESULT']._serialized_end=1285
+  _globals['_BEHAVIORALSTREAMINGAPI']._serialized_start=1358
+  _globals['_BEHAVIORALSTREAMINGAPI']._serialized_end=1580
 # @@protoc_insertion_point(module_scope)

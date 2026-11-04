@@ -68,7 +68,14 @@ class Prediction(_message.Message):
     def __init__(self, label: _Optional[str] = ..., posterior: _Optional[str] = ..., logit: _Optional[str] = ..., score: _Optional[str] = ...) -> None: ...
 
 class InferenceResult(_message.Message):
-    __slots__ = ("id", "start_time", "end_time", "task", "prediction", "final_label", "embedding", "level")
+    __slots__ = ("id", "start_time", "end_time", "task", "prediction", "final_label", "embedding", "level", "outputs")
+    class OutputsEntry(_message.Message):
+        __slots__ = ("key", "value")
+        KEY_FIELD_NUMBER: _ClassVar[int]
+        VALUE_FIELD_NUMBER: _ClassVar[int]
+        key: str
+        value: GroupedOutput
+        def __init__(self, key: _Optional[str] = ..., value: _Optional[_Union[GroupedOutput, _Mapping]] = ...) -> None: ...
     ID_FIELD_NUMBER: _ClassVar[int]
     START_TIME_FIELD_NUMBER: _ClassVar[int]
     END_TIME_FIELD_NUMBER: _ClassVar[int]
@@ -77,6 +84,7 @@ class InferenceResult(_message.Message):
     FINAL_LABEL_FIELD_NUMBER: _ClassVar[int]
     EMBEDDING_FIELD_NUMBER: _ClassVar[int]
     LEVEL_FIELD_NUMBER: _ClassVar[int]
+    OUTPUTS_FIELD_NUMBER: _ClassVar[int]
     id: str
     start_time: str
     end_time: str
@@ -85,7 +93,16 @@ class InferenceResult(_message.Message):
     final_label: str
     embedding: str
     level: Level
-    def __init__(self, id: _Optional[str] = ..., start_time: _Optional[str] = ..., end_time: _Optional[str] = ..., task: _Optional[str] = ..., prediction: _Optional[_Iterable[_Union[Prediction, _Mapping]]] = ..., final_label: _Optional[str] = ..., embedding: _Optional[str] = ..., level: _Optional[_Union[Level, str]] = ...) -> None: ...
+    outputs: _containers.MessageMap[str, GroupedOutput]
+    def __init__(self, id: _Optional[str] = ..., start_time: _Optional[str] = ..., end_time: _Optional[str] = ..., task: _Optional[str] = ..., prediction: _Optional[_Iterable[_Union[Prediction, _Mapping]]] = ..., final_label: _Optional[str] = ..., embedding: _Optional[str] = ..., level: _Optional[_Union[Level, str]] = ..., outputs: _Optional[_Mapping[str, GroupedOutput]] = ...) -> None: ...
+
+class GroupedOutput(_message.Message):
+    __slots__ = ("prediction", "final_label")
+    PREDICTION_FIELD_NUMBER: _ClassVar[int]
+    FINAL_LABEL_FIELD_NUMBER: _ClassVar[int]
+    prediction: _containers.RepeatedCompositeFieldContainer[Prediction]
+    final_label: str
+    def __init__(self, prediction: _Optional[_Iterable[_Union[Prediction, _Mapping]]] = ..., final_label: _Optional[str] = ...) -> None: ...
 
 class StreamResult(_message.Message):
     __slots__ = ("cid", "pid", "message_id", "result")

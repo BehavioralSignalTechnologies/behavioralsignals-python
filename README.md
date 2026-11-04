@@ -124,8 +124,8 @@ process = client.behavioral.upload_audio(
 
 ### Behavioral outputs
 
-The Behavioral API returns **24 signals** across 8 dimensions: 18 behavioral signals and 6 speaker signals. Each label is its own signal with its own probability.
-All eight dimensions are scored together on every utterance longer than 1 second, so one utterance can be *sad + weak + negative + slow + hesitating + withdrawn*, with a voice estimated as female and aged 31 - 45. That gives 4 × 3 × 3 × 3 × 2 × 3 × 2 × 4 = **5,184 possible profiles** per utterance.
+The Behavioral API returns **28 signals** across 10 dimensions: 22 behavioral signals and 6 speaker signals. Each label is its own signal with its own probability.
+All ten dimensions are scored together on every utterance longer than 1 second, so one utterance can be *sad + weak + negative + slow + hesitating + withdrawn*, with a voice estimated as female and aged 31 - 45. That gives 4 × 3 × 3 × 3 × 2 × 3 × 2 × 2 × 2 × 4 = **20,736 possible profiles** per utterance.
 
 | Task | What it measures | Labels | # |
 |---|---|---|---|
@@ -135,12 +135,16 @@ All eight dimensions are scored together on every utterance longer than 1 second
 | `speaking_rate` | How fast the speaker talks, compared to speakers in general, not to their own pace | `fast`, `slow`, `normal` | 3 |
 | `hesitation` | Signs of hesitation | `yes`, `no` | 2 |
 | `engagement` | Involved or detached tone | `engaged`, `withdrawn`, `neutral` | 3 |
+| `whispering` | Whispered speech | `whispering`, `non-whispering` | 2 |
+| `shouting` | Shouted speech | `shouting`, `non-shouting` | 2 |
 | `gender` | Sex of the speaker, estimated from the voice | `female`, `male` | 2 |
 | `age` | Age range of the speaker, estimated from the voice | `18 - 22`, `23 - 30`, `31 - 45`, `46 - 65` | 4 |
-| **Total** | | | **24** |
+| **Total** | | | **28** |
 
-Plus `intensity`: how intense the emotion is, as one score between 0 and 1. It is not a score for any one emotion, even when `emotion` is `angry`. It has no labels and is not counted in the 24.
-In batch results, utterances of 1 second or less return only `diarization`, `asr` and `language`. When streaming, every segment gets all 24 signals and `intensity`, however short it is.
+Plus four scores between 0 and 1, which have no labels and are not counted in the 28:
+`intensity`, how intense the emotion is (not a score for any one emotion, even when `emotion` is `angry`), `breathiness`, how breathy the voice is, `monotony`, how monotone the delivery is (1 = monotone), and `fluency`, how fluent the speech sounds to a listener.
+Two more tasks group several outputs: `accent`, the accent of the speaker with one model per language (`en`, `es`, `de`, `fr`; each only makes sense for speech in its language), and `signal_quality`, the recording quality as `snr` (background noise), `c50` (reverberation), `sdr` (clipping) and `overall`, scores from 0 to 1 where 1 is clean.
+In batch results, utterances of 1 second or less return only `diarization`, `asr` and `language`. When streaming, every segment gets all the signals and scores, however short it is.
 In batch results, `gender` and `age` are given per speaker: every utterance of a speaker longer than 1 second gets the same values, averaged over the file. When streaming, `gender` and `age` are estimated on each segment.
 The other tasks have open-ended values, not fixed labels: `diarization` (a speaker ID such as `SPEAKER_00`), `asr` (the transcript) and `language`. With `embeddings=True`, `features` holds the behavioral embedding.
 All results of one utterance share its `id`, `startTime` and `endTime`. To split results by speaker, use the `diarization` label of each utterance. Speaker IDs are generic: the API does not say who is the agent and who is the customer.
@@ -151,6 +155,16 @@ All results of one utterance share its `id`, `startTime` and `endTime`. To split
 When you need a score instead of a label, use the probabilities in `prediction`. They are strings, so convert them with `float()`.
 For each task in the table they add up to 1, so each label's probability is a score from 0 to 1 that you can track over time, average over a call, or compare against your own threshold.
 For example, the `angry` probability of `emotion` is a score for anger. `intensity` is not: it does not say which emotion is intense.
+`accent` and `signal_quality` have no `prediction` or `finalLabel` of their own: each of their outputs is in `outputs`, with its own `prediction` and `finalLabel`. `overall` is mostly the worst of the three quality scores.
+`item.flatten_outputs()` turns them into one result per output, with tasks such as `accent.en`; `print_results()` prints them that way.
+
+```python
+for item in result.results:
+    if item.task == "accent":
+        print(item.st, "English accent:", item.outputs["en"].finalLabel)
+    elif item.task == "signal_quality":
+        print(item.st, "signal quality:", float(item.outputs["overall"].prediction[0].score))
+```
 
 `positivity` is valence and `strength` is arousal, the two dimensions often used in emotion research. The API gives them as probabilities from 0 to 1. To put them on the usual scale from -1 to 1, subtract the probabilities of the two opposite labels:
 
