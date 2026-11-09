@@ -143,7 +143,7 @@ All ten dimensions are scored together on every utterance longer than 1 second, 
 
 Plus four scores between 0 and 1, which have no labels and are not counted in the 28:
 `intensity`, how intense the emotion is (not a score for any one emotion, even when `emotion` is `angry`), `breathiness`, how breathy the voice is, `monotony`, how monotone the delivery is (1 = monotone), and `fluency`, how fluent the speech sounds to a listener.
-Two more tasks group several outputs: `accent`, the accent of the speaker with one model per language (`en`, `es`, `de`, `fr`; each only makes sense for speech in its language), and `signal_quality`, the recording quality as `snr` (background noise), `c50` (reverberation), `sdr` (clipping) and `overall`, scores from 0 to 1 where 1 is clean.
+The quality of the recording comes as four more scores, named `signal_quality.<output>`: `signal_quality.snr` (background noise), `signal_quality.c50` (reverberation), `signal_quality.sdr` (clipping) and `signal_quality.overall`, from 0 to 1 where 1 is clean. `overall` is mostly the worst of the three.
 In batch results, utterances of 1 second or less return only `diarization`, `asr` and `language`. When streaming, every segment gets all the signals and scores, however short it is.
 In batch results, `gender` and `age` are given per speaker: every utterance of a speaker longer than 1 second gets the same values, averaged over the file. When streaming, `gender` and `age` are estimated on each segment.
 The other tasks have open-ended values, not fixed labels: `diarization` (a speaker ID such as `SPEAKER_00`), `asr` (the transcript) and `language`. With `embeddings=True`, `features` holds the behavioral embedding.
@@ -155,15 +155,12 @@ All results of one utterance share its `id`, `startTime` and `endTime`. To split
 When you need a score instead of a label, use the probabilities in `prediction`. They are strings, so convert them with `float()`.
 For each task in the table they add up to 1, so each label's probability is a score from 0 to 1 that you can track over time, average over a call, or compare against your own threshold.
 For example, the `angry` probability of `emotion` is a score for anger. `intensity` is not: it does not say which emotion is intense.
-`accent` and `signal_quality` have no `prediction` or `finalLabel` of their own: each of their outputs is in `outputs`, with its own `prediction` and `finalLabel`. `overall` is mostly the worst of the three quality scores.
-`item.flatten_outputs()` turns them into one result per output, with tasks such as `accent.en`; `print_results()` prints them that way.
+Scores have no `finalLabel`: their `prediction` holds a single `score`.
 
 ```python
 for item in result.results:
-    if item.task == "accent":
-        print(item.st, "English accent:", item.outputs["en"].finalLabel)
-    elif item.task == "signal_quality":
-        print(item.st, "signal quality:", float(item.outputs["overall"].prediction[0].score))
+    if item.task == "signal_quality.overall":
+        print(item.st, "signal quality:", float(item.prediction[0].score))
 ```
 
 `positivity` is valence and `strength` is arousal, the two dimensions often used in emotion research. The API gives them as probabilities from 0 to 1. To put them on the usual scale from -1 to 1, subtract the probabilities of the two opposite labels:

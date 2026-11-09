@@ -30,13 +30,12 @@ def print_results(items: Iterable[ResultItem] | None) -> None:
     """Print one line per result: start time, end time, task, final label and its probability.
 
     Continuous tasks (e.g. intensity) have no label, so their score is printed instead.
-    Grouped tasks (accent, signal_quality) get one line per output, e.g. "accent.en" or "signal_quality.snr".
     Rows without a label or score (e.g. the features row, which carries embeddings) are skipped.
 
     Args:
         items (Iterable[ResultItem] | None): Result items, e.g. `result.results`.
     """
-    for item in (row for result in items or [] for row in result.flatten_outputs()):
+    for item in items or []:
         top = item.prediction[0] if item.prediction else None
         label = item.finalLabel or (top.score if top else None)
         if not label:

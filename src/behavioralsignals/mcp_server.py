@@ -53,7 +53,7 @@ server = MCPServer(
 
 @server.tool(structured_output=False)
 def analyze_behavior(source: str, wait_seconds: WaitSeconds = DEFAULT_WAIT) -> str:
-    """Analyzes speech in an audio file: transcript, speakers, language, gender, age, accent, emotion,
+    """Analyzes speech in an audio file: transcript, speakers, language, gender, age, emotion,
     positivity, strength, speaking rate, hesitation, engagement, intensity, speaking style (whispering,
     shouting, breathiness, monotony, fluency) and signal quality.
 
@@ -248,7 +248,7 @@ def _result_rows(result, analysis: str) -> list[list[str]]:
 
 
 def _labelled_rows(items: list[ResultItem] | None) -> list[list[str]]:
-    rows = (_result_row(row) for item in items or [] for row in item.flatten_outputs())
+    rows = (_result_row(item) for item in items or [])
     return [row for row in rows if row]
 
 
@@ -283,7 +283,7 @@ def _format_result(
     task_index = columns.index("task")
     task_names = ", ".join(sorted({row[task_index] for row in rows}))
     if tasks:
-        # "accent" keeps all of accent.en, accent.es, ...
+        # a group name keeps all its tasks, e.g. "signal_quality" keeps signal_quality.snr, ...
         rows = [
             row
             for row in rows

@@ -30,8 +30,7 @@ def make_table(resp: StreamingResultResponse):
         st, et = resp.results[0].st, resp.results[0].et
         table.add_row("Timestamps", f"{st} → {et} (s)", "")
 
-    # accent and signal_quality become one row per output, e.g. accent.en
-    for res in (row for item in resp.results or [] for row in item.flatten_outputs()):
+    for res in resp.results or []:
         scores = []
         for p in res.prediction or []:
             try:

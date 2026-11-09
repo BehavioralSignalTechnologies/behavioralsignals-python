@@ -98,14 +98,6 @@ message InferenceResult {
   optional string embedding = 7;
   // Level of result
   optional Level level = 8;
-  // results of a grouped task (accent: en, es, de, fr; signal_quality: snr, c50, sdr, overall), keyed by output
-  map<string, GroupedOutput> outputs = 9;
-}
-
-message GroupedOutput {
-  repeated Prediction prediction = 1;
-  // label after thresholding, empty for scores
-  string final_label = 2;
 }
 
 // The response message of the server that contains the inference results.

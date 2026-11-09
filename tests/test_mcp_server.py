@@ -392,24 +392,17 @@ async def test_list_processes_uses_the_video_list_for_video(api):
     assert text == "No processes found."
 
 
-async def test_grouped_tasks_get_one_row_per_output_and_can_be_filtered(api):
-    accent = ResultItem(
-        startTime="0.5",
-        endTime="1.5",
-        task="accent",
-        outputs={
-            "en": {
-                "prediction": [{"label": "England", "posterior": "0.6"}],
-                "finalLabel": "England",
-            },
-            "fr": {"prediction": [{"label": "Canada", "posterior": "0.7"}], "finalLabel": "Canada"},
-        },
-    )
+async def test_a_group_name_selects_all_its_tasks(api):
     api.responses["wait_for_result"] = ResultResponse(
-        pid=7, results=[item("emotion", "sad", "0.706"), accent]
+        pid=7,
+        results=[
+            item("emotion", "sad", "0.706"),
+            item("signal_quality.snr", score="0.9594"),
+            item("signal_quality.overall", score="0.5125"),
+        ],
     )
-    _, text = await call("get_result", pid=7, analysis="behavioral", tasks=["accent"])
-    assert text.splitlines()[2:] == [
-        "0.5\t1.5\taccent.en\tEngland\tEngland=0.60",
-        "0.5\t1.5\taccent.fr\tCanada\tCanada=0.70",
+    _, text = await call("get_result", pid=7, analysis="behavioral", tasks=["signal_quality"])
+    assert [line.split("\t")[2] for line in text.splitlines()[2:]] == [
+        "signal_quality.snr",
+        "signal_quality.overall",
     ]

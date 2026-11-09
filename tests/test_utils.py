@@ -75,33 +75,3 @@ def test_importing_utils_does_not_load_pydub():
     code = "import sys, behavioralsignals.utils; print('pydub' in sys.modules)"
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
     assert out.stdout.strip() == "False"
-
-
-def test_print_results_prints_each_output_of_a_grouped_task(capsys):
-    accent = ResultItem(
-        task="accent",
-        startTime="0.487",
-        endTime="3.001",
-        outputs={
-            "en": {
-                "prediction": [{"label": "United States", "posterior": "0.41"}],
-                "finalLabel": "United States",
-            },
-            "de": {
-                "prediction": [{"label": "Austria", "posterior": "0.73"}],
-                "finalLabel": "Austria",
-            },
-        },
-    )
-    quality = ResultItem(
-        task="signal_quality",
-        startTime="0.487",
-        endTime="3.001",
-        outputs={"snr": {"prediction": [{"score": "0.8123"}], "finalLabel": ""}},
-    )
-    print_results([accent, quality])
-    assert capsys.readouterr().out == (
-        "0.487 3.001 accent.en United States (41.0%)\n"
-        "0.487 3.001 accent.de Austria (73.0%)\n"
-        "0.487 3.001 signal_quality.snr 0.8123\n"
-    )
