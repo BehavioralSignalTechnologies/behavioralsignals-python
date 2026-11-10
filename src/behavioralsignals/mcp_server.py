@@ -54,7 +54,8 @@ server = MCPServer(
 @server.tool(structured_output=False)
 def analyze_behavior(source: str, wait_seconds: WaitSeconds = DEFAULT_WAIT) -> str:
     """Analyzes speech in an audio file: transcript, speakers, language, gender, age, emotion,
-    positivity, strength, speaking rate, hesitation, engagement and intensity.
+    positivity, strength, speaking rate, hesitation, engagement, intensity, speaking style (whispering,
+    shouting, breathiness, monotony, fluency) and signal quality.
 
     `source` is an absolute path to a local audio file, or an S3 presigned URL. Each call uploads
     the audio again and uses credits: to check a job you started, call get_result. If an upload
@@ -282,7 +283,12 @@ def _format_result(
     task_index = columns.index("task")
     task_names = ", ".join(sorted({row[task_index] for row in rows}))
     if tasks:
-        rows = [row for row in rows if row[task_index] in tasks]
+        # a group name keeps all its tasks, e.g. "signal_quality" keeps signal_quality.snr, ...
+        rows = [
+            row
+            for row in rows
+            if row[task_index] in tasks or row[task_index].split(".")[0] in tasks
+        ]
     total = len(rows)
     if total == 0:
         hint = f" Tasks: {task_names}" if tasks and task_names else ""

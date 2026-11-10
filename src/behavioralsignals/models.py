@@ -1,6 +1,6 @@
 import json
 from enum import IntEnum
-from typing import Literal
+from typing import Any, Literal
 from pathlib import Path
 from datetime import date
 from datetime import datetime as datetime_aliased
@@ -250,7 +250,7 @@ class ResultItem(_SerializableModel):
     )
     task: str | None = Field(
         None,
-        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaker: gender, age. Other: diarization, asr, language, features, focus. Deepfakes API: deepfake, visual_deepfake, generator. "
+        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaking style: whispering, shouting, breathiness, monotony, fluency. Speaker: gender, age. Signal quality: signal_quality.snr, signal_quality.c50, signal_quality.sdr, signal_quality.overall. Other: diarization, asr, language, features, focus. Deepfakes API: deepfake, visual_deepfake, generator. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         examples=["emotion"],
     )
@@ -319,3 +319,18 @@ class StreamingResultResponse(_SerializableModel):
     results: list[ResultItem] | None = Field(
         None, alias="result", description="List of result items"
     )
+
+    @field_validator("results", mode="before")
+    @classmethod
+    def _drop_empty_strings(cls, results: Any) -> Any:
+        # The gRPC message has every unset string as "" (e.g. the label and posterior of a score);
+        # drop them, so streaming results look like batch ones
+        return _without_empty_strings(results)
+
+
+def _without_empty_strings(value: Any) -> Any:
+    if isinstance(value, dict):
+        return {key: _without_empty_strings(item) for key, item in value.items() if item != ""}
+    if isinstance(value, list):
+        return [_without_empty_strings(item) for item in value]
+    return value

@@ -390,3 +390,19 @@ async def test_list_processes_uses_the_video_list_for_video(api):
     _, text = await call("list_processes", analysis="deepfake_video")
     assert api.built == ["Deepfakes"] and api.calls[0][0] == "list_video_processes"
     assert text == "No processes found."
+
+
+async def test_a_group_name_selects_all_its_tasks(api):
+    api.responses["wait_for_result"] = ResultResponse(
+        pid=7,
+        results=[
+            item("emotion", "sad", "0.706"),
+            item("signal_quality.snr", score="0.9594"),
+            item("signal_quality.overall", score="0.5125"),
+        ],
+    )
+    _, text = await call("get_result", pid=7, analysis="behavioral", tasks=["signal_quality"])
+    assert [line.split("\t")[2] for line in text.splitlines()[2:]] == [
+        "signal_quality.snr",
+        "signal_quality.overall",
+    ]
