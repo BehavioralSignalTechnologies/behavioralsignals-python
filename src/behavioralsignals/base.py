@@ -176,8 +176,6 @@ class BaseClient:
             ("grpc.keepalive_timeout_ms", KEEPALIVE_TIMEOUT_MS),
             # A keepalive can wait on gRPC's own ping instead, which waits 60 s for an answer by default
             ("grpc.http2.ping_timeout_ms", KEEPALIVE_TIMEOUT_MS),
-            # Keep pinging while no audio is sent, e.g. while the audio source waits
-            ("grpc.http2.max_pings_without_data", 0),
         ]
         if self.config.use_ssl:
             credentials = grpc.ssl_channel_credentials()
