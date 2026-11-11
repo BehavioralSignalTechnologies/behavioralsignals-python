@@ -1,11 +1,14 @@
 import os
 import time
-from collections.abc import Callable
+import threading
+from typing import Any
+from collections.abc import Callable, Iterator
 
 import grpc
 import requests
+from google.protobuf.json_format import MessageToDict
 
-from .models import APIError, ProcessItem, ProcessStatus
+from .models import APIError, ProcessItem, ProcessStatus, StreamingResultResponse
 from .configuration import DEFAULT_TIMEOUT, DEFAULT_UPLOAD_TIMEOUT, TimeoutType, Configuration
 
 
@@ -18,6 +21,45 @@ class BehavioralSignalsError(Exception):
     def __init__(self, message: str, status_code: int):
         super().__init__(message)
         self.status_code = status_code
+
+
+class StreamingResults(Iterator[StreamingResultResponse]):
+    """The results of a stream, as they arrive. The stream opens on the first `next()`.
+
+    Call `cancel()`, from any thread, to stop the stream: the loop over the results ends.
+    """
+
+    def __init__(self, open_channel: Callable, start_call: Callable[[grpc.Channel], Any]):
+        self._open_channel = open_channel
+        self._start_call = start_call
+        self._cancelled = threading.Event()
+        # The gRPC call: an iterator of responses, with cancel()
+        self._call: Any = None
+        self._results = self._run()
+
+    def __next__(self) -> StreamingResultResponse:
+        return next(self._results)
+
+    def cancel(self) -> None:
+        """Stop the stream. The loop over the results ends, with no error."""
+        self._cancelled.set()
+        if self._call is not None:
+            self._call.cancel()
+
+    def _run(self) -> Iterator[StreamingResultResponse]:
+        if self._cancelled.is_set():
+            return
+        with self._open_channel() as channel:
+            self._call = self._start_call(channel)
+            if self._cancelled.is_set():  # cancelled while the call started
+                self._call.cancel()
+            try:
+                for response in self._call:
+                    resp_dict = MessageToDict(response, always_print_fields_with_no_presence=True)
+                    yield StreamingResultResponse(**resp_dict)
+            except grpc.RpcError:
+                if not self._cancelled.is_set():
+                    raise
 
 
 def _value_or_env(value: str | int | None, arg_name: str, env_var: str) -> str:

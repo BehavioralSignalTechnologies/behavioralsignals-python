@@ -282,6 +282,8 @@ for result in client.behavioral.stream_audio(
 
 `stream_audio()` can also accept your own `Iterator[bytes]`, for example from a microphone or live call.
 
+To stop a stream early, call `cancel()` on what `stream_audio()` returns. You can call it from another thread; the loop over the results then ends, with no error.
+
 For real-time deepfake detection, use the same interface:
 
 ```python
@@ -325,7 +327,7 @@ A stream's focus results are saved with its results: `get_result` returns them, 
 | `get_result(pid)` | Returns the results of a finished process. Behavioral also takes `focus` and `sensitivity` |
 | `get_process(pid)` | Returns a process and its current status |
 | `list_processes(...)` | Lists audio processes |
-| `stream_audio(audio_stream, options)` | Streams audio and yields results as they arrive |
+| `stream_audio(audio_stream, options)` | Streams audio and yields results as they arrive. Call `cancel()` on what it returns to stop the stream |
 | `upload_video(file_path, ...)` | Deepfakes only: uploads a video file |
 | `upload_s3_presigned_video_url(url, ...)` | Deepfakes only: submits video using an S3 presigned URL |
 | `wait_for_video_result(pid, timeout=None)` | Deepfakes only: waits for a video process to finish and returns its results |

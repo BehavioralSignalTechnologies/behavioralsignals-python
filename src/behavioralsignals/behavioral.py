@@ -2,9 +2,7 @@ from typing import Literal
 from pathlib import Path
 from collections.abc import Iterator
 
-from google.protobuf.json_format import MessageToDict
-
-from .base import BaseClient
+from .base import BaseClient, StreamingResults
 from .models import (
     ProcessItem,
     ResultResponse,
@@ -13,7 +11,6 @@ from .models import (
     ProcessListParams,
     S3UrlUploadParams,
     ProcessListResponse,
-    StreamingResultResponse,
 )
 from .generated import api_pb2 as pb
 from .generated import api_pb2_grpc as pb_grpc
@@ -201,30 +198,28 @@ class Behavioral(BaseClient):
 
     def stream_audio(
         self, audio_stream: Iterator[bytes], options: StreamingOptions
-    ) -> Iterator[StreamingResultResponse]:
-        with self._get_channel_context() as channel:
-            stub = pb_grpc.BehavioralStreamingApiStub(channel)
+    ) -> StreamingResults:
+        def _request_generator() -> Iterator[pb.AudioStream]:
+            # Streaming API always requires the first message to contain
+            # the audio configuration and authentication details
+            audio_config = options.to_pb_config()
+            req = pb.AudioStream(
+                cid=int(self.config.cid),
+                x_auth_token=self.config.api_key,
+                config=audio_config,
+            )
+            yield req
 
-            def _request_generator() -> Iterator[pb.AudioStream]:
-                # Streaming API always requires the first message to contain
-                # the audio configuration and authentication details
-                audio_config = options.to_pb_config()
-                req = pb.AudioStream(
+            for chunk in audio_stream:
+                yield pb.AudioStream(
                     cid=int(self.config.cid),
                     x_auth_token=self.config.api_key,
-                    config=audio_config,
+                    audio_content=chunk,
                 )
-                yield req
 
-                for chunk in audio_stream:
-                    yield pb.AudioStream(
-                        cid=int(self.config.cid),
-                        x_auth_token=self.config.api_key,
-                        audio_content=chunk,
-                    )
-
-            response_stream = stub.StreamAudio(_request_generator())
-            for response in response_stream:
-                resp_dict = MessageToDict(response, always_print_fields_with_no_presence=True)
-                response_data = StreamingResultResponse(**resp_dict)
-                yield response_data
+        return StreamingResults(
+            self._get_channel_context,
+            lambda channel: pb_grpc.BehavioralStreamingApiStub(channel).StreamAudio(
+                _request_generator()
+            ),
+        )

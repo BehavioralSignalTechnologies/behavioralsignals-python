@@ -1,9 +1,14 @@
+import threading
+from concurrent import futures
+
+import grpc
 import pytest
 
 from behavioralsignals import StreamingOptions
 from behavioralsignals.base import BaseClient
 from behavioralsignals.deepfakes import Deepfakes
 from behavioralsignals.generated import api_pb2 as pb
+from behavioralsignals.generated import api_pb2_grpc as pb_grpc
 from behavioralsignals.behavioral import Behavioral
 from behavioralsignals.configuration import Configuration
 
@@ -149,3 +154,76 @@ def test_stream_audio_drops_the_empty_fields_of_a_score(monkeypatch):
         "prediction": [{"score": "0.3231"}],
         "level": "segment",
     }
+
+
+class HangingStreamingApi(pb_grpc.BehavioralStreamingApiServicer):
+    """Answers once, then holds the stream open without answering again."""
+
+    def __init__(self):
+        self.stop = threading.Event()
+
+    def StreamAudio(self, request_iterator, context):
+        next(request_iterator)
+        yield pb.StreamResult(pid=1)
+        self.stop.wait()
+
+    DeepfakeDetection = StreamAudio
+
+
+@pytest.fixture
+def hanging_api():
+    """A local streaming API that never ends a stream. Returns the client that uses it."""
+    api = HangingStreamingApi()
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+    pb_grpc.add_BehavioralStreamingApiServicer_to_server(api, server)
+    port = server.add_insecure_port("localhost:0")
+    server.start()
+    config = Configuration(
+        cid="123", api_key="secret", streaming_api_url=f"localhost:{port}", use_ssl=False
+    )
+    yield config
+    api.stop.set()
+    server.stop(grace=None)
+
+
+@pytest.mark.parametrize("cls", [Behavioral, Deepfakes])
+def test_cancel_ends_a_stream_that_waits_for_results(hanging_api, cls):
+    client = make_client(cls)
+    client.config = hanging_api
+    options = StreamingOptions(encoding="LINEAR_PCM", sample_rate=8000)
+    responses = client.stream_audio(audio_stream=iter([b"aa"]), options=options)
+    read = []
+
+    def consume():
+        read.extend(responses)
+
+    next(responses)
+    consumer = threading.Thread(target=consume, daemon=True)
+    consumer.start()
+    responses.cancel()
+    consumer.join(timeout=5)
+    assert not consumer.is_alive()
+    assert read == []
+
+
+def test_cancel_before_reading_opens_no_stream(monkeypatch):
+    channel = fake_channel(monkeypatch)
+    options = StreamingOptions(encoding="LINEAR_PCM", sample_rate=8000)
+    responses = make_client(Behavioral).stream_audio(audio_stream=iter([b"aa"]), options=options)
+    responses.cancel()
+    assert list(responses) == []
+    assert channel.path is None
+
+
+class FakeRpcError(grpc.RpcError):
+    pass
+
+
+def test_stream_audio_raises_the_errors_of_the_api(monkeypatch):
+    def failing_responses():
+        raise FakeRpcError()
+        yield
+
+    fake_channel(monkeypatch, failing_responses())
+    with pytest.raises(FakeRpcError):
+        stream_audio(Behavioral)
