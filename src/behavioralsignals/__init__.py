@@ -1,6 +1,6 @@
 from importlib.metadata import PackageNotFoundError, version
 
-from .base import BehavioralSignalsError
+from .base import StreamingResults, BehavioralSignalsError
 from .client import Client
 from .models import StreamingOptions, VideoResultResponse
 from .deepfakes import Deepfakes
@@ -18,5 +18,6 @@ __all__ = [
     "Client",
     "Deepfakes",
     "StreamingOptions",
+    "StreamingResults",
     "VideoResultResponse",
 ]

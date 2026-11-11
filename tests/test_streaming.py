@@ -1,11 +1,13 @@
+import gc
 import threading
+import contextlib
 from concurrent import futures
 
 import grpc
 import pytest
 
 from behavioralsignals import StreamingOptions
-from behavioralsignals.base import BaseClient
+from behavioralsignals.base import BaseClient, StreamingResults
 from behavioralsignals.deepfakes import Deepfakes
 from behavioralsignals.generated import api_pb2 as pb
 from behavioralsignals.generated import api_pb2_grpc as pb_grpc
@@ -161,8 +163,12 @@ class HangingStreamingApi(pb_grpc.BehavioralStreamingApiServicer):
 
     def __init__(self):
         self.stop = threading.Event()
+        # Set when the stream ends on the server, e.g. because the client closed it
+        self.ended = threading.Event()
+        self.config = None
 
     def StreamAudio(self, request_iterator, context):
+        context.add_callback(self.ended.set)
         next(request_iterator)
         yield pb.StreamResult(pid=1)
         self.stop.wait()
@@ -172,16 +178,16 @@ class HangingStreamingApi(pb_grpc.BehavioralStreamingApiServicer):
 
 @pytest.fixture
 def hanging_api():
-    """A local streaming API that never ends a stream. Returns the client that uses it."""
+    """A local streaming API that never ends a stream, with the configuration that uses it."""
     api = HangingStreamingApi()
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
     pb_grpc.add_BehavioralStreamingApiServicer_to_server(api, server)
     port = server.add_insecure_port("localhost:0")
     server.start()
-    config = Configuration(
+    api.config = Configuration(
         cid="123", api_key="secret", streaming_api_url=f"localhost:{port}", use_ssl=False
     )
-    yield config
+    yield api
     api.stop.set()
     server.stop(grace=None)
 
@@ -189,7 +195,7 @@ def hanging_api():
 @pytest.mark.parametrize("cls", [Behavioral, Deepfakes])
 def test_cancel_ends_a_stream_that_waits_for_results(hanging_api, cls):
     client = make_client(cls)
-    client.config = hanging_api
+    client.config = hanging_api.config
     options = StreamingOptions(encoding="LINEAR_PCM", sample_rate=8000)
     responses = client.stream_audio(audio_stream=iter([b"aa"]), options=options)
     read = []
@@ -227,3 +233,54 @@ def test_stream_audio_raises_the_errors_of_the_api(monkeypatch):
     fake_channel(monkeypatch, failing_responses())
     with pytest.raises(FakeRpcError):
         stream_audio(Behavioral)
+
+
+def test_leaving_the_loop_early_ends_the_stream(hanging_api):
+    client = make_client(Behavioral)
+    client.config = hanging_api.config
+    options = StreamingOptions(encoding="LINEAR_PCM", sample_rate=8000)
+    gc.disable()  # the stream must end without waiting for the garbage collector
+    try:
+        for _ in client.stream_audio(audio_stream=iter([b"aa"]), options=options):
+            break
+        assert hanging_api.ended.wait(timeout=5)
+    finally:
+        gc.enable()
+
+
+def test_close_ends_the_stream(hanging_api):
+    client = make_client(Behavioral)
+    client.config = hanging_api.config
+    options = StreamingOptions(encoding="LINEAR_PCM", sample_rate=8000)
+    responses = client.stream_audio(audio_stream=iter([b"aa"]), options=options)
+    next(responses)
+    responses.close()
+    assert hanging_api.ended.wait(timeout=5)
+    assert list(responses) == []
+
+
+class FakeCall:
+    """Stands in for a gRPC call: fails once cancelled, as a real one does."""
+
+    def __init__(self):
+        self.cancelled = False
+
+    def cancel(self):
+        self.cancelled = True
+
+    def __iter__(self):
+        if self.cancelled:
+            raise FakeRpcError()
+        yield pb.StreamResult(pid=1)
+
+
+def test_cancel_while_the_stream_starts_ends_the_loop():
+    call = FakeCall()
+
+    def start_call(channel):
+        results.cancel()
+        return call
+
+    results = StreamingResults(contextlib.nullcontext, start_call)
+    assert list(results) == []
+    assert call.cancelled
