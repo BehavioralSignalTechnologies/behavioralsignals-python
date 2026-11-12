@@ -5,7 +5,7 @@
 | Name                                   |    Stmts |     Miss |   Branch |   BrPart |   Cover |   Missing |
 |--------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
 | src/behavioralsignals/\_\_init\_\_.py  |       11 |        0 |        0 |        0 |    100% |           |
-| src/behavioralsignals/base.py          |       77 |        5 |       22 |        1 |     92% |120, 170-174 |
+| src/behavioralsignals/base.py          |       80 |        1 |       22 |        1 |     98% |       124 |
 | src/behavioralsignals/behavioral.py    |       56 |        2 |        8 |        2 |     94% |    51, 88 |
 | src/behavioralsignals/client.py        |       21 |        0 |        4 |        0 |    100% |           |
 | src/behavioralsignals/configuration.py |       18 |        1 |        2 |        1 |     90% |        24 |
@@ -13,7 +13,7 @@
 | src/behavioralsignals/mcp\_server.py   |      150 |        4 |       24 |        2 |     97% |21-22, 149-\>160, 165, 325 |
 | src/behavioralsignals/models.py        |      172 |       14 |       14 |        3 |     91% |80, 87-90, 108-111, 157, 161, 211, 222-223 |
 | src/behavioralsignals/utils.py         |       19 |        0 |        4 |        0 |    100% |           |
-| **TOTAL**                              |  **611** |   **30** |   **90** |   **13** | **94%** |           |
+| **TOTAL**                              |  **614** |   **26** |   **90** |   **13** | **94%** |           |
 
 
 ## Setup coverage badge
