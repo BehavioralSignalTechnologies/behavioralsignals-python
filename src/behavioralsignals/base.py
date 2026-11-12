@@ -1,11 +1,14 @@
 import os
 import time
-from collections.abc import Callable
+import threading
+from typing import Any
+from collections.abc import Callable, Iterator, Generator
 
 import grpc
 import requests
+from google.protobuf.json_format import MessageToDict
 
-from .models import APIError, ProcessItem, ProcessStatus
+from .models import APIError, ProcessItem, ProcessStatus, StreamingResultResponse
 from .configuration import DEFAULT_TIMEOUT, DEFAULT_UPLOAD_TIMEOUT, TimeoutType, Configuration
 
 
@@ -22,6 +25,53 @@ class BehavioralSignalsError(Exception):
     def __init__(self, message: str, status_code: int):
         super().__init__(message)
         self.status_code = status_code
+
+
+class StreamingResults(Iterator[StreamingResultResponse]):
+    """The results of a stream, as they arrive. The stream opens on the first `next()`.
+
+    Call `cancel()`, from any thread, to stop the stream: the loop over the results ends.
+    """
+
+    def __init__(self, open_channel: Callable, start_call: Callable[[grpc.Channel], Any]):
+        self._cancelled = threading.Event()
+        # The gRPC call, once started: an iterator of responses, with cancel()
+        self._calls: list[Any] = []
+        # A plain function, not a method: the generator must not hold `self`, or the stream
+        # stays open after the caller drops the results without reading them to the end
+        self._results = _stream(open_channel, start_call, self._cancelled, self._calls)
+
+    def __next__(self) -> StreamingResultResponse:
+        return next(self._results)
+
+    def cancel(self) -> None:
+        """Stop the stream. The loop over the results ends, with no error."""
+        self._cancelled.set()
+        for call in self._calls:
+            call.cancel()
+
+    def close(self) -> None:
+        """Stop the stream from the thread that reads it, like a generator's `close()`."""
+        self._results.close()
+
+
+def _stream(
+    open_channel: Callable, start_call: Callable, cancelled: threading.Event, calls: list
+) -> Generator[StreamingResultResponse, None, None]:
+    if cancelled.is_set():
+        return
+    with open_channel() as channel:
+        call = start_call(channel)
+        calls.append(call)
+        if cancelled.is_set():  # cancelled while the call started
+            call.cancel()
+        try:
+            for response in call:
+                resp_dict = MessageToDict(response, always_print_fields_with_no_presence=True)
+                yield StreamingResultResponse(**resp_dict)
+        except grpc.RpcError:
+            if not cancelled.is_set():
+                raise
 
 
 def _value_or_env(value: str | int | None, arg_name: str, env_var: str) -> str:
