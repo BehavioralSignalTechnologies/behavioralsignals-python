@@ -1,4 +1,5 @@
 import gc
+import socket
 import threading
 import contextlib
 from concurrent import futures
@@ -6,7 +7,7 @@ from concurrent import futures
 import grpc
 import pytest
 
-from behavioralsignals import StreamingOptions
+from behavioralsignals import StreamingOptions, base
 from behavioralsignals.base import BaseClient, StreamingResults
 from behavioralsignals.deepfakes import Deepfakes
 from behavioralsignals.generated import api_pb2 as pb
@@ -174,6 +175,103 @@ class HangingStreamingApi(pb_grpc.BehavioralStreamingApiServicer):
         self.stop.wait()
 
     DeepfakeDetection = StreamAudio
+
+
+def start_silent_proxy(target_port, silent):
+    """Forwards TCP to the target port until `silent` is set, then drops all bytes and keeps
+    the connection open, like a network that went down without closing it. Returns the port and
+    the sockets to close."""
+    listener = socket.create_server(("localhost", 0))
+    sockets = [listener]
+
+    def pump(source, sink):
+        while data := source.recv(65536):
+            if not silent.is_set():
+                sink.sendall(data)
+
+    def accept():
+        client, _ = listener.accept()
+        server = socket.create_connection(("localhost", target_port))
+        sockets.extend((client, server))
+        for source, sink in ((client, server), (server, client)):
+            threading.Thread(target=pump, args=(source, sink), daemon=True).start()
+
+    threading.Thread(target=accept, daemon=True).start()
+    return listener.getsockname()[1], sockets
+
+
+def test_stream_audio_fails_when_the_network_drops_silently(monkeypatch):
+    monkeypatch.setattr(base, "KEEPALIVE_TIME_MS", 1000)
+    monkeypatch.setattr(base, "KEEPALIVE_TIMEOUT_MS", 1000)
+    api = HangingStreamingApi()
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+    pb_grpc.add_BehavioralStreamingApiServicer_to_server(api, server)
+    silent = threading.Event()
+    proxy_port, sockets = start_silent_proxy(server.add_insecure_port("localhost:0"), silent)
+    server.start()
+    client = make_client(Behavioral)
+    client.config = Configuration(
+        cid="123", api_key="secret", streaming_api_url=f"localhost:{proxy_port}", use_ssl=False
+    )
+    options = StreamingOptions(encoding="LINEAR_PCM", sample_rate=8000)
+    errors = []
+
+    def consume():
+        responses = client.stream_audio(audio_stream=iter([b"aa"]), options=options)
+        next(responses)
+        silent.set()
+        try:
+            next(responses)
+        except grpc.RpcError as error:
+            errors.append(error.code())
+
+    consumer = threading.Thread(target=consume, daemon=True)
+    consumer.start()
+    consumer.join(timeout=15)
+    api.stop.set()
+    server.stop(grace=None)
+    for open_socket in sockets:
+        open_socket.close()
+    assert errors == [grpc.StatusCode.UNAVAILABLE]
+
+
+def test_an_idle_stream_stays_open_on_a_grpc_server_with_default_settings(monkeypatch):
+    # A default server allows one ping every 5 minutes while no data flows, and closes the
+    # connection after a few more
+    monkeypatch.setattr(base, "KEEPALIVE_TIME_MS", 500)
+    api = HangingStreamingApi()
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=2))
+    pb_grpc.add_BehavioralStreamingApiServicer_to_server(api, server)
+    port = server.add_insecure_port("localhost:0")
+    server.start()
+    client = make_client(Behavioral)
+    client.config = Configuration(
+        cid="123", api_key="secret", streaming_api_url=f"localhost:{port}", use_ssl=False
+    )
+    options = StreamingOptions(encoding="LINEAR_PCM", sample_rate=8000)
+    errors = []
+
+    def consume():
+        responses = client.stream_audio(audio_stream=iter([b"aa"]), options=options)
+        try:
+            list(responses)
+        except grpc.RpcError as error:
+            errors.append(error.code())
+
+    consumer = threading.Thread(target=consume, daemon=True)
+    consumer.start()
+    consumer.join(timeout=4)
+    errors_while_idle = list(errors)
+    api.stop.set()
+    server.stop(grace=None)
+    assert errors_while_idle == []
+
+
+def test_the_tls_channel_uses_keepalive(monkeypatch):
+    calls = []
+    monkeypatch.setattr(grpc, "secure_channel", lambda *args, **kwargs: calls.append(kwargs))
+    make_client(Behavioral)._get_channel_context()
+    assert ("grpc.keepalive_time_ms", base.KEEPALIVE_TIME_MS) in calls[0]["options"]
 
 
 @pytest.fixture
