@@ -117,6 +117,17 @@ class BaseClient:
         self.session = requests.Session()
         self._authenticate()
 
+    @classmethod
+    def _with_checked_credentials(cls, config: Configuration):
+        """Creates a client from credentials that another client already checked.
+
+        Skips the login that `__init__` does, so `Client` logs in once for all its clients.
+        """
+        client = cls.__new__(cls)
+        client.config = config
+        client.session = requests.Session()
+        return client
+
     def _get_default_headers(self):
         return {
             "accept": "application/json",
