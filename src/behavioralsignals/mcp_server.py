@@ -55,7 +55,8 @@ server = MCPServer(
 def analyze_behavior(source: str, wait_seconds: WaitSeconds = DEFAULT_WAIT) -> str:
     """Analyzes speech in an audio file: transcript, speakers, language, gender, age, emotion,
     positivity, strength, speaking rate, hesitation, engagement, intensity, speaking style (whispering,
-    shouting, breathiness, monotony, fluency) and signal quality.
+    shouting, breathiness, monotony, fluency), signal quality and vocalization events (laugh, sigh, cough,
+    sneeze, scream; rows only where detected, with the event's own start and end).
 
     `source` is an absolute path to a local audio file, or an S3 presigned URL. Each call uploads
     the audio again and uses credits: to check a job you started, call get_result. If an upload

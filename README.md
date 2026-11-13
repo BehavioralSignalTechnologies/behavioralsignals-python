@@ -147,7 +147,8 @@ The quality of the recording comes as four more scores, named `signal_quality.<o
 In batch results, utterances of 1 second or less return only `diarization`, `asr` and `language`. When streaming, every segment gets all the signals and scores, however short it is.
 In batch results, `gender` and `age` are given per speaker: every utterance of a speaker longer than 1 second gets the same values, averaged over the file. When streaming, `gender` and `age` are estimated on each segment.
 The other tasks have open-ended values, not fixed labels: `diarization` (a speaker ID such as `SPEAKER_00`), `asr` (the transcript) and `language`. With `embeddings=True`, `features` holds the behavioral embedding.
-All results of one utterance share its `id`, `startTime` and `endTime`. To split results by speaker, use the `diarization` label of each utterance. Speaker IDs are generic: the API does not say who is the agent and who is the customer.
+The API also detects non-verbal vocalizations: `laugh`, `sigh`, `cough`, `sneeze` and `scream`. They are not among the 28 signals: each one is returned only when it is detected, with `finalLabel` `yes`, the confidence as the `yes` probability, and its own `startTime` and `endTime` (whole seconds). An event gets the `id` of the utterance it overlaps most; an event in a pause gets an `id` of its own. See [Vocalization events](https://behavioralsignals.readme.io/docs/vocalization-events).
+All results of one utterance share its `id`, `startTime` and `endTime`, except vocalization events, which keep their own times. To split results by speaker, use the `diarization` label of each utterance. Speaker IDs are generic: the API does not say who is the agent and who is the customer.
 
 `neutral` means something different in each task, so always read a label together with its task: `emotion: neutral` means no clear emotion, `strength: neutral` normal energy, `positivity: neutral` neither positive nor negative, and `engagement: neutral` neither engaged nor withdrawn.
 
@@ -279,6 +280,8 @@ for result in client.behavioral.stream_audio(
 ```
 
 `chunk_size` is specified in **seconds**, so `0.25` corresponds to 250 ms.
+
+Behavioral streams also return [vocalization events](https://behavioralsignals.readme.io/docs/vocalization-events) (`laugh`, `sigh`, `cough`, `sneeze`, `scream`) when they are detected, at both levels: with the segment or utterance they happen in, or in a result of their own during a pause. With the default `level` you receive each event once per level.
 
 `stream_audio()` can also accept your own `Iterator[bytes]`, for example from a microphone or live call.
 
