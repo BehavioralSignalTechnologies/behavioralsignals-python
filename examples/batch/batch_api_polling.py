@@ -48,6 +48,11 @@ def parse_args():
         choices=["low", "default", "high"],
         help="Focus sensitivity",
     )
+    parser.add_argument(
+        "--continuous",
+        type=str,
+        help="Comma-separated continuous values, e.g. valence,arousal (behavioral only)",
+    )
 
     return parser.parse_args()
 
@@ -71,9 +76,12 @@ if __name__ == "__main__":
 
     # Step 3. Wait until processing is complete and get the results
     print("Processing audio...")
-    if isinstance(client, Behavioral) and args.focus:
-        focus = args.focus.split(",")
-        result = client.wait_for_result(pid=pid, focus=focus, sensitivity=args.sensitivity)
+    if isinstance(client, Behavioral) and (args.focus or args.continuous):
+        focus = args.focus.split(",") if args.focus else None
+        continuous = args.continuous.split(",") if args.continuous else None
+        result = client.wait_for_result(
+            pid=pid, focus=focus, sensitivity=args.sensitivity, continuous=continuous
+        )
     else:
         result = client.wait_for_result(pid=pid)
     print("Processing complete!")

@@ -43,6 +43,9 @@ message AudioConfig {
 
     // If specified, also return a "focus" result when a label is likely but not the predicted one
     optional FocusConfig focus = 6;
+
+    // If specified, also return a "continuous_<name>" result with a score in [-1, 1]. One or more of: valence, arousal
+    repeated string continuous = 7;
 }
 
 message FocusConfig {
@@ -79,7 +82,7 @@ message Prediction {
   optional string posterior = 2;
   // logit
   optional string logit = 3;
-  // regression score for continuous tasks (e.g. intensity), in (0,1)
+  // regression score for continuous tasks (e.g. intensity), in (0,1); in [-1, 1] for continuous_valence and continuous_arousal
   optional string score = 4;
 }
 

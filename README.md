@@ -175,6 +175,8 @@ for item in result.results:
             print(item.st, "arousal", scores["strong"] - scores["weak"])
 ```
 
+The API can also return a valence and an arousal score directly: see [Continuous valence and arousal](#continuous-valence-and-arousal).
+
 All probabilities are model estimates: use them to compare utterances and follow trends, not as exact measurements.
 
 See [Definition of behaviors](https://behavioralsignals.readme.io/docs/definition-of-behaviors) for what each signal means.
@@ -315,6 +317,24 @@ Each flag is a result with `task="focus"` and `finalLabel="suspected_<label>"`, 
 
 A stream's focus results are saved with its results: `get_result` returns them, and replaces them if you pass `focus`.
 
+## Continuous valence and arousal
+
+Ask for `continuous` values to get a valence and an arousal score for every utterance (and, in streaming, every segment), from -1 to 1. Unlike Focus there is no threshold: every utterance with behavioral results gets a value. It is available in the Behavioral API, for batch and streaming.
+
+```python
+# Batch
+result = client.behavioral.wait_for_result(pid=process.pid, continuous=["valence", "arousal"])
+
+# Streaming
+options = StreamingOptions(sample_rate=sample_rate, encoding="LINEAR_PCM", continuous=["valence", "arousal"])
+
+for item in result.results:
+    if item.task in ("continuous_valence", "continuous_arousal"):
+        print(item.st, item.task, float(item.prediction[0].score))
+```
+
+Each value is a result with `task="continuous_valence"` or `"continuous_arousal"` and the value in `score`, with the same time span as its utterance or segment. It can be combined with `focus`.
+
 ## Available Methods
 
 `client.behavioral` and `client.deepfakes` expose the same methods for audio. Video methods are available only on `client.deepfakes`.
@@ -323,8 +343,8 @@ A stream's focus results are saved with its results: `get_result` returns them, 
 |---|---|
 | `upload_audio(file_path, ...)` | Uploads an audio file and returns the process, including its `pid` |
 | `upload_s3_presigned_url(url, ...)` | Submits audio using an S3 presigned URL |
-| `wait_for_result(pid, timeout=None)` | Waits for a process to finish and returns its results. Behavioral also takes `focus` and `sensitivity` (see [Focus](#focus)) |
-| `get_result(pid)` | Returns the results of a finished process. Behavioral also takes `focus` and `sensitivity` |
+| `wait_for_result(pid, timeout=None)` | Waits for a process to finish and returns its results. Behavioral also takes `focus` and `sensitivity` (see [Focus](#focus)), and `continuous` (see [Continuous valence and arousal](#continuous-valence-and-arousal)) |
+| `get_result(pid)` | Returns the results of a finished process. Behavioral also takes `focus`, `sensitivity` and `continuous` |
 | `get_process(pid)` | Returns a process and its current status |
 | `list_processes(...)` | Lists audio processes |
 | `stream_audio(audio_stream, options)` | Streams audio and yields results as they arrive. Call `cancel()` on what it returns to stop the stream |
@@ -462,7 +482,7 @@ The server exposes four tools:
 |---|---|
 | `analyze_behavior` | Uploads an audio file or S3 presigned URL for behavioral analysis and returns the results |
 | `detect_deepfake` | Uploads an audio or video file, or an S3 presigned URL, for deepfake detection (video is experimental) and returns the results |
-| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label. Behavioral results can also include [Focus](#focus) rows, with `focus` and `sensitivity` |
+| `get_result` | Returns the results of a process, in pages, optionally filtered to specific tasks. Each row has the final label and the probability of every label. Behavioral results can also include [Focus](#focus) rows, with `focus` and `sensitivity`, and [continuous valence and arousal](#continuous-valence-and-arousal) rows, with `continuous` |
 | `list_processes` | Lists processes, newest first, including the failure reason when available |
 
 Notes:

@@ -39,6 +39,11 @@ For the behavioral API, add `--focus` to also get focus results for the labels y
 python batch_api_polling.py --file_path audio.wav --output audio_results.json --focus angry,low_confidence --sensitivity high
 ```
 
+Add `--continuous` to also get continuous valence and arousal for every utterance:
+```bash
+python batch_api_polling.py --file_path audio.wav --output audio_results.json --continuous valence,arousal
+```
+
 ## Video deepfake detection
 
 The `video_deepfake_polling.py` script submits a video file to the Deepfakes API for video deepfake detection and waits for the results with `wait_for_video_result`.

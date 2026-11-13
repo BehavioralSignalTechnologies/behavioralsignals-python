@@ -212,6 +212,35 @@ async def test_focus_on_a_deepfake_result_is_an_error(api):
     assert api.calls == []
 
 
+async def test_continuous_is_sent_shown_and_kept_in_the_hints(api):
+    api.responses["wait_for_result"] = ResultResponse(
+        pid=7, results=[item("emotion", "neutral"), item("continuous_valence", score="-0.4277")]
+    )
+    _, text = await call(
+        "get_result", pid=7, analysis="behavioral", continuous=["valence"], limit=1
+    )
+    _, all_rows = await call(
+        "get_result", pid=7, analysis="behavioral", focus=["angry"], continuous=["valence"]
+    )
+    assert api.calls[0] == (
+        "wait_for_result",
+        {"pid": 7, "timeout": 45.0, "continuous": ["valence"]},
+    )
+    assert api.calls[1][1]["focus"] == ["angry"] and api.calls[1][1]["continuous"] == ["valence"]
+    assert text.endswith(
+        'More rows: get_result(pid=7, analysis="behavioral", offset=1, continuous=["valence"])'
+    )
+    assert all_rows.splitlines()[-1] == "0.5\t1.5\tcontinuous_valence\t-0.4277\t"
+
+
+async def test_continuous_on_a_deepfake_result_is_an_error(api):
+    is_error, text = await call(
+        "get_result", pid=7, analysis="deepfake_audio", continuous=["valence"]
+    )
+    assert is_error and "only available for behavioral results" in text
+    assert api.calls == []
+
+
 async def test_still_processing_returns_the_pid_to_check_later(api):
     api.responses["wait_for_video_result"] = TimeoutError("still running")
     is_error, text = await call("get_result", pid=9, analysis="deepfake_video", wait_seconds=0)

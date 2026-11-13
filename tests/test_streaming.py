@@ -108,6 +108,14 @@ def test_streaming_sends_an_empty_focus_list_for_the_api_to_reject():
     assert config.HasField("focus") and list(config.focus.labels) == []
 
 
+def test_streaming_sends_continuous_only_when_asked():
+    assert list(StreamingOptions(encoding="LINEAR_PCM").to_pb_config().continuous) == []
+    config = StreamingOptions(
+        encoding="LINEAR_PCM", continuous=["valence", "arousal"]
+    ).to_pb_config()
+    assert list(config.continuous) == ["valence", "arousal"]
+
+
 @pytest.mark.parametrize("cls", [Behavioral, Deepfakes])
 def test_stream_audio_parses_the_responses(monkeypatch, cls):
     response = pb.StreamResult(

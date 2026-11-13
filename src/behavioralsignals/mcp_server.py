@@ -97,6 +97,7 @@ def get_result(
     wait_seconds: WaitSeconds = DEFAULT_WAIT,
     focus: list[str] | None = None,
     sensitivity: Literal["low", "default", "high"] = "default",
+    continuous: list[str] | None = None,
 ) -> str:
     """Returns the results of a job, waiting up to wait_seconds if it is still processing.
 
@@ -110,12 +111,17 @@ def get_result(
     `focus` (behavioral only) adds "focus" rows where a label is likely but is not the final
     label, e.g. ["angry", "low_confidence"]. Labels: angry, happy, negative, positive, slow, fast,
     high_stress, low_confidence, negative_tone. `sensitivity` "high" flags more rows, "low" fewer.
+
+    `continuous` (behavioral only) adds a "continuous_valence" and/or "continuous_arousal" row to
+    every utterance, e.g. ["valence", "arousal"], with a score from -1 to 1 as its label.
     """
     if focus is not None and analysis != "behavioral":
         raise ToolError("focus is only available for behavioral results.")
+    if continuous is not None and analysis != "behavioral":
+        raise ToolError("continuous is only available for behavioral results.")
     with _tool_errors(), _api(analysis) as api:
         return _result_text(
-            api, analysis, pid, wait_seconds, tasks, offset, limit, focus, sensitivity
+            api, analysis, pid, wait_seconds, tasks, offset, limit, focus, sensitivity, continuous
         )
 
 
@@ -220,12 +226,15 @@ def _result_text(
     limit: int,
     focus: list[str] | None = None,
     sensitivity: str = "default",
+    continuous: list[str] | None = None,
 ) -> str:
     """Waits up to wait_seconds for the result and formats one page of it."""
     wait = api.wait_for_video_result if analysis == "deepfake_video" else api.wait_for_result  # type: ignore[union-attr]
     focus_args: dict[str, Any] = (
         {} if focus is None else {"focus": focus, "sensitivity": sensitivity}
     )
+    if continuous is not None:
+        focus_args["continuous"] = continuous
     try:
         result = wait(pid=pid, timeout=wait_seconds, **focus_args)
     except TimeoutError:
