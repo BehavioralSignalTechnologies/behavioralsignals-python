@@ -31,6 +31,11 @@ def make_table(resp: StreamingResultResponse):
         table.add_row("Timestamps", f"{st} → {et} (s)", "")
 
     for res in resp.results or []:
+        # Score-only tasks (signal_quality.*, stress, monotony, ...) have no posterior, so show their score
+        top = res.prediction[0] if res.prediction else None
+        if top and top.score and not any(p.posterior for p in res.prediction or []):
+            table.add_row(res.task, "", top.score)
+            continue
         scores = []
         for p in res.prediction or []:
             try:
