@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 from .base import BaseClient, StreamingResults
 from .models import (
+    EndOfTurn,
     ProcessItem,
     ResultResponse,
     StreamingOptions,
@@ -390,7 +391,7 @@ class Deepfakes(BaseClient):
         return self.get_video_result(pid)
 
     def stream_audio(
-        self, audio_stream: Iterator[bytes], options: StreamingOptions
+        self, audio_stream: Iterator[bytes | EndOfTurn], options: StreamingOptions
     ) -> StreamingResults:
         def _request_generator() -> Iterator[pb.AudioStream]:
             # Streaming API always requires the first message to contain
@@ -404,6 +405,13 @@ class Deepfakes(BaseClient):
             yield req
 
             for chunk in audio_stream:
+                if isinstance(chunk, EndOfTurn):
+                    yield pb.AudioStream(
+                        cid=int(self.config.cid),
+                        x_auth_token=self.config.api_key,
+                        end_of_turn=True,
+                    )
+                    continue
                 yield pb.AudioStream(
                     cid=int(self.config.cid),
                     x_auth_token=self.config.api_key,

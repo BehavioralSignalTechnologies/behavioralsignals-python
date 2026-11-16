@@ -7,7 +7,7 @@ from concurrent import futures
 import grpc
 import pytest
 
-from behavioralsignals import StreamingOptions, base
+from behavioralsignals import END_OF_TURN, StreamingOptions, base
 from behavioralsignals.base import BaseClient, StreamingResults
 from behavioralsignals.deepfakes import Deepfakes
 from behavioralsignals.generated import api_pb2 as pb
@@ -80,6 +80,20 @@ def test_stream_audio_sends_the_config_first_then_the_chunks(monkeypatch, cls):
     assert config.config.level == pb.Level.utterance
     assert config.audio_content == b""
     assert [message.audio_content for message in chunks] == [b"aa", b"bb"]
+    assert not any(message.end_of_turn for message in channel.sent)
+
+
+@pytest.mark.parametrize("cls", [Behavioral, Deepfakes])
+def test_stream_audio_sends_end_of_turn_as_its_own_message(monkeypatch, cls):
+    channel = fake_channel(monkeypatch)
+    stream_audio(cls, audio=(b"aa", END_OF_TURN, b"bb"))
+    _, first, marker, last = channel.sent
+    assert [first.audio_content, last.audio_content] == [b"aa", b"bb"]
+    assert not first.end_of_turn and not last.end_of_turn
+    assert marker.end_of_turn
+    assert marker.audio_content == b""
+    assert not marker.HasField("config")
+    assert (marker.cid, marker.x_auth_token) == (123, "secret")
 
 
 def test_stream_audio_sends_the_credentials_on_every_message(monkeypatch):

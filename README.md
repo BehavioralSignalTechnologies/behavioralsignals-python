@@ -284,6 +284,8 @@ for result in client.behavioral.stream_audio(
 
 `stream_audio()` can also accept your own `Iterator[bytes]`, for example from a microphone or live call.
 
+If you know when the caller's turn has ended, for example from your voice agent's turn detector, yield `END_OF_TURN` (from `behavioralsignals`) from the iterator at that point. The SDK sends it as its own message, with no audio, to tell the server that the turn has ended. Yield it once per turn, and only for a final end of turn, never for a guess. It is sent when your iterator yields it, so an iterator that waits for audio must be woken up to yield it.
+
 To stop a stream early, call `cancel()` on what `stream_audio()` returns. You can call it from another thread; the loop over the results then ends, with no error.
 
 For real-time deepfake detection, use the same interface:
@@ -347,7 +349,7 @@ Each value is a result with `task="continuous_valence"` or `"continuous_arousal"
 | `get_result(pid)` | Returns the results of a finished process. Behavioral also takes `focus`, `sensitivity` and `continuous` |
 | `get_process(pid)` | Returns a process and its current status |
 | `list_processes(...)` | Lists audio processes |
-| `stream_audio(audio_stream, options)` | Streams audio and yields results as they arrive. Call `cancel()` on what it returns to stop the stream |
+| `stream_audio(audio_stream, options)` | Streams audio and yields results as they arrive. The iterator can also yield `END_OF_TURN` when the caller's turn has ended (see [Streaming](#streaming)). Call `cancel()` on what it returns to stop the stream |
 | `upload_video(file_path, ...)` | Deepfakes only: uploads a video file |
 | `upload_s3_presigned_video_url(url, ...)` | Deepfakes only: submits video using an S3 presigned URL |
 | `wait_for_video_result(pid, timeout=None)` | Deepfakes only: waits for a video process to finish and returns its results |
