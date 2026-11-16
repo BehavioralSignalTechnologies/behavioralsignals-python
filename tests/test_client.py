@@ -317,6 +317,23 @@ def test_get_result_sends_an_empty_focus_list_for_the_api_to_reject(monkeypatch)
     assert calls[-1].params == {"focus": "", "sensitivity": "default"}
 
 
+def test_get_result_sends_continuous_only_when_asked(monkeypatch):
+    calls = fake_requests(monkeypatch, FakeResponse(body={"pid": 7}))
+    behavioral = Client(cid="1", api_key="k").behavioral
+    behavioral.get_result(pid=7, continuous=["valence", "arousal"])
+    behavioral.get_result(pid=7, focus=["angry"], continuous=["arousal"])
+    assert [call.params for call in calls[-2:]] == [
+        {"continuous": "valence,arousal"},
+        {"focus": "angry", "sensitivity": "default", "continuous": "arousal"},
+    ]
+
+
+def test_wait_for_result_sends_continuous(monkeypatch):
+    calls = fake_requests(monkeypatch, FakeResponse(body={"pid": 7, "status": 2}))
+    Client(cid="1", api_key="k").behavioral.wait_for_result(pid=7, continuous=["valence"])
+    assert calls[-1].params == {"continuous": "valence"}
+
+
 def test_get_video_result_parses_both_result_lists(monkeypatch):
     body = {
         "pid": 7,

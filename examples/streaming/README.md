@@ -59,3 +59,8 @@ For the behavioral API, add `--focus` to also get focus results for the labels y
 ```bash
 python streaming_api_file.py --file_path audio.wav --output results.json --response_level all --focus angry,low_confidence --sensitivity high
 ```
+
+Add `--continuous` to also get continuous valence and arousal for every utterance and segment:
+```bash
+python streaming_api_file.py --file_path audio.wav --output results.json --response_level all --continuous valence,arousal
+```
