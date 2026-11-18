@@ -46,16 +46,20 @@ class FocusConfig(_message.Message):
     def __init__(self, labels: _Optional[_Iterable[str]] = ..., sensitivity: _Optional[str] = ...) -> None: ...
 
 class AudioStream(_message.Message):
-    __slots__ = ("cid", "x_auth_token", "config", "audio_content")
+    __slots__ = ("cid", "x_auth_token", "config", "audio_content", "app_id", "end_of_turn")
     CID_FIELD_NUMBER: _ClassVar[int]
     X_AUTH_TOKEN_FIELD_NUMBER: _ClassVar[int]
     CONFIG_FIELD_NUMBER: _ClassVar[int]
     AUDIO_CONTENT_FIELD_NUMBER: _ClassVar[int]
+    APP_ID_FIELD_NUMBER: _ClassVar[int]
+    END_OF_TURN_FIELD_NUMBER: _ClassVar[int]
     cid: int
     x_auth_token: str
     config: AudioConfig
     audio_content: bytes
-    def __init__(self, cid: _Optional[int] = ..., x_auth_token: _Optional[str] = ..., config: _Optional[_Union[AudioConfig, _Mapping]] = ..., audio_content: _Optional[bytes] = ...) -> None: ...
+    app_id: str
+    end_of_turn: bool
+    def __init__(self, cid: _Optional[int] = ..., x_auth_token: _Optional[str] = ..., config: _Optional[_Union[AudioConfig, _Mapping]] = ..., audio_content: _Optional[bytes] = ..., app_id: _Optional[str] = ..., end_of_turn: bool = ...) -> None: ...
 
 class Prediction(_message.Message):
     __slots__ = ("label", "posterior", "logit", "score")

@@ -69,6 +69,14 @@ class StreamingOptions(BaseModel):
         return config
 
 
+class EndOfTurn:
+    """Type of END_OF_TURN, the marker `stream_audio()` accepts between audio chunks."""
+
+
+END_OF_TURN = EndOfTurn()
+"""Yield from the `stream_audio()` iterator once, when the caller's turn has ended."""
+
+
 class AudioUploadParams(BaseModel):
     file_path: str = Field(..., description="Path to the audio file to upload")
     name: str | None = Field(None, description="Optional name for the job request")
