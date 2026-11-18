@@ -10,7 +10,7 @@
 | src/behavioralsignals/client.py        |       21 |        0 |        4 |        0 |    100% |           |
 | src/behavioralsignals/configuration.py |       18 |        1 |        2 |        1 |     90% |        24 |
 | src/behavioralsignals/deepfakes.py     |       83 |        4 |       12 |        4 |     92% |62, 112, 246, 296 |
-| src/behavioralsignals/mcp\_server.py   |      154 |        4 |       28 |        2 |     97% |21-22, 155-\>166, 171, 334 |
+| src/behavioralsignals/mcp\_server.py   |      154 |        4 |       28 |        2 |     97% |21-22, 156-\>167, 172, 335 |
 | src/behavioralsignals/models.py        |      178 |       14 |       16 |        3 |     91% |95, 102-105, 123-126, 172, 176, 226, 237-238 |
 | src/behavioralsignals/utils.py         |       19 |        0 |        4 |        0 |    100% |           |
 | **TOTAL**                              |  **651** |   **26** |  **110** |   **13** | **95%** |           |
