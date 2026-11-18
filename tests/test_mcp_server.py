@@ -118,6 +118,25 @@ async def test_formats_labelled_rows_and_drops_the_rest(api):
     )
 
 
+async def test_vocalization_event_rows_keep_their_own_times(api):
+    yes_no = [
+        ModelPredictions(label="yes", posterior="0.9652"),
+        ModelPredictions(label="no", posterior="0.0348"),
+    ]
+    api.responses["wait_for_result"] = ResultResponse(
+        pid=7,
+        results=[
+            item("emotion", "happy", "0.97", start="7.507", end="12.586"),
+            ResultItem(
+                startTime="7.00", endTime="9.00", task="laugh", finalLabel="yes", prediction=yes_no
+            ),
+        ],
+    )
+    is_error, text = await call("get_result", pid=7, analysis="behavioral", tasks=["laugh"])
+    assert not is_error
+    assert text.splitlines()[-1] == "7.00\t9.00\tlaugh\tyes\tyes=0.97, no=0.03"
+
+
 async def test_rows_show_the_probability_of_every_label(api):
     prediction = [
         ModelPredictions(label="sad", posterior="0.5"),
