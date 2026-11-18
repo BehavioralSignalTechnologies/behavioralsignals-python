@@ -6,14 +6,14 @@
 |--------------------------------------- | -------: | -------: | -------: | -------: | ------: | --------: |
 | src/behavioralsignals/\_\_init\_\_.py  |       11 |        0 |        0 |        0 |    100% |           |
 | src/behavioralsignals/base.py          |      111 |        1 |       32 |        1 |     99% |       174 |
-| src/behavioralsignals/behavioral.py    |       53 |        2 |       10 |        2 |     94% |    48, 85 |
+| src/behavioralsignals/behavioral.py    |       56 |        2 |       12 |        2 |     94% |    49, 86 |
 | src/behavioralsignals/client.py        |       21 |        0 |        4 |        0 |    100% |           |
 | src/behavioralsignals/configuration.py |       18 |        1 |        2 |        1 |     90% |        24 |
-| src/behavioralsignals/deepfakes.py     |       80 |        4 |       10 |        4 |     91% |61, 111, 245, 295 |
+| src/behavioralsignals/deepfakes.py     |       83 |        4 |       12 |        4 |     92% |62, 112, 246, 296 |
 | src/behavioralsignals/mcp\_server.py   |      154 |        4 |       28 |        2 |     97% |21-22, 155-\>166, 171, 334 |
-| src/behavioralsignals/models.py        |      175 |       14 |       16 |        3 |     91% |87, 94-97, 115-118, 164, 168, 218, 229-230 |
+| src/behavioralsignals/models.py        |      178 |       14 |       16 |        3 |     91% |95, 102-105, 123-126, 172, 176, 226, 237-238 |
 | src/behavioralsignals/utils.py         |       19 |        0 |        4 |        0 |    100% |           |
-| **TOTAL**                              |  **642** |   **26** |  **106** |   **13** | **95%** |           |
+| **TOTAL**                              |  **651** |   **26** |  **110** |   **13** | **95%** |           |
 
 
 ## Setup coverage badge
