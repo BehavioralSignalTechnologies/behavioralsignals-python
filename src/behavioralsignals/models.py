@@ -242,7 +242,7 @@ class ModelPredictions(_SerializableModel):
     label: str | None = Field(None, description="The name of the class", examples=["happy"])
     posterior: str | None = Field(
         None,
-        description="The probability of this class, as a string. The posteriors of one result add up to about 1, except for language, which lists only the top 3 languages. Use float(posterior) as a score when finalLabel is not enough",
+        description="The probability of this class, as a string. The posteriors of one result add up to about 1, except for language, which lists only the top 3 languages. For diarization there is one per speaker of the recording, highest first. Use float(posterior) as a score when finalLabel is not enough",
         examples=["0.754"],
     )
     score: str | None = Field(
@@ -252,6 +252,20 @@ class ModelPredictions(_SerializableModel):
     )
     dominantInSegments: list[int] | None = Field(
         None, description="Internal field, usually empty. You can ignore it."
+    )
+
+
+class OverlapSegment(_SerializableModel):
+    startTime: str | None = Field(
+        None, description="The start time of the interval in seconds", examples=["5.640"]
+    )
+    endTime: str | None = Field(
+        None, description="The end time of the interval in seconds", examples=["6.180"]
+    )
+    speakers: list[str] | None = Field(
+        None,
+        description="The speakers active in the interval",
+        examples=[["SPEAKER_00", "SPEAKER_01"]],
     )
 
 
@@ -272,7 +286,7 @@ class ResultItem(_SerializableModel):
     prediction: list[ModelPredictions] | None = None
     finalLabel: str | None = Field(
         None,
-        description="The label the API picks for this task. For behavioral tasks it is the label with the highest posterior. For focus it is suspected_<label>.",
+        description="The label the API picks for this task. For behavioral tasks it is the label with the highest posterior. For diarization it is the speaker; it can differ from the top posterior when that speaker is talking over the segment. For focus it is suspected_<label>.",
         examples=["happy"],
     )
     level: str | None = Field(
@@ -285,6 +299,26 @@ class ResultItem(_SerializableModel):
         description="The embedding as a stringified array: the speaker embedding (192 values) on the diarization row of a speaker's first utterance, or the behavioral embedding (768 values) on the features row.",
         examples=["[11.614513397216797, -15.228992462158203, -4.92175817489624, ...]"],
     )
+    overlapDuration: str | None = Field(
+        None,
+        description="Diarization only, present when the segment has overlapping speech: total seconds where two or more speakers talk at once.",
+        examples=["0.540"],
+    )
+    overlapRatio: str | None = Field(
+        None,
+        description="Diarization only, present when the segment has overlapping speech: overlapDuration divided by the segment duration.",
+        examples=["0.088"],
+    )
+    overlapSegments: list[OverlapSegment] | None = Field(
+        None,
+        description="Diarization only, present when the segment has overlapping speech: the intervals where two or more speakers talk at once, with all speakers active in each.",
+    )
+
+    @field_validator("overlapSegments", mode="before")
+    @classmethod
+    def _no_empty_overlap(cls, value: Any) -> Any:
+        # streaming sends every result with an empty list; batch leaves the field out
+        return value or None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
