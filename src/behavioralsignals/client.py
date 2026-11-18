@@ -4,18 +4,19 @@ from contextlib import ExitStack
 from .base import BaseClient
 from .deepfakes import Deepfakes
 from .behavioral import Behavioral
+from .configuration import Configuration
 
 
 class Client(BaseClient):
     @cached_property
     def behavioral(self) -> Behavioral:
         """Client for the Behavioral API."""
-        return Behavioral(**self._sub_client_args())
+        return Behavioral._with_checked_credentials(self._sub_client_config())
 
     @cached_property
     def deepfakes(self) -> Deepfakes:
         """Client for the Deepfakes API."""
-        return Deepfakes(**self._sub_client_args())
+        return Deepfakes._with_checked_credentials(self._sub_client_config())
 
     def close(self):
         """Close the session, and the sessions of the sub-clients that were used."""
@@ -28,10 +29,10 @@ class Client(BaseClient):
                 if sub_client is not None:
                     stack.callback(sub_client.close)
 
-    def _sub_client_args(self) -> dict:
-        return {
-            "cid": self.config.cid,
-            "api_key": self.config.api_key,
-            "timeout": self.config.timeout,
-            "upload_timeout": self.config.upload_timeout,
-        }
+    def _sub_client_config(self) -> Configuration:
+        return Configuration(
+            cid=self.config.cid,
+            api_key=self.config.api_key,
+            timeout=self.config.timeout,
+            upload_timeout=self.config.upload_timeout,
+        )

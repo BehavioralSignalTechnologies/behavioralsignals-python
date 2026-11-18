@@ -83,14 +83,14 @@ def test_client_timeout_reaches_sub_clients(monkeypatch):
     calls = fake_requests(monkeypatch)
     client = Client(cid="1", api_key="k", timeout=5)
     assert client.behavioral.config.timeout == 5
-    assert timeouts(calls) == [("GET", 5), ("GET", 5)]
+    assert timeouts(calls) == [("GET", 5)]
 
 
 def test_client_timeout_none_disables_it(monkeypatch):
     calls = fake_requests(monkeypatch)
     client = Client(cid="1", api_key="k", timeout=None, upload_timeout=None)
     client.deepfakes.upload_s3_presigned_url(url="https://example.com/a.wav")
-    assert timeouts(calls) == [("GET", None), ("GET", None), ("POST", None)]
+    assert timeouts(calls) == [("GET", None), ("POST", None)]
 
 
 def test_uploads_use_upload_timeout(monkeypatch, audio_file):
@@ -111,6 +111,14 @@ def test_upload_timeout_reaches_sub_clients(monkeypatch):
     client = Client(cid="1", api_key="k", upload_timeout=(10, 900))
     client.deepfakes.upload_s3_presigned_video_url(url="https://example.com/a.mp4")
     assert timeouts(calls)[-1] == ("POST", (10.0, 900.0))
+
+
+def test_sub_clients_do_not_log_in_again(monkeypatch):
+    calls = fake_requests(monkeypatch)
+    client = Client(cid="1", api_key="k")
+    assert client.behavioral.config.api_key == "k"
+    assert client.deepfakes.config.api_key == "k"
+    assert [call.url for call in calls] == [f"{API_URL}/auth"]
 
 
 def test_sub_clients_are_created_once(monkeypatch):
