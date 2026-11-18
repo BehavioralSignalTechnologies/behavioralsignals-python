@@ -4,6 +4,7 @@ from collections.abc import Iterator
 
 from .base import BaseClient, StreamingResults
 from .models import (
+    EndOfTurn,
     ProcessItem,
     ResultResponse,
     StreamingOptions,
@@ -148,6 +149,7 @@ class Behavioral(BaseClient):
         pid: int,
         focus: list[str] | None = None,
         sensitivity: Literal["low", "default", "high"] = "default",
+        continuous: list[str] | None = None,
     ) -> ResultResponse:
         """Retrieves the result of a completed process by its ID.
 
@@ -156,16 +158,20 @@ class Behavioral(BaseClient):
             focus (list[str], optional): Labels to focus on, e.g. ["angry", "low_confidence"].
                 Adds a "focus" result when a label is likely but not the predicted one.
             sensitivity (str, optional): Focus sensitivity: "low", "default" or "high".
+            continuous (list[str], optional): Continuous values, e.g. ["valence", "arousal"].
+                Adds a "continuous_<name>" result with a score in [-1, 1].
         Returns:
             ResultResponse: The result response containing the results of the specified process.
         """
-        params = (
-            {"focus": ",".join(focus), "sensitivity": sensitivity} if focus is not None else None
-        )
+        params: dict[str, str] = {}
+        if focus is not None:
+            params.update(focus=",".join(focus), sensitivity=sensitivity)
+        if continuous is not None:
+            params["continuous"] = ",".join(continuous)
         data = self._send_request(
             path=f"clients/{self.config.cid}/processes/{pid}/results",
             method="GET",
-            data=params,
+            data=params or None,
         )
         return ResultResponse(**data)
 
@@ -175,6 +181,7 @@ class Behavioral(BaseClient):
         timeout: float | None = None,
         focus: list[str] | None = None,
         sensitivity: Literal["low", "default", "high"] = "default",
+        continuous: list[str] | None = None,
     ) -> ResultResponse:
         """Waits for a process to finish and returns its result.
 
@@ -185,6 +192,7 @@ class Behavioral(BaseClient):
             timeout (float, optional): Maximum seconds to wait. Defaults to None (no limit).
             focus (list[str], optional): Labels to focus on (see `get_result`).
             sensitivity (str, optional): Focus sensitivity: "low", "default" or "high".
+            continuous (list[str], optional): Continuous values (see `get_result`).
         Returns:
             ResultResponse: The result response containing the results of the specified process.
         Raises:
@@ -194,10 +202,10 @@ class Behavioral(BaseClient):
                 retried until `timeout` runs out.
         """
         self._wait_for_process(self.get_process, pid, timeout)
-        return self.get_result(pid, focus, sensitivity)
+        return self.get_result(pid, focus, sensitivity, continuous)
 
     def stream_audio(
-        self, audio_stream: Iterator[bytes], options: StreamingOptions
+        self, audio_stream: Iterator[bytes | EndOfTurn], options: StreamingOptions
     ) -> StreamingResults:
         def _request_generator() -> Iterator[pb.AudioStream]:
             # Streaming API always requires the first message to contain
@@ -211,6 +219,13 @@ class Behavioral(BaseClient):
             yield req
 
             for chunk in audio_stream:
+                if isinstance(chunk, EndOfTurn):
+                    yield pb.AudioStream(
+                        cid=int(self.config.cid),
+                        x_auth_token=self.config.api_key,
+                        end_of_turn=True,
+                    )
+                    continue
                 yield pb.AudioStream(
                     cid=int(self.config.cid),
                     x_auth_token=self.config.api_key,

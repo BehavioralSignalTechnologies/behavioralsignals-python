@@ -59,3 +59,14 @@ For the behavioral API, add `--focus` to also get focus results for the labels y
 ```bash
 python streaming_api_file.py --file_path audio.wav --output results.json --response_level all --focus angry,low_confidence --sensitivity high
 ```
+
+Add `--continuous` to also get continuous valence and arousal for every utterance and segment:
+```bash
+python streaming_api_file.py --file_path audio.wav --output results.json --response_level all --continuous valence,arousal
+```
+
+## ⏹️ Mark the end of a turn
+
+If your own code knows when the caller's turn has ended (for example, a voice agent with a turn detector), have your audio iterator yield `END_OF_TURN` (from `behavioralsignals`) at that point. The SDK sends it as its own message, with no audio, to tell the server that the turn has ended. Yield it once per turn, and only for a final end of turn, never for a guess.
+
+The scripts above do not send it: they have no turn detector, so any end of turn they sent would be a guess.

@@ -43,6 +43,11 @@ class StreamingOptions(BaseModel):
     sensitivity: Literal["low", "default", "high"] = Field(
         default="default", description="Focus sensitivity: 'high' flags more, 'low' flags fewer."
     )
+    continuous: list[str] | None = Field(
+        default=None,
+        description="Behavioral only. Continuous values, e.g. ['valence', 'arousal']. "
+        "Adds a 'continuous_<name>' result with a score in [-1, 1].",
+    )
 
     def to_pb_config(self) -> pb.AudioConfig:
         """Convert the level to a protobuf Level enum."""
@@ -59,7 +64,17 @@ class StreamingOptions(BaseModel):
         if self.focus is not None:
             config.focus.labels.extend(self.focus)
             config.focus.sensitivity = self.sensitivity
+        if self.continuous is not None:
+            config.continuous.extend(self.continuous)
         return config
+
+
+class EndOfTurn:
+    """Type of END_OF_TURN, the marker `stream_audio()` accepts between audio chunks."""
+
+
+END_OF_TURN = EndOfTurn()
+"""Yield from the `stream_audio()` iterator once, when the caller's turn has ended."""
 
 
 class AudioUploadParams(BaseModel):
@@ -232,7 +247,7 @@ class ModelPredictions(_SerializableModel):
     )
     score: str | None = Field(
         None,
-        description="The regression score for continuous tasks (e.g. intensity), bounded in (0,1)",
+        description="The regression score for continuous tasks (e.g. intensity), bounded in (0,1); in [-1, 1] for continuous_valence and continuous_arousal",
         examples=["0.62"],
     )
     dominantInSegments: list[int] | None = Field(
@@ -250,7 +265,7 @@ class ResultItem(_SerializableModel):
     )
     task: str | None = Field(
         None,
-        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaking style: whispering, shouting, breathiness, monotony, fluency. Speaker: gender, age. Signal quality: signal_quality.snr, signal_quality.c50, signal_quality.sdr, signal_quality.overall. Vocalization events (only when detected): laugh, sigh, cough, sneeze, scream. Other: diarization, asr, language, features, focus. Deepfakes API: deepfake, visual_deepfake, generator. "
+        description="The task. Behavioral: emotion, strength, positivity, speaking_rate, hesitation, engagement, intensity. Speaking style: whispering, shouting, breathiness, monotony, fluency. Speaker: gender, age. Signal quality: signal_quality.snr, signal_quality.c50, signal_quality.sdr, signal_quality.overall. Vocalization events (only when detected): laugh, sigh, cough, sneeze, scream. Other: diarization, asr, language, features, focus, continuous_valence, continuous_arousal. Deepfakes API: deepfake, visual_deepfake, generator. "
         "Consider visiting the guides in behavioralsignals.readme.io for the latest examples.",
         examples=["emotion"],
     )

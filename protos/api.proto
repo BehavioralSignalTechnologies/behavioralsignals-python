@@ -43,6 +43,9 @@ message AudioConfig {
 
     // If specified, also return a "focus" result when a label is likely but not the predicted one
     optional FocusConfig focus = 6;
+
+    // If specified, also return a "continuous_<name>" result with a score in [-1, 1]. One or more of: valence, arousal
+    repeated string continuous = 7;
 }
 
 message FocusConfig {
@@ -67,9 +70,17 @@ message AudioStream {
   AudioConfig config = 3;
   // The audio data to be recognized. Sequential chunks of audio data are sent in sequential
   // `AudioStream` messages. The first `AudioStream` message must not contain `audio` data
-  // and all subsequent `AudioStream` messages must contain `audio` data. The audio bytes must
-  // be encoded as specified in `StreamConfig`.
+  // and all subsequent `AudioStream` messages must contain `audio` data, except one that sets
+  // `end_of_turn`. The audio bytes must be encoded as specified in `StreamConfig`.
   bytes audio_content = 4;
+
+  // Optional application identifier
+  // Used for tracking and logging purposes
+  optional string app_id = 5;
+
+  // Optional. Send once, with no audio, when the caller's turn has ended (a final end of turn,
+  // not a guess). The server then returns the turn's utterance result right away.
+  bool end_of_turn = 6;
 }
 
 message Prediction {
@@ -79,7 +90,7 @@ message Prediction {
   optional string posterior = 2;
   // logit
   optional string logit = 3;
-  // regression score for continuous tasks (e.g. intensity), in (0,1)
+  // regression score for continuous tasks (e.g. intensity), in (0,1); in [-1, 1] for continuous_valence and continuous_arousal
   optional string score = 4;
 }
 

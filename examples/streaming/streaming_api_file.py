@@ -42,6 +42,11 @@ def parse_args():
         choices=["low", "default", "high"],
         help="Focus sensitivity",
     )
+    parser.add_argument(
+        "--continuous",
+        type=str,
+        help="Comma-separated continuous values, e.g. valence,arousal (behavioral only)",
+    )
 
     return parser.parse_args()
 
@@ -62,6 +67,9 @@ if __name__ == "__main__":
         level=args.response_level,
         focus=args.focus.split(",") if args.focus and args.api == "behavioral" else None,
         sensitivity=args.sensitivity,
+        continuous=args.continuous.split(",")
+        if args.continuous and args.api == "behavioral"
+        else None,
     )
 
     if args.api == "behavioral":
