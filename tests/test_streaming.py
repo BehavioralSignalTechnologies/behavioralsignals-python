@@ -181,6 +181,44 @@ def test_stream_audio_drops_the_empty_fields_of_a_score(monkeypatch):
     }
 
 
+def test_stream_audio_parses_diarization_posteriors_and_overlap(monkeypatch):
+    response = pb.StreamResult(
+        pid=7,
+        result=[
+            pb.InferenceResult(
+                id="3",
+                start_time="43.703",
+                end_time="46.319",
+                task="diarization",
+                final_label="SPEAKER_03",
+                prediction=[
+                    pb.Prediction(label="SPEAKER_03", posterior="0.798"),
+                    pb.Prediction(label="SPEAKER_02", posterior="0.202"),
+                ],
+                overlap_duration="0.253",
+                overlap_ratio="0.097",
+                overlap_segments=[
+                    pb.OverlapSegment(
+                        start_time="45.695",
+                        end_time="45.948",
+                        speakers=["SPEAKER_02", "SPEAKER_03"],
+                    )
+                ],
+            )
+        ],
+    )
+    fake_channel(monkeypatch, [response])
+    item = stream_audio(Behavioral)[0].results[0]
+    assert [(p.label, p.posterior) for p in item.prediction] == [
+        ("SPEAKER_03", "0.798"),
+        ("SPEAKER_02", "0.202"),
+    ]
+    assert (item.overlapDuration, item.overlapRatio) == ("0.253", "0.097")
+    assert [(o.startTime, o.endTime, o.speakers) for o in item.overlapSegments] == [
+        ("45.695", "45.948", ["SPEAKER_02", "SPEAKER_03"])
+    ]
+
+
 class HangingStreamingApi(pb_grpc.BehavioralStreamingApiServicer):
     """Answers once, then holds the stream open without answering again."""
 

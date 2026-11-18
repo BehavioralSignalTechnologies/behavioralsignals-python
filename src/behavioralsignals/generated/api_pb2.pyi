@@ -73,8 +73,18 @@ class Prediction(_message.Message):
     score: str
     def __init__(self, label: _Optional[str] = ..., posterior: _Optional[str] = ..., logit: _Optional[str] = ..., score: _Optional[str] = ...) -> None: ...
 
+class OverlapSegment(_message.Message):
+    __slots__ = ("start_time", "end_time", "speakers")
+    START_TIME_FIELD_NUMBER: _ClassVar[int]
+    END_TIME_FIELD_NUMBER: _ClassVar[int]
+    SPEAKERS_FIELD_NUMBER: _ClassVar[int]
+    start_time: str
+    end_time: str
+    speakers: _containers.RepeatedScalarFieldContainer[str]
+    def __init__(self, start_time: _Optional[str] = ..., end_time: _Optional[str] = ..., speakers: _Optional[_Iterable[str]] = ...) -> None: ...
+
 class InferenceResult(_message.Message):
-    __slots__ = ("id", "start_time", "end_time", "task", "prediction", "final_label", "embedding", "level")
+    __slots__ = ("id", "start_time", "end_time", "task", "prediction", "final_label", "embedding", "level", "overlap_duration", "overlap_ratio", "overlap_segments")
     ID_FIELD_NUMBER: _ClassVar[int]
     START_TIME_FIELD_NUMBER: _ClassVar[int]
     END_TIME_FIELD_NUMBER: _ClassVar[int]
@@ -83,6 +93,9 @@ class InferenceResult(_message.Message):
     FINAL_LABEL_FIELD_NUMBER: _ClassVar[int]
     EMBEDDING_FIELD_NUMBER: _ClassVar[int]
     LEVEL_FIELD_NUMBER: _ClassVar[int]
+    OVERLAP_DURATION_FIELD_NUMBER: _ClassVar[int]
+    OVERLAP_RATIO_FIELD_NUMBER: _ClassVar[int]
+    OVERLAP_SEGMENTS_FIELD_NUMBER: _ClassVar[int]
     id: str
     start_time: str
     end_time: str
@@ -91,7 +104,10 @@ class InferenceResult(_message.Message):
     final_label: str
     embedding: str
     level: Level
-    def __init__(self, id: _Optional[str] = ..., start_time: _Optional[str] = ..., end_time: _Optional[str] = ..., task: _Optional[str] = ..., prediction: _Optional[_Iterable[_Union[Prediction, _Mapping]]] = ..., final_label: _Optional[str] = ..., embedding: _Optional[str] = ..., level: _Optional[_Union[Level, str]] = ...) -> None: ...
+    overlap_duration: str
+    overlap_ratio: str
+    overlap_segments: _containers.RepeatedCompositeFieldContainer[OverlapSegment]
+    def __init__(self, id: _Optional[str] = ..., start_time: _Optional[str] = ..., end_time: _Optional[str] = ..., task: _Optional[str] = ..., prediction: _Optional[_Iterable[_Union[Prediction, _Mapping]]] = ..., final_label: _Optional[str] = ..., embedding: _Optional[str] = ..., level: _Optional[_Union[Level, str]] = ..., overlap_duration: _Optional[str] = ..., overlap_ratio: _Optional[str] = ..., overlap_segments: _Optional[_Iterable[_Union[OverlapSegment, _Mapping]]] = ...) -> None: ...
 
 class StreamResult(_message.Message):
     __slots__ = ("cid", "pid", "message_id", "result")
