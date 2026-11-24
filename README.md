@@ -112,6 +112,7 @@ For a 10-second clip of one speaker, the output starts like this:
 ```
 
 Each row also has `prediction`, the list of all labels with their probabilities. Use `result.model_dump()` to get the results as a dictionary.
+The result also carries `modelVersion`, the version of the models that produced it.
 
 To include speaker and behavioral embeddings:
 

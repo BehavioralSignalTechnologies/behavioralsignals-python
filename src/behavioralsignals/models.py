@@ -302,6 +302,7 @@ class ResultResponse(_SerializableModel):
     cid: int | None = Field(None, description="Client ID that requested the processing")
     code: int | None = Field(None, description="Code indicating status")
     message: str | None = Field(None, description="Description of status")
+    modelVersion: str | None = Field(None, description="Version of the models used for inference")
     results: list[ResultItem] | None = None
 
 
@@ -317,6 +318,7 @@ class VideoResultResponse(_SerializableModel):
     cid: int | None = Field(None, description="Client ID that requested the processing")
     code: int | None = Field(None, description="Code indicating status")
     message: str | None = Field(None, description="Description of status")
+    modelVersion: str | None = Field(None, description="Version of the models used for inference")
     audio_results: list[ResultItem] | None = Field(
         None, description="Audio deepfake detection results"
     )
