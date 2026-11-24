@@ -97,12 +97,12 @@ print_results(result.results)
 `upload_audio()` returns a process with a unique process ID (`pid`). `wait_for_result()` polls until processing completes and returns the analysis result.
 
 `print_results()` prints one line per result: the start and end time in seconds, the task, and the final label with its probability.
-Continuous tasks such as `intensity` have no label, only a score, and `asr` and `diarization` have a label without a probability.
+Continuous tasks such as `intensity` have no label, only a score, and `asr` has a label without a probability.
 For a 10-second clip of one speaker, the output starts like this:
 
 ```
 0.487 3.001 asr The birch canoe slid on the smooth plank.
-0.487 3.001 diarization SPEAKER_00
+0.487 3.001 diarization SPEAKER_00 (100.0%)
 0.487 3.001 language en (98.9%)
 0.487 3.001 gender female (99.7%)
 0.487 3.001 age 18 - 22 (46.8%)
@@ -150,6 +150,7 @@ In batch results, `gender` and `age` are given per speaker: every utterance of a
 The other tasks have open-ended values, not fixed labels: `diarization` (a speaker ID such as `SPEAKER_00`), `asr` (the transcript) and `language`. With `embeddings=True`, `features` holds the behavioral embedding.
 The API also detects non-verbal vocalizations: `laugh`, `sigh`, `cough`, `sneeze` and `scream`. They are not among the 28 signals: each one is returned only when it is detected, with `finalLabel` `yes`, the confidence as the `yes` probability, and its own `startTime` and `endTime` (whole seconds). An event gets the `id` of the utterance it overlaps most; an event in a pause gets an `id` of its own. See [Vocalization events](https://behavioralsignals.readme.io/docs/vocalization-events).
 All results of one utterance share its `id`, `startTime` and `endTime`, except vocalization events, which keep their own times. To split results by speaker, use the `diarization` label of each utterance. Speaker IDs are generic: the API does not say who is the agent and who is the customer.
+The `diarization` result has a probability for every speaker of the recording, highest first, which says how sure the API is about the speaker of that utterance. When two or more speakers talk at once inside the utterance, it also has `overlapDuration` (seconds), `overlapRatio` (share of the utterance) and `overlapSegments`, the intervals with the speakers active in each (requires API 5.14.0).
 
 `neutral` means something different in each task, so always read a label together with its task: `emotion: neutral` means no clear emotion, `strength: neutral` normal energy, `positivity: neutral` neither positive nor negative, and `engagement: neutral` neither engaged nor withdrawn.
 

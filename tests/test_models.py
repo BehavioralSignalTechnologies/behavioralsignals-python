@@ -33,3 +33,30 @@ def test_process_list_still_serializes_its_own_fields():
     dump = response.model_dump()
     assert dump["total_count"] == 1
     assert [process["pid"] for process in dump["processes"]] == [7]
+
+
+def test_diarization_result_with_overlap():
+    item = ResultItem.model_validate(
+        {
+            "task": "diarization",
+            "finalLabel": "SPEAKER_00",
+            "prediction": [
+                {"label": "SPEAKER_00", "posterior": "0.84"},
+                {"label": "SPEAKER_01", "posterior": "0.16"},
+            ],
+            "overlapDuration": "0.54",
+            "overlapRatio": "0.088",
+            "overlapSegments": [
+                {"startTime": "5.64", "endTime": "6.18", "speakers": ["SPEAKER_00", "SPEAKER_01"]}
+            ],
+        }
+    )
+    assert item.overlapSegments[0].speakers == ["SPEAKER_00", "SPEAKER_01"]
+    assert item.model_dump()["overlapSegments"] == [
+        {"startTime": "5.64", "endTime": "6.18", "speakers": ["SPEAKER_00", "SPEAKER_01"]}
+    ]
+
+
+def test_diarization_result_without_overlap_has_no_overlap_fields():
+    item = ResultItem.model_validate({"task": "diarization", "finalLabel": "SPEAKER_00"})
+    assert not {"overlapDuration", "overlapRatio", "overlapSegments"} & set(item.model_dump())
