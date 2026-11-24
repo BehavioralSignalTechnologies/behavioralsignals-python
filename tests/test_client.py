@@ -347,6 +347,29 @@ def test_get_video_result_parses_both_result_lists(monkeypatch):
     assert [item.finalLabel for item in output.video_results] == ["real"]
 
 
+GET_RESULTS = [
+    lambda client: client.behavioral.get_result(pid=7),
+    lambda client: client.deepfakes.get_result(pid=7),
+    lambda client: client.deepfakes.get_video_result(pid=7),
+]
+
+
+@pytest.mark.parametrize("get_result", GET_RESULTS)
+def test_get_result_keeps_the_model_version(monkeypatch, get_result):
+    fake_requests(monkeypatch, FakeResponse(body={"pid": 7, "modelVersion": "x"}))
+    output = get_result(Client(cid="1", api_key="k"))
+    assert output.modelVersion == "x"
+    assert output.model_dump()["modelVersion"] == "x"
+
+
+@pytest.mark.parametrize("get_result", GET_RESULTS)
+def test_get_result_without_a_model_version_leaves_it_out(monkeypatch, get_result):
+    fake_requests(monkeypatch, FakeResponse(body={"pid": 7}))
+    output = get_result(Client(cid="1", api_key="k"))
+    assert output.modelVersion is None
+    assert "modelVersion" not in output.model_dump()
+
+
 def test_list_processes_parses_the_response(monkeypatch):
     body = [
         {"pid": 7, "status": 2, "name": "done.wav"},
