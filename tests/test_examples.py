@@ -63,12 +63,16 @@ STREAM_RESPONSE = pb.StreamResult(
 )
 
 
-def write_silent_wav(path):
+def write_wav(path, frames):
     with wave.open(str(path), "wb") as audio:
         audio.setnchannels(1)
         audio.setsampwidth(2)
         audio.setframerate(8000)
-        audio.writeframes(b"\0\0" * 8000)
+        audio.writeframes(frames)
+
+
+def write_silent_wav(path):
+    write_wav(path, b"\0\0" * 8000)
 
 
 @pytest.fixture
@@ -110,3 +114,37 @@ def test_readme_python_snippets_run_in_order():
     namespace = {}
     for snippet in snippets:
         exec(snippet, namespace)
+
+
+def run_streaming_file_example(monkeypatch, *args):
+    """Runs streaming_api_file.py on audio.wav. Returns the messages it sent."""
+    channel = fake_channel(monkeypatch, [STREAM_RESPONSE])
+    script = "streaming/streaming_api_file.py"
+    monkeypatch.setattr(sys, "argv", [script, "--file_path", "audio.wav", *args])
+    runpy.run_path(str(ROOT / "examples" / script), run_name="__main__")
+    return channel.sent[1:]  # the first message is the config
+
+
+@pytest.mark.usefixtures("fake_api")
+def test_streaming_file_example_sends_end_of_turn_after_a_pause(monkeypatch):
+    speech, pause = b"\x10\x27" * 8000, b"\0\0" * 8000  # 1 s each at 8 kHz
+    write_wav(Path("audio.wav"), speech + pause + speech)
+    sent = run_streaming_file_example(monkeypatch, "--end_of_turn_after", "0.5")
+    # 0.25 s chunks: 4 of speech, then 2 of pause, then the marker, then the rest.
+    assert [message.end_of_turn for message in sent] == [False] * 6 + [True] + [False] * 6
+    assert sent[6].audio_content == b""
+
+
+@pytest.mark.usefixtures("fake_api")
+def test_streaming_file_example_sends_no_end_of_turn_before_speech(monkeypatch):
+    write_wav(Path("audio.wav"), b"\0\0" * 8000 + b"\x10\x27" * 8000)
+    sent = run_streaming_file_example(monkeypatch, "--end_of_turn_after", "0.5")
+    assert not any(message.end_of_turn for message in sent)
+
+
+@pytest.mark.usefixtures("fake_api")
+def test_streaming_file_example_sends_no_end_of_turn_by_default(monkeypatch):
+    write_wav(Path("audio.wav"), b"\x10\x27" * 8000 + b"\0\0" * 8000)
+    sent = run_streaming_file_example(monkeypatch)
+    assert len(sent) == 8
+    assert not any(message.end_of_turn for message in sent)

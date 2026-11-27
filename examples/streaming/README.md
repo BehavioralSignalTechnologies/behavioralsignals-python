@@ -69,4 +69,8 @@ python streaming_api_file.py --file_path audio.wav --output results.json --respo
 
 If your own code knows when the caller's turn has ended (for example, a voice agent with a turn detector), have your audio iterator yield `END_OF_TURN` (from `behavioralsignals`) at that point. The SDK sends it as its own message, with no audio, to tell the server that the turn has ended. Yield it once per turn, and only for a final end of turn, never for a guess.
 
-The scripts above do not send it: they have no turn detector, so any end of turn they sent would be a guess.
+`streaming_api_file.py` shows how. Add `--end_of_turn_after` to send `END_OF_TURN` after each pause of that many seconds that follows speech:
+```bash
+python streaming_api_file.py --file_path audio.wav --output results.json --response_level all --end_of_turn_after 1.0
+```
+This is for demonstration only. The pause check (any 0.25-second chunk below -40 dBFS is silence) stands in for a real turn detector, and 1.0 second is the same pause the server waits for when no marker is sent. In your own code, yield `END_OF_TURN` where your turn detector says the turn has ended. `streaming_from_mic.py` does not send it.
