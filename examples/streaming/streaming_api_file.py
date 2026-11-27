@@ -1,10 +1,18 @@
 import json
+import math
 import argparse
+from array import array
+from collections.abc import Iterator
 
 from dotenv import load_dotenv
 
-from behavioralsignals import Client, StreamingOptions
+from behavioralsignals import END_OF_TURN, Client, EndOfTurn, StreamingOptions
 from behavioralsignals.utils import print_results, make_audio_stream
+
+
+CHUNK_SECONDS = 0.25
+# A chunk quieter than this counts as silence. It stands in for a real turn detector.
+SILENCE_DBFS = -40.0
 
 
 def parse_args():
@@ -47,8 +55,34 @@ def parse_args():
         type=str,
         help="Comma-separated continuous values, e.g. valence,arousal (behavioral only)",
     )
+    parser.add_argument(
+        "--end_of_turn_after",
+        type=float,
+        help="Send END_OF_TURN after this many seconds of silence that follows speech",
+    )
 
     return parser.parse_args()
+
+
+def is_silent(chunk: bytes) -> bool:
+    """True if a chunk of 16-bit audio is quieter than SILENCE_DBFS."""
+    samples = array("h", chunk)
+    rms = math.sqrt(sum(s * s for s in samples) / max(len(samples), 1))
+    return 20 * math.log10(max(rms, 1) / 32768) < SILENCE_DBFS
+
+
+def with_end_of_turn(
+    chunks: Iterator[bytes], silence_seconds: float
+) -> Iterator[bytes | EndOfTurn]:
+    """Yields the chunks, and END_OF_TURN once per pause of `silence_seconds` after speech."""
+    silent_chunks, in_turn = 0, False
+    for chunk in chunks:
+        yield chunk
+        silent_chunks = silent_chunks + 1 if is_silent(chunk) else 0
+        in_turn = in_turn or silent_chunks == 0
+        if in_turn and silent_chunks * CHUNK_SECONDS >= silence_seconds:
+            yield END_OF_TURN
+            in_turn = False
 
 
 if __name__ == "__main__":
@@ -60,7 +94,11 @@ if __name__ == "__main__":
     client = Client()
 
     # Step 2. Read the audio file, and wrap it inside an iterator of chunks
-    audio_stream, sample_rate = make_audio_stream(file_path, chunk_size=0.25)
+    chunks, sample_rate = make_audio_stream(file_path, chunk_size=CHUNK_SECONDS)
+    # Optional: mark the end of each turn, here after a pause (a voice agent uses its turn detector)
+    audio_stream: Iterator[bytes | EndOfTurn] = chunks
+    if args.end_of_turn_after:
+        audio_stream = with_end_of_turn(chunks, args.end_of_turn_after)
     options = StreamingOptions(
         sample_rate=sample_rate,
         encoding="LINEAR_PCM",
